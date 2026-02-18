@@ -60,14 +60,14 @@ function ChainBadge({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md' | 
   const logo = chainLogo(name);
   const color = chainClr(name);
   const he = chainHe(name);
-  const s = size === 'lg' ? 120 : size === 'md' ? 126 : 120;
-  const textClass = size === 'lg' ? 'font-black text-lg' : size === 'md' ? 'font-bold text-base' : 'font-bold text-sm';
+  const s = size === 'lg' ? 52 : size === 'md' ? 36 : 28;
+  const textClass = size === 'lg' ? 'font-black text-sm' : size === 'md' ? 'font-bold text-xs' : 'font-bold text-[11px]';
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-2.5">
       {logo ? (
-        <img src={logo} alt={he} width={s} height={s} className="rounded-lg object-contain shadow-sm" style={{ width: s, height: s }} />
+        <img src={logo} alt={he} width={s} height={s} className="rounded-xl object-contain shadow-sm" style={{ width: s, height: s }} />
       ) : (
-        <span className="rounded-lg flex items-center justify-center text-white font-bold shadow-sm" style={{ backgroundColor: color, width: s, height: s, fontSize: s * 0.4 }}>
+        <span className="rounded-xl flex items-center justify-center text-white font-bold shadow-sm" style={{ backgroundColor: color, width: s, height: s, fontSize: s * 0.38 }}>
           {he.charAt(0)}
         </span>
       )}
@@ -82,10 +82,11 @@ function LogoSlider() {
   const doubled = [...LOGO_CHAINS, ...LOGO_CHAINS];
   return (
     <div className="w-full overflow-hidden py-4 mb-2">
-      <div className="flex items-center gap-8 animate-scroll" style={{ width: 'max-content' }}>
+      <div className="flex items-center gap-10 animate-scroll" style={{ width: 'max-content' }}>
         {doubled.map((c, i) => (
-          <div key={i} className="flex-shrink-0 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
-            <img src={c.logo} alt={c.he} width={36} height={36} className="rounded-lg object-contain" style={{ width: 36, height: 36 }} />
+          <div key={i} className="flex-shrink-0 flex flex-col items-center gap-1 opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+            <img src={c.logo} alt={c.he} width={56} height={56} className="rounded-xl object-contain" style={{ width: 56, height: 56 }} />
+            <span className="text-[10px] text-stone-400 font-medium">{c.he}</span>
           </div>
         ))}
       </div>
@@ -95,7 +96,7 @@ function LogoSlider() {
           100% { transform: translateX(-50%); }
         }
         .animate-scroll {
-          animation: scroll 30s linear infinite;
+          animation: scroll 25s linear infinite;
         }
         .animate-scroll:hover {
           animation-play-state: paused;
@@ -408,6 +409,8 @@ export default function Home() {
                     {listResults.map((store: StoreResult, i: number) => {
                       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
                       const sav = i > 0 ? (store.total - listResults[0].total).toFixed(2) : null;
+                      const foundIds = new Set(store.breakdown?.map((b: any) => b.productId) || []);
+                      const missingItems = list.filter(l => !foundIds.has(l.product.id));
                       return (
                         <div key={store.storeId} className={"rounded-2xl border-2 p-5 transition bg-white " + (i === 0 ? "border-emerald-500 shadow-lg shadow-emerald-100" : "border-stone-100 shadow-sm")}>
                           <div className="flex justify-between items-start">
@@ -415,7 +418,7 @@ export default function Home() {
                               {medal && <span className="text-2xl">{medal}</span>}
                               <div>
                                 <ChainBadge name={store.chainName} size="lg" />
-                                <div className="text-xs text-stone-400 mt-0.5">{store.storeName} · {store.city}</div>
+                                <div className="text-xs text-stone-400 mt-1">{store.storeName} · {store.city}</div>
                               </div>
                             </div>
                             <div className="text-left">
@@ -423,26 +426,51 @@ export default function Home() {
                               {sav && <div className="text-xs text-red-400 font-medium">+₪{sav} יותר</div>}
                             </div>
                           </div>
+
                           <div className="mt-3 flex items-center gap-3">
                             <div className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium">✓ {store.availableCount} נמצאו</div>
                             {store.missingCount > 0 && <div className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-500 font-medium">✕ {store.missingCount} חסרים</div>}
                           </div>
-                          {i === 0 && store.breakdown && (
+
+                          {/* Detailed breakdown - found items */}
+                          {store.breakdown && store.breakdown.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-stone-100">
-                              <div className="text-xs font-bold text-stone-500 mb-2">פירוט:</div>
+                              <div className="text-xs font-bold text-emerald-600 mb-2">✓ מוצרים שנמצאו:</div>
                               {store.breakdown.map((b: any) => {
                                 const prod = list.find(l => l.product.id === b.productId);
                                 return (
-                                  <div key={b.productId} className="flex justify-between text-xs text-stone-500 py-0.5">
-                                    <span>{prod ? prod.product.name : `#${b.productId}`} ×{b.qty}</span>
-                                    <span className="font-mono">₪{b.subtotal.toFixed(2)}</span>
+                                  <div key={b.productId} className="flex justify-between items-center text-xs py-1.5 border-b border-stone-50 last:border-0">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] shrink-0">✓</span>
+                                      <span className="text-stone-700 truncate">{prod ? prod.product.name : `מוצר #${b.productId}`}</span>
+                                      {b.qty > 1 && <span className="text-stone-400">×{b.qty}</span>}
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 mr-2">
+                                      <span className="text-stone-400 text-[10px]">₪{Number(b.price).toFixed(2)} ליח׳</span>
+                                      <span className="font-mono font-bold text-stone-700">₪{b.subtotal.toFixed(2)}</span>
+                                    </div>
                                   </div>
                                 );
                               })}
                             </div>
                           )}
+
+                          {/* Missing items in red */}
+                          {missingItems.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-red-100">
+                              <div className="text-xs font-bold text-red-500 mb-2">✕ מוצרים חסרים בסניף:</div>
+                              {missingItems.map(item => (
+                                <div key={item.product.id} className="flex items-center gap-2 text-xs py-1.5 border-b border-red-50 last:border-0">
+                                  <span className="w-4 h-4 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-[10px] shrink-0">✕</span>
+                                  <span className="text-red-400 line-through">{item.product.name}</span>
+                                  {item.qty > 1 && <span className="text-red-300">×{item.qty}</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                           {i === 0 && listResults.length > 1 && (
-                            <div className="mt-3 text-center text-sm font-bold text-emerald-600">💰 חוסכים ₪{(listResults[listResults.length - 1].total - store.total).toFixed(2)} לעומת הכי יקר</div>
+                            <div className="mt-4 text-center text-sm font-bold text-emerald-600 bg-emerald-50 py-2 rounded-xl">💰 חוסכים ₪{(listResults[listResults.length - 1].total - store.total).toFixed(2)} לעומת הכי יקר</div>
                           )}
                         </div>
                       );
