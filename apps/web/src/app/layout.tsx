@@ -1,8 +1,6 @@
 import './globals.css';
 import { ReactNode } from 'react';
-
 export const metadata = { title: 'סל חכם', description: 'השוואת מחירים בסופרים' };
-
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="he" dir="rtl">
