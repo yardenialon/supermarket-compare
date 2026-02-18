@@ -124,9 +124,16 @@ export default function Home() {
   const onInput = (v: string) => { setQ(v); clearTimeout(db.current); db.current = setTimeout(() => search(v), 300); };
   const pick = (p: Product) => {
     setSel(p); setPLoading(true); setChainFilter(null); setSelImage(productImages[p.id] || null);
+    // Fast: get prices
     api.prices(p.id).then((d: any) => {
       setPrices(d.prices || []);
       if (d.imageUrl) { setSelImage(d.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d.imageUrl })); }
+      else {
+        // Background: fetch image from Google (slow, non-blocking)
+        api.image(p.id).then((img: any) => {
+          if (img.imageUrl) { setSelImage(img.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: img.imageUrl })); }
+        }).catch(() => {});
+      }
     }).catch(() => {}).finally(() => setPLoading(false));
   };
   const addToList = (p: Product) => { setList(prev => { const ex = prev.find(i => i.product.id === p.id); if (ex) return prev.map(i => i.product.id === p.id ? { ...i, qty: i.qty + 1 } : i); return [...prev, { product: p, qty: 1 }]; }); setToast(p.name); setTimeout(() => setToast(""), 2000); };
@@ -210,7 +217,7 @@ export default function Home() {
           <div>{sel ? (<div className="rounded-xl bg-white border border-stone-100 shadow-sm overflow-hidden sticky top-16">
             <div className="p-4 border-b border-stone-100">
               <div className="flex items-start gap-3">
-                <ProductImg barcode={sel.barcode} name={sel.name} size={64} />
+                <ProductImg barcode={sel.barcode} name={sel.name} size={64} imageUrl={selImage} />
                 <div className="min-w-0 flex-1">
                   <div className="font-black text-lg text-stone-800 leading-snug">{sel.name}</div>
                   <div className="text-xs text-stone-400 mt-1">{sel.brand}{sel.barcode && ` · ${sel.barcode}`}</div>
@@ -268,7 +275,7 @@ export default function Home() {
                 {list.map(item => (
                   <div key={item.product.id} className="bg-white rounded-xl p-3 border border-stone-100 flex items-center justify-between">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <ProductImg barcode={item.product.barcode} name={item.product.name} size={40} />
+                      <ProductImg barcode={item.product.barcode} name={item.product.name} size={40} imageUrl={productImages[item.product.id]} />
                       <div className="min-w-0"><div className="font-bold text-sm text-stone-800 truncate">{item.product.name}</div><div className="text-[11px] text-stone-400">{item.product.minPrice ? `מ-₪${Number(item.product.minPrice).toFixed(2)}` : ''}{item.product.brand && ` · ${item.product.brand}`}</div></div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 mr-2">
@@ -337,7 +344,7 @@ export default function Home() {
                                   return (
                                     <div key={b.productId} className={"flex items-center justify-between px-3 py-2.5 text-xs " + (bi % 2 === 0 ? "bg-white" : "bg-stone-50/50")}>
                                       <div className="flex items-center gap-2 min-w-0">
-                                        <ProductImg barcode={prod?.product.barcode || ''} name={prod?.product.name || ''} size={30} />
+                                        <ProductImg barcode={prod?.product.barcode || ''} name={prod?.product.name || ''} size={30} imageUrl={prod ? productImages[prod.product.id] : undefined} />
                                         <span className="text-stone-700 truncate font-medium">{prod ? prod.product.name : `מוצר #${b.productId}`}</span>
                                         {b.qty > 1 && <span className="text-stone-400 shrink-0">×{b.qty}</span>}
                                       </div>
