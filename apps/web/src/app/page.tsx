@@ -60,18 +60,48 @@ function ChainBadge({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md' | 
   const logo = chainLogo(name);
   const color = chainClr(name);
   const he = chainHe(name);
-  const s = size === 'lg' ? 32 : size === 'md' ? 24 : 20;
+  const s = size === 'lg' ? 44 : size === 'md' ? 32 : 26;
+  const textClass = size === 'lg' ? 'font-black text-lg' : size === 'md' ? 'font-bold text-base' : 'font-bold text-sm';
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex items-center gap-2">
       {logo ? (
-        <img src={logo} alt={he} width={s} height={s} className="rounded-md object-contain" style={{ width: s, height: s }} />
+        <img src={logo} alt={he} width={s} height={s} className="rounded-lg object-contain shadow-sm" style={{ width: s, height: s }} />
       ) : (
-        <span className="rounded-md flex items-center justify-center text-white text-[10px] font-bold" style={{ backgroundColor: color, width: s, height: s }}>
+        <span className="rounded-lg flex items-center justify-center text-white font-bold shadow-sm" style={{ backgroundColor: color, width: s, height: s, fontSize: s * 0.4 }}>
           {he.charAt(0)}
         </span>
       )}
-      <span className={size === 'lg' ? 'font-black text-lg' : 'font-bold text-sm'}>{he}</span>
+      <span className={textClass}>{he}</span>
     </span>
+  );
+}
+
+const LOGO_CHAINS = Object.entries(CHAINS).filter(([_, v]) => v.logo).map(([k, v]) => ({ key: k, ...v }));
+
+function LogoSlider() {
+  const doubled = [...LOGO_CHAINS, ...LOGO_CHAINS];
+  return (
+    <div className="w-full overflow-hidden py-4 mb-2">
+      <div className="flex items-center gap-8 animate-scroll" style={{ width: 'max-content' }}>
+        {doubled.map((c, i) => (
+          <div key={i} className="flex-shrink-0 flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <img src={c.logo} alt={c.he} width={36} height={36} className="rounded-lg object-contain" style={{ width: 36, height: 36 }} />
+          </div>
+        ))}
+      </div>
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+    </div>
   );
 }
 
@@ -167,8 +197,11 @@ export default function Home() {
         <p className="text-stone-400 text-sm mt-2">משווים מחירים ברשתות השיווק בישראל. בזמן אמת. בחינם.</p>
       </section>
 
+      {/* Logo Slider */}
+      <LogoSlider />
+
       {/* Tabs */}
-      <div className="flex justify-center gap-2 mt-4 mb-5">
+      <div className="flex justify-center gap-2 mt-2 mb-5">
         <button onClick={() => setTab('search')} className={"px-6 py-2.5 rounded-full text-sm font-bold transition-all " + (tab === 'search' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-stone-100 text-stone-500 hover:bg-stone-200")}>🔍 חיפוש מוצר</button>
         <button onClick={() => setTab('list')} className={"px-6 py-2.5 rounded-full text-sm font-bold transition-all relative " + (tab === 'list' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-stone-100 text-stone-500 hover:bg-stone-200")}>
           🛒 רשימת קניות
