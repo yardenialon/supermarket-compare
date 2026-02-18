@@ -57,23 +57,23 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
 /* ---- Animated logo marquee ---- */
 const LOGO_LIST = Object.entries(CHAINS).filter(([_, v]) => v.logo).map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
-  const items = [...LOGO_LIST, ...LOGO_LIST];
+  const items = [...LOGO_LIST, ...LOGO_LIST, ...LOGO_LIST];
   return (
-    <div className="relative w-full overflow-hidden py-5 -mt-2" style={{ maskImage: 'linear-gradient(to left, transparent 0%, black 10%, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to left, transparent 0%, black 10%, black 90%, transparent 100%)' }}>
+    <div className="relative w-full overflow-hidden py-5 -mt-2" style={{ maskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)' }}>
       <div className="flex gap-8 items-center marquee-track">
         {items.map((c, i) => (
           <div key={i} className="shrink-0 flex flex-col items-center gap-1.5 group cursor-default">
-            <div className="rounded-2xl bg-white shadow-md border border-stone-100 p-2 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-              <img src={c.logo} alt={c.he} width={44} height={44} className="object-contain" style={{ width: 44, height: 44 }} />
+            <div className="rounded-2xl bg-white shadow-md border border-stone-100 p-2.5 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+              <img src={c.logo} alt={c.he} width={64} height={64} className="object-contain" style={{ width: 64, height: 64 }} />
             </div>
             <span className="text-[10px] text-stone-400 group-hover:text-stone-600 font-semibold transition-colors">{c.he}</span>
           </div>
         ))}
       </div>
       <style>{`
-        .marquee-track { display:flex; width:max-content; animation: marquee 28s linear infinite; }
+        .marquee-track { display:flex; width:max-content; animation: marquee 45s linear infinite; }
         .marquee-track:hover { animation-play-state: paused; }
-        @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-33.333%)} }
       `}</style>
     </div>
   );
