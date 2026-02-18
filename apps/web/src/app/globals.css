@@ -1,2 +1,37 @@
-@tailwind base; @tailwind components; @tailwind utilities;
-html { direction: rtl; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  direction: rtl;
+}
+
+body {
+  font-family: 'Heebo', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Rubik', 'Heebo', sans-serif;
+}
+
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
