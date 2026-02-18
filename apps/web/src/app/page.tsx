@@ -57,11 +57,10 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
 /* ---- Animated logo marquee ---- */
 const LOGO_LIST = Object.entries(CHAINS).filter(([_, v]) => v.logo).map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
-  const items = [...LOGO_LIST, ...LOGO_LIST, ...LOGO_LIST];
   return (
     <div className="relative w-full overflow-hidden py-5 -mt-2" style={{ maskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)' }}>
       <div className="flex gap-8 items-center marquee-track">
-        {items.map((c, i) => (
+        {[...LOGO_LIST, ...LOGO_LIST].map((c, i) => (
           <div key={i} className="shrink-0 flex flex-col items-center gap-1.5 group cursor-default">
             <div className="rounded-2xl bg-white shadow-md border border-stone-100 p-2.5 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
               <img src={c.logo} alt={c.he} width={64} height={64} className="object-contain" style={{ width: 64, height: 64 }} />
@@ -71,9 +70,18 @@ function LogoMarquee() {
         ))}
       </div>
       <style>{`
-        .marquee-track { display:flex; width:max-content; animation: marquee 45s linear infinite; }
-        .marquee-track:hover { animation-play-state: paused; }
-        @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-33.333%)} }
+        .marquee-track {
+          display: flex;
+          width: max-content;
+          animation: marquee 40s linear infinite;
+        }
+        .marquee-track:hover {
+          animation-play-state: paused;
+        }
+        @keyframes marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
       `}</style>
     </div>
   );
