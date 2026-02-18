@@ -1,5 +1,4 @@
 const B = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
 async function f(p: string, o?: RequestInit): Promise<any> {
   const r = await fetch(B + p, {
     ...o,
@@ -8,12 +7,13 @@ async function f(p: string, o?: RequestInit): Promise<any> {
   if (r.ok === false) throw new Error(String(r.status));
   return r.json();
 }
-
 export const api = {
   search: (q: string, mode: string = 'name') =>
     f('/search?q=' + encodeURIComponent(q) + '&mode=' + mode),
   prices: (id: number) =>
     f('/product/' + id + '/prices?limit=50'),
+  image: (id: number) =>
+    f('/product/' + id + '/image'),
   list: (items: { productId: number; qty: number }[]) =>
     f('/list', { method: 'POST', body: JSON.stringify({ items, topN: 5 }) }),
 };
