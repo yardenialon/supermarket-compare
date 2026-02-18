@@ -54,9 +54,10 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
   return <span className="flex items-center justify-center text-white font-black" style={{ backgroundColor: color, width: size, height: size, borderRadius: size > 40 ? 16 : 10, fontSize: size * 0.42 }}>{he.charAt(0)}</span>;
 }
 
-/* ---- Product image ---- */
-function ProductImg({ barcode, name, size = 48, imageUrl }: { barcode: string; name: string; size?: number; imageUrl?: string | null }) {
+/* ---- Product image with lightbox ---- */
+function ProductImg({ barcode, name, size = 48, imageUrl, clickable = true }: { barcode: string; name: string; size?: number; imageUrl?: string | null; clickable?: boolean }) {
   const [err, setErr] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const url = imageUrl && !err ? imageUrl : '';
 
   if (!url) return (
@@ -64,7 +65,35 @@ function ProductImg({ barcode, name, size = 48, imageUrl }: { barcode: string; n
       <span className="text-stone-300" style={{ fontSize: size * 0.45 }}>📦</span>
     </div>
   );
-  return <img src={url} alt={name} width={size} height={size} onError={() => setErr(true)} className="rounded-xl object-cover bg-stone-50 shrink-0" style={{ width: size, height: size }} />;
+  return (
+    <>
+      <div
+        onClick={clickable ? (e) => { e.stopPropagation(); setShowModal(true); } : undefined}
+        className={"rounded-xl bg-stone-50 shrink-0 overflow-hidden flex items-center justify-center " + (clickable ? "cursor-zoom-in hover:ring-2 hover:ring-emerald-400/50 transition-all" : "")}
+        style={{ width: size, height: size }}
+      >
+        <img src={url} alt={name} onError={() => setErr(true)} className="max-w-full max-h-full object-contain" />
+      </div>
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
+          <div className="relative max-w-[90vw] max-h-[85vh] animate-scaleIn" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowModal(false)} className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-stone-500 hover:text-stone-800 text-lg font-bold z-10 transition">✕</button>
+            <div className="bg-white rounded-2xl shadow-2xl p-4 flex flex-col items-center gap-3">
+              <img src={url} alt={name} className="max-w-[80vw] max-h-[65vh] object-contain rounded-xl" />
+              <div className="text-center">
+                <div className="font-bold text-stone-800 text-sm">{name}</div>
+                {barcode && <div className="text-[11px] text-stone-400 mt-0.5">ברקוד: {barcode}</div>}
+              </div>
+            </div>
+          </div>
+          <style>{`
+            @keyframes scaleIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+            .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
+          `}</style>
+        </div>
+      )}
+    </>
+  );
 }
 
 /* ---- Animated logo marquee ---- */
