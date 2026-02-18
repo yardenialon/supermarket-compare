@@ -1,0 +1,1 @@
+DATABASE_URL=postgresql://neondb_owner:YOUR_NEW_PASSWORD@ep-nameless-dew-ago5j3zt-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require /workspaces/supermarket-compare
