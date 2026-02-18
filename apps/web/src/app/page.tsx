@@ -54,33 +54,17 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
   return <span className="flex items-center justify-center text-white font-black" style={{ backgroundColor: color, width: size, height: size, borderRadius: size > 40 ? 16 : 10, fontSize: size * 0.42 }}>{he.charAt(0)}</span>;
 }
 
-/* ---- Product image from Open Food Facts ---- */
-function barcodeToOFFUrl(barcode: string): string {
-  if (!barcode || barcode.length < 8) return '';
-  const b = barcode.padStart(13, '0');
-  // OFF uses format: /images/products/729/000/412/7329/ for 13-digit barcodes
-  const path = `${b.slice(0,3)}/${b.slice(3,6)}/${b.slice(6,9)}/${b.slice(9)}`;
-  return `https://images.openfoodfacts.org/images/products/${path}/front_fr/1.400.jpg`;
-}
+/* ---- Product image ---- */
+function ProductImg({ barcode, name, size = 48, imageUrl }: { barcode: string; name: string; size?: number; imageUrl?: string | null }) {
+  const [err, setErr] = useState(false);
+  const url = imageUrl && !err ? imageUrl : '';
 
-function barcodeToOFFUrl2(barcode: string): string {
-  if (!barcode || barcode.length < 8) return '';
-  const b = barcode.padStart(13, '0');
-  const path = `${b.slice(0,3)}/${b.slice(3,6)}/${b.slice(6,9)}/${b.slice(9)}`;
-  return `https://images.openfoodfacts.org/images/products/${path}/1.400.jpg`;
-}
-
-function ProductImg({ barcode, name, size = 48 }: { barcode: string; name: string; size?: number }) {
-  const [tryCount, setTryCount] = useState(0);
-  const urls = [barcodeToOFFUrl(barcode), barcodeToOFFUrl2(barcode)];
-  const url = tryCount < urls.length ? urls[tryCount] : '';
-  
-  if (!barcode || barcode.length < 8 || !url) return (
+  if (!url) return (
     <div className="rounded-xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <span className="text-stone-300" style={{ fontSize: size * 0.45 }}>📦</span>
     </div>
   );
-  return <img src={url} alt={name} width={size} height={size} onError={() => setTryCount(c => c + 1)} className="rounded-xl object-cover bg-stone-50 shrink-0" style={{ width: size, height: size }} />;
+  return <img src={url} alt={name} width={size} height={size} onError={() => setErr(true)} className="rounded-xl object-cover bg-stone-50 shrink-0" style={{ width: size, height: size }} />;
 }
 
 /* ---- Animated logo marquee ---- */
@@ -133,10 +117,18 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<'price' | 'stores' | 'name'>('price'); const db = useRef<any>(null);
   const [list, setList] = useState<ListItem[]>([]); const [listResults, setListResults] = useState<StoreResult[]>([]);
   const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null);
+  const [selImage, setSelImage] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<Record<number, string>>({});
 
   const search = useCallback((v: string) => { if (!v.trim()) { setResults([]); return; } setLoading(true); api.search(v).then((d: any) => setResults(d.results || [])).catch(() => {}).finally(() => setLoading(false)); }, []);
   const onInput = (v: string) => { setQ(v); clearTimeout(db.current); db.current = setTimeout(() => search(v), 300); };
-  const pick = (p: Product) => { setSel(p); setPLoading(true); setChainFilter(null); api.prices(p.id).then((d: any) => setPrices(d.prices || [])).catch(() => {}).finally(() => setPLoading(false)); };
+  const pick = (p: Product) => {
+    setSel(p); setPLoading(true); setChainFilter(null); setSelImage(productImages[p.id] || null);
+    api.prices(p.id).then((d: any) => {
+      setPrices(d.prices || []);
+      if (d.imageUrl) { setSelImage(d.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d.imageUrl })); }
+    }).catch(() => {}).finally(() => setPLoading(false));
+  };
   const addToList = (p: Product) => { setList(prev => { const ex = prev.find(i => i.product.id === p.id); if (ex) return prev.map(i => i.product.id === p.id ? { ...i, qty: i.qty + 1 } : i); return [...prev, { product: p, qty: 1 }]; }); setToast(p.name); setTimeout(() => setToast(""), 2000); };
   const removeFromList = (id: number) => setList(prev => prev.filter(i => i.product.id !== id));
   const updateQty = (id: number, qty: number) => { if (qty <= 0) { removeFromList(id); return; } setList(prev => prev.map(i => i.product.id === id ? { ...i, qty } : i)); };
@@ -199,7 +191,7 @@ export default function Home() {
               <div key={p.id} className={"group rounded-xl transition-all bg-white border " + (sel?.id === p.id ? "border-emerald-500 shadow-md ring-1 ring-emerald-500/20" : "border-stone-100 hover:border-stone-200 hover:shadow-sm")}>
                 <button onClick={() => pick(p)} className="w-full text-right p-3.5">
                   <div className="flex items-center gap-3">
-                    <ProductImg barcode={p.barcode} name={p.name} size={52} />
+                    <ProductImg barcode={p.barcode} name={p.name} size={52} imageUrl={productImages[p.id]} />
                     <div className="min-w-0 flex-1"><div className="font-bold text-stone-800 text-sm truncate">{p.name}</div><div className="text-[11px] text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
                     <div className="text-left shrink-0 flex items-center gap-3">
                       <div>{p.minPrice && <div className="font-mono font-black text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-[10px] text-stone-300 mt-0.5">{p.storeCount} חנויות</div>}</div>
