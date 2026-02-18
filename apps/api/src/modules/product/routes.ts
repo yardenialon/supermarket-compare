@@ -1,21 +1,21 @@
 import { query } from '../../db.js';
 
-const GOOGLE_CX = 'e2d04ac793f3d4269';
-const GOOGLE_KEY = 'AIzaSyCfVvxrOTZH1sgmRvu5a16RlskQAboVcy4';
+const SERP_KEY = '2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a778';
 
 async function fetchProductImage(barcode: string, name: string): Promise<string | null> {
   try {
-    const q = encodeURIComponent(barcode + ' ' + name);
-    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_KEY}&cx=${GOOGLE_CX}&q=${q}&searchType=image&num=1&imgSize=medium`;
+    const q = encodeURIComponent(barcode);
+    const url = `https://serpapi.com/search.json?engine=google_images&q=${q}&api_key=${SERP_KEY}&num=1`;
     const res = await fetch(url);
     const data = await res.json();
-    if (data.items && data.items.length > 0) return data.items[0].link;
+    if (data.images_results && data.images_results.length > 0) {
+      return data.images_results[0].original || data.images_results[0].thumbnail;
+    }
     return null;
   } catch { return null; }
 }
 
 export async function productRoutes(app) {
-  // Fast prices endpoint - no image fetching
   app.get('/product/:id/prices', async (req) => {
     const { id } = req.params;
     const { limit = 50 } = req.query;
@@ -24,7 +24,6 @@ export async function productRoutes(app) {
     return { productId: +id, imageUrl: prod.rows[0]?.image_url || null, prices: prices.rows.map(r => ({ ...r, price: +r.price })) };
   });
 
-  // Separate image endpoint - called in background
   app.get('/product/:id/image', async (req) => {
     const { id } = req.params;
     const prod = await query('SELECT barcode, name, image_url FROM product WHERE id=$1', [id]);
