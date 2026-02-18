@@ -60,7 +60,7 @@ function ChainBadge({ name, size = 'sm' }: { name: string; size?: 'sm' | 'md' | 
   const logo = chainLogo(name);
   const color = chainClr(name);
   const he = chainHe(name);
-  const s = size === 'lg' ? 44 : size === 'md' ? 32 : 26;
+  const s = size === 'lg' ? 120 : size === 'md' ? 126 : 120;
   const textClass = size === 'lg' ? 'font-black text-lg' : size === 'md' ? 'font-bold text-base' : 'font-bold text-sm';
   return (
     <span className="inline-flex items-center gap-2">
