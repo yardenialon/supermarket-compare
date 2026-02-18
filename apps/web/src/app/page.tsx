@@ -58,18 +58,29 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
 function barcodeToOFFUrl(barcode: string): string {
   if (!barcode || barcode.length < 8) return '';
   const b = barcode.padStart(13, '0');
-  return `https://images.openfoodfacts.org/images/products/${b.slice(0,3)}/${b.slice(3,6)}/${b.slice(6,9)}/${b.slice(9)}/front_fr/1.400.jpg`;
+  // OFF uses format: /images/products/729/000/412/7329/ for 13-digit barcodes
+  const path = `${b.slice(0,3)}/${b.slice(3,6)}/${b.slice(6,9)}/${b.slice(9)}`;
+  return `https://images.openfoodfacts.org/images/products/${path}/front_fr/1.400.jpg`;
+}
+
+function barcodeToOFFUrl2(barcode: string): string {
+  if (!barcode || barcode.length < 8) return '';
+  const b = barcode.padStart(13, '0');
+  const path = `${b.slice(0,3)}/${b.slice(3,6)}/${b.slice(6,9)}/${b.slice(9)}`;
+  return `https://images.openfoodfacts.org/images/products/${path}/1.400.jpg`;
 }
 
 function ProductImg({ barcode, name, size = 48 }: { barcode: string; name: string; size?: number }) {
-  const [err, setErr] = useState(false);
-  const url = barcodeToOFFUrl(barcode);
-  if (!url || err) return (
+  const [tryCount, setTryCount] = useState(0);
+  const urls = [barcodeToOFFUrl(barcode), barcodeToOFFUrl2(barcode)];
+  const url = tryCount < urls.length ? urls[tryCount] : '';
+  
+  if (!barcode || barcode.length < 8 || !url) return (
     <div className="rounded-xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <span className="text-stone-300" style={{ fontSize: size * 0.45 }}>📦</span>
     </div>
   );
-  return <img src={url} alt={name} width={size} height={size} onError={() => setErr(true)} className="rounded-xl object-cover bg-stone-50 shrink-0" style={{ width: size, height: size }} />;
+  return <img src={url} alt={name} width={size} height={size} onError={() => setTryCount(c => c + 1)} className="rounded-xl object-cover bg-stone-50 shrink-0" style={{ width: size, height: size }} />;
 }
 
 /* ---- Animated logo marquee ---- */
