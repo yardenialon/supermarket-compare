@@ -54,6 +54,24 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
   return <span className="flex items-center justify-center text-white font-black" style={{ backgroundColor: color, width: size, height: size, borderRadius: size > 40 ? 16 : 10, fontSize: size * 0.42 }}>{he.charAt(0)}</span>;
 }
 
+/* ---- Product image from Open Food Facts ---- */
+function barcodeToOFFUrl(barcode: string): string {
+  if (!barcode || barcode.length < 8) return '';
+  const b = barcode.padStart(13, '0');
+  return `https://images.openfoodfacts.org/images/products/${b.slice(0,3)}/${b.slice(3,6)}/${b.slice(6,9)}/${b.slice(9)}/front_fr/1.400.jpg`;
+}
+
+function ProductImg({ barcode, name, size = 48 }: { barcode: string; name: string; size?: number }) {
+  const [err, setErr] = useState(false);
+  const url = barcodeToOFFUrl(barcode);
+  if (!url || err) return (
+    <div className="rounded-xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <span className="text-stone-300" style={{ fontSize: size * 0.45 }}>📦</span>
+    </div>
+  );
+  return <img src={url} alt={name} width={size} height={size} onError={() => setErr(true)} className="rounded-xl object-cover bg-stone-50 shrink-0" style={{ width: size, height: size }} />;
+}
+
 /* ---- Animated logo marquee ---- */
 const LOGO_LIST = Object.entries(CHAINS).filter(([_, v]) => v.logo).map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
@@ -169,8 +187,9 @@ export default function Home() {
             {sorted.map((p: Product) => (
               <div key={p.id} className={"group rounded-xl transition-all bg-white border " + (sel?.id === p.id ? "border-emerald-500 shadow-md ring-1 ring-emerald-500/20" : "border-stone-100 hover:border-stone-200 hover:shadow-sm")}>
                 <button onClick={() => pick(p)} className="w-full text-right p-3.5">
-                  <div className="flex justify-between items-center">
-                    <div className="min-w-0 ml-3"><div className="font-bold text-stone-800 text-sm truncate">{p.name}</div><div className="text-[11px] text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
+                  <div className="flex items-center gap-3">
+                    <ProductImg barcode={p.barcode} name={p.name} size={52} />
+                    <div className="min-w-0 flex-1"><div className="font-bold text-stone-800 text-sm truncate">{p.name}</div><div className="text-[11px] text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
                     <div className="text-left shrink-0 flex items-center gap-3">
                       <div>{p.minPrice && <div className="font-mono font-black text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-[10px] text-stone-300 mt-0.5">{p.storeCount} חנויות</div>}</div>
                       <span className="text-stone-200 group-hover:text-stone-400 transition">‹</span>
@@ -187,9 +206,14 @@ export default function Home() {
           {/* Price panel */}
           <div>{sel ? (<div className="rounded-xl bg-white border border-stone-100 shadow-sm overflow-hidden sticky top-16">
             <div className="p-4 border-b border-stone-100">
-              <div className="font-black text-lg text-stone-800 leading-snug">{sel.name}</div>
-              <div className="text-xs text-stone-400 mt-1">{sel.brand}{sel.barcode && ` · ${sel.barcode}`}</div>
-              {fp.length > 0 && <div className="mt-3 flex items-baseline gap-2"><span className="font-mono font-black text-2xl text-emerald-600">₪{cheap.toFixed(2)}</span>{exp > cheap && <span className="text-xs text-stone-400">— ₪{exp.toFixed(2)} ({((exp - cheap) / cheap * 100).toFixed(0)}% הפרש)</span>}</div>}
+              <div className="flex items-start gap-3">
+                <ProductImg barcode={sel.barcode} name={sel.name} size={64} />
+                <div className="min-w-0 flex-1">
+                  <div className="font-black text-lg text-stone-800 leading-snug">{sel.name}</div>
+                  <div className="text-xs text-stone-400 mt-1">{sel.brand}{sel.barcode && ` · ${sel.barcode}`}</div>
+                  {fp.length > 0 && <div className="mt-2 flex items-baseline gap-2"><span className="font-mono font-black text-2xl text-emerald-600">₪{cheap.toFixed(2)}</span>{exp > cheap && <span className="text-xs text-stone-400">— ₪{exp.toFixed(2)} ({((exp - cheap) / cheap * 100).toFixed(0)}% הפרש)</span>}</div>}
+                </div>
+              </div>
             </div>
             {uChains.length > 1 && <div className="px-4 py-2.5 bg-stone-50/80 border-b flex flex-wrap gap-1">
               <button onClick={() => setChainFilter(null)} className={"px-2 py-0.5 rounded text-[10px] font-semibold transition " + (!chainFilter ? "bg-stone-900 text-white" : "text-stone-400 hover:text-stone-600")}>הכל</button>
@@ -240,7 +264,10 @@ export default function Home() {
               <div className="space-y-1.5">
                 {list.map(item => (
                   <div key={item.product.id} className="bg-white rounded-xl p-3 border border-stone-100 flex items-center justify-between">
-                    <div className="min-w-0"><div className="font-bold text-sm text-stone-800 truncate">{item.product.name}</div><div className="text-[11px] text-stone-400">{item.product.minPrice ? `מ-₪${Number(item.product.minPrice).toFixed(2)}` : ''}{item.product.brand && ` · ${item.product.brand}`}</div></div>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <ProductImg barcode={item.product.barcode} name={item.product.name} size={40} />
+                      <div className="min-w-0"><div className="font-bold text-sm text-stone-800 truncate">{item.product.name}</div><div className="text-[11px] text-stone-400">{item.product.minPrice ? `מ-₪${Number(item.product.minPrice).toFixed(2)}` : ''}{item.product.brand && ` · ${item.product.brand}`}</div></div>
+                    </div>
                     <div className="flex items-center gap-1.5 shrink-0 mr-2">
                       <button onClick={() => updateQty(item.product.id, item.qty - 1)} className="w-7 h-7 rounded-lg bg-stone-100 flex items-center justify-center text-stone-500 font-bold text-sm hover:bg-stone-200 transition">−</button>
                       <span className="w-6 text-center font-bold text-sm">{item.qty}</span>
@@ -307,7 +334,7 @@ export default function Home() {
                                   return (
                                     <div key={b.productId} className={"flex items-center justify-between px-3 py-2.5 text-xs " + (bi % 2 === 0 ? "bg-white" : "bg-stone-50/50")}>
                                       <div className="flex items-center gap-2 min-w-0">
-                                        <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] shrink-0 font-bold">✓</span>
+                                        <ProductImg barcode={prod?.product.barcode || ''} name={prod?.product.name || ''} size={30} />
                                         <span className="text-stone-700 truncate font-medium">{prod ? prod.product.name : `מוצר #${b.productId}`}</span>
                                         {b.qty > 1 && <span className="text-stone-400 shrink-0">×{b.qty}</span>}
                                       </div>
