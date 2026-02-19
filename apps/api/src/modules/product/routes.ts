@@ -37,21 +37,21 @@ export async function productRoutes(app) {
 
     let prices;
     if (lat && lng) {
-      // With location: nearest store per chain
+      const uLat = parseFloat(lat);
+      const uLng = parseFloat(lng);
       prices = await query(`
         SELECT DISTINCT ON (rc.name)
           sp.price, sp.is_promo as "isPromo",
           s.id as "storeId", s.name as "storeName", s.city,
           rc.name as "chainName",
-          ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3) * 0.7)::numeric(12,6) as dist
+          ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
         JOIN retailer_chain rc ON rc.id = s.chain_id
         WHERE sp.product_id = $1 AND s.lat IS NOT NULL
         ORDER BY rc.name, (s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3) ASC
-      `, [id, parseFloat(lat), parseFloat(lng)]);
+      `, [id, uLat, uLng]);
     } else {
-      // Without location: cheapest per chain
       prices = await query(`
         SELECT DISTINCT ON (rc.name)
           sp.price, sp.is_promo as "isPromo",
