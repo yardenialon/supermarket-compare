@@ -43,7 +43,7 @@ export async function productRoutes(app) {
           sp.price, sp.is_promo as "isPromo",
           s.id as "storeId", s.name as "storeName", s.city,
           rc.name as "chainName",
-          ROUND((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3) * 0.7, 6) as dist
+          ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3) * 0.7)::numeric(12,6) as dist
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
         JOIN retailer_chain rc ON rc.id = s.chain_id
