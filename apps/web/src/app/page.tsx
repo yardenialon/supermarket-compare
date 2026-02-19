@@ -150,13 +150,14 @@ export default function Home() {
   const [productImages, setProductImages] = useState<Record<number, string>>({});
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
+  const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
 
   // Request geolocation on mount
   useEffect(() => {
     if (navigator.geolocation) {
       setLocStatus('loading');
       navigator.geolocation.getCurrentPosition(
-        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); },
+        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); setLocMode('nearby'); },
         () => { setLocStatus('denied'); },
         { enableHighAccuracy: false, timeout: 10000 }
       );
@@ -168,13 +169,22 @@ export default function Home() {
   const pick = (p: Product) => {
     setSel(p); setPLoading(true); setChainFilter(null);
     setSelImage(productImages[p.id] || p.imageUrl || null);
-    api.prices(p.id, userLoc?.lat, userLoc?.lng).then((d: any) => {
-      setPrices(d.prices || []);
-      if (d.imageUrl) { setSelImage(d.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d.imageUrl })); }
-      else if (!p.imageUrl) {
-        api.image(p.id).then((img: any) => {
-          if (img.imageUrl) { setSelImage(img.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: img.imageUrl })); }
+    const useLoc = locMode === 'nearby' && userLoc;
+    api.prices(p.id, useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined).then((d: any) => {
+      // Fallback: if no results with location, retry without
+      if ((!d.prices || d.prices.length === 0) && useLoc) {
+        api.prices(p.id).then((d2: any) => {
+          setPrices(d2.prices || []);
+          if (d2.imageUrl) { setSelImage(d2.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d2.imageUrl })); }
         }).catch(() => {});
+      } else {
+        setPrices(d.prices || []);
+        if (d.imageUrl) { setSelImage(d.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d.imageUrl })); }
+        else if (!p.imageUrl) {
+          api.image(p.id).then((img: any) => {
+            if (img.imageUrl) { setSelImage(img.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: img.imageUrl })); }
+          }).catch(() => {});
+        }
       }
     }).catch(() => {}).finally(() => setPLoading(false));
   };
@@ -217,8 +227,14 @@ export default function Home() {
       {tab === 'search' && (<div>
         <div className="max-w-2xl mx-auto">
           <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-5 py-4 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-xl">🔍</span></div>
-          {locStatus === 'granted' && <div className="mt-2 flex justify-center"><span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-semibold">📍 מחירים לפי הסניף הקרוב אליך</span></div>}
-          {locStatus === 'denied' && <div className="mt-2 flex justify-center"><button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => setLocStatus('denied')); }} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-stone-100 text-stone-400 text-[11px] font-semibold hover:bg-stone-200 transition">📍 הפעל מיקום לסניפים קרובים</button></div>}
+          <div className="mt-2 flex justify-center gap-2">
+            <button onClick={() => setLocMode('cheapest')} className={"px-3 py-1.5 rounded-lg text-[11px] font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 הכי זול בארץ</button>
+            {locStatus === 'granted' ? (
+              <button onClick={() => setLocMode('nearby')} className={"px-3 py-1.5 rounded-lg text-[11px] font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 סניפים קרובים</button>
+            ) : (
+              <button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
             <button onClick={() => setShowCats(p => !p)} className={"px-3.5 py-1.5 rounded-lg text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
             {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'}].map(qs => (
