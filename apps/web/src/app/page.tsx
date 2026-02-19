@@ -103,15 +103,17 @@ function distToKm(dist: number): number {
 }
 
 /* ---- Animated logo marquee ---- */
-const LOGO_LIST = Object.entries(CHAINS).filter(([_, v]) => v.logo).map(([k, v]) => ({ key: k, ...v }));
+const LOGO_LIST = Object.entries(CHAINS).filter(([k, v]) => v.logo && k !== 'Mega').map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
+  // Triple the list to ensure seamless loop
+  const items = [...LOGO_LIST, ...LOGO_LIST, ...LOGO_LIST];
   return (
-    <div className="relative w-full overflow-hidden py-5 -mt-2" style={{ maskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)' }}>
-      <div className="flex gap-8 items-center marquee-track">
-        {[...LOGO_LIST, ...LOGO_LIST].map((c, i) => (
-          <div key={i} className="shrink-0 flex flex-col items-center gap-1.5 group cursor-default">
-            <div className="rounded-2xl bg-white shadow-md border border-stone-100 p-2.5 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-              <img src={c.logo} alt={c.he} width={64} height={64} className="object-contain" style={{ width: 64, height: 64 }} />
+    <div className="relative w-full overflow-hidden py-4 sm:py-5 -mt-2" style={{ maskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)' }}>
+      <div className="marquee-track">
+        {items.map((c, i) => (
+          <div key={i} className="shrink-0 flex flex-col items-center gap-1 sm:gap-1.5 group cursor-default mx-3 sm:mx-4">
+            <div className="rounded-xl sm:rounded-2xl bg-white shadow-md border border-stone-100 p-2 sm:p-2.5 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+              <img src={c.logo} alt={c.he} className="object-contain w-12 h-12 sm:w-16 sm:h-16" />
             </div>
             <span className="text-[10px] text-stone-400 group-hover:text-stone-600 font-semibold transition-colors">{c.he}</span>
           </div>
@@ -121,14 +123,14 @@ function LogoMarquee() {
         .marquee-track {
           display: flex;
           width: max-content;
-          animation: marquee 40s linear infinite;
+          animation: marquee ${LOGO_LIST.length * 3}s linear infinite;
         }
         .marquee-track:hover {
           animation-play-state: paused;
         }
         @keyframes marquee {
           from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
+          to { transform: translateX(-33.333%); }
         }
       `}</style>
     </div>
@@ -226,54 +228,54 @@ export default function Home() {
 
       {/* Hero */}
       <section className="text-center pt-6 sm:pt-8 pb-1 px-4">
-        <h2 className="font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight text-stone-800 leading-tight">כמה אתם <span className="bg-gradient-to-l from-emerald-600 to-teal-500 bg-clip-text text-transparent">באמת</span> משלמים?</h2>
-        <p className="text-stone-400 text-xs sm:text-sm mt-2 font-medium">משווים מחירים מכל רשתות השיווק בישראל</p>
+        <h2 className="font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-stone-800 leading-tight">כמה אתם <span className="bg-gradient-to-l from-emerald-600 to-teal-500 bg-clip-text text-transparent">באמת</span> משלמים?</h2>
+        <p className="text-stone-400 text-sm sm:text-base mt-2 font-medium">משווים מחירים מכל רשתות השיווק בישראל</p>
       </section>
 
       {/* Logo Marquee */}
       <LogoMarquee />
 
       {/* Tabs */}
-      <div className="flex justify-center gap-2 sm:gap-3 mb-4 sm:mb-6 px-4">
-        <button onClick={() => setTab('search')} className={"flex-1 sm:flex-none px-5 sm:px-7 py-3 sm:py-2.5 rounded-xl text-sm font-bold transition-all duration-200 " + (tab === 'search' ? "bg-stone-900 text-white shadow-lg" : "bg-white text-stone-500 shadow-sm border border-stone-200 hover:border-stone-300")}>🔍 חיפוש מוצר</button>
-        <button onClick={() => setTab('list')} className={"flex-1 sm:flex-none px-5 sm:px-7 py-3 sm:py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative " + (tab === 'list' ? "bg-stone-900 text-white shadow-lg" : "bg-white text-stone-500 shadow-sm border border-stone-200 hover:border-stone-300")}>
+      <div className="flex justify-center gap-2 sm:gap-3 mb-5 sm:mb-6 px-4">
+        <button onClick={() => setTab('search')} className={"flex-1 sm:flex-none px-5 sm:px-8 py-3.5 sm:py-3 rounded-xl text-base sm:text-sm font-bold transition-all duration-200 " + (tab === 'search' ? "bg-stone-900 text-white shadow-lg" : "bg-white text-stone-500 shadow-sm border border-stone-200 hover:border-stone-300")}>🔍 חיפוש מוצר</button>
+        <button onClick={() => setTab('list')} className={"flex-1 sm:flex-none px-5 sm:px-8 py-3.5 sm:py-3 rounded-xl text-base sm:text-sm font-bold transition-all duration-200 relative " + (tab === 'list' ? "bg-stone-900 text-white shadow-lg" : "bg-white text-stone-500 shadow-sm border border-stone-200 hover:border-stone-300")}>
           🛒 רשימת קניות
-          {list.length > 0 && <span className="absolute -top-2 -left-2 bg-emerald-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">{list.length}</span>}
+          {list.length > 0 && <span className="absolute -top-2 -left-2 bg-emerald-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold shadow">{list.length}</span>}
         </button>
       </div>
 
       {/* ==================== SEARCH TAB ==================== */}
       {tab === 'search' && (<div>
         <div className="max-w-2xl mx-auto px-4">
-          <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-xl">🔍</span></div>
-          <div className="mt-2 flex justify-center gap-2">
-            <button onClick={() => setLocMode('cheapest')} className={"px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-[11px] font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 הכי זול בארץ</button>
+          <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span></div>
+          <div className="mt-3 flex justify-center gap-2">
+            <button onClick={() => setLocMode('cheapest')} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 הכי זול בארץ</button>
             {locStatus === 'granted' ? (
-              <button onClick={() => setLocMode('nearby')} className={"px-3 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-[11px] font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 סניפים קרובים</button>
+              <button onClick={() => setLocMode('nearby')} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 סניפים קרובים</button>
             ) : (
-              <button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-3 py-2 sm:py-1.5 rounded-lg text-xs sm:text-[11px] font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
+              <button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
             )}
           </div>
           {locMode === 'nearby' && locStatus === 'granted' && (
-            <div className="mt-2 flex justify-center gap-1.5">
+            <div className="mt-2 flex justify-center gap-2">
               {[5, 10, 20, 50].map(r => (
-                <button key={r} onClick={() => setRadius(r)} className={"px-3 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
+                <button key={r} onClick={() => setRadius(r)} className={"px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
               ))}
             </div>
           )}
-          <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
-            <button onClick={() => setShowCats(p => !p)} className={"px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
+          <div className="flex flex-wrap gap-2 mt-3 justify-center">
+            <button onClick={() => setShowCats(p => !p)} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
             {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'}].map(qs => (
-              <button key={qs.q} onClick={() => { setQ(qs.q); search(qs.q); }} className="px-3 py-2 sm:py-1.5 rounded-lg bg-white border border-stone-200 text-xs hover:border-emerald-400 hover:bg-emerald-50 transition">{qs.e} {qs.l}</button>
+              <button key={qs.q} onClick={() => { setQ(qs.q); search(qs.q); }} className="px-4 py-2.5 sm:py-2 rounded-lg bg-white border border-stone-200 text-sm sm:text-xs hover:border-emerald-400 hover:bg-emerald-50 transition">{qs.e} {qs.l}</button>
             ))}
           </div>
-          {showCats && <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-1.5">{CATS.map(c => (<button key={c.label} onClick={() => { setQ(c.q); search(c.q); setShowCats(false); }} className="flex flex-col items-center gap-1 p-3 sm:p-2.5 rounded-xl bg-white border border-stone-100 hover:border-emerald-400 hover:bg-emerald-50 transition"><span className="text-2xl sm:text-xl">{c.emoji}</span><span className="text-xs sm:text-[10px] font-semibold text-stone-500">{c.label}</span></button>))}</div>}
+          {showCats && <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">{CATS.map(c => (<button key={c.label} onClick={() => { setQ(c.q); search(c.q); setShowCats(false); }} className="flex flex-col items-center gap-1.5 p-3.5 sm:p-3 rounded-xl bg-white border border-stone-100 hover:border-emerald-400 hover:bg-emerald-50 transition"><span className="text-2xl">{c.emoji}</span><span className="text-xs sm:text-[11px] font-semibold text-stone-500">{c.label}</span></button>))}</div>}
         </div>
 
         {results.length > 0 && <div className="max-w-2xl mx-auto mt-4 flex items-center gap-2 px-4">
-          <span className="text-stone-300 text-xs sm:text-[11px]">מיון:</span>
-          {([['price','מחיר'],['stores','חנויות'],['name','א-ב']] as const).map(([k,l]) => (<button key={k} onClick={() => setSortBy(k)} className={"px-3 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[11px] font-semibold transition " + (sortBy === k ? "bg-stone-900 text-white" : "bg-white text-stone-400 border border-stone-200")}>{l}</button>))}
-          <span className="text-stone-300 text-xs sm:text-[11px] mr-auto">{results.length} תוצאות</span>
+          <span className="text-stone-300 text-sm sm:text-xs">מיון:</span>
+          {([['price','מחיר'],['stores','חנויות'],['name','א-ב']] as const).map(([k,l]) => (<button key={k} onClick={() => setSortBy(k)} className={"px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition " + (sortBy === k ? "bg-stone-900 text-white" : "bg-white text-stone-400 border border-stone-200")}>{l}</button>))}
+          <span className="text-stone-300 text-sm sm:text-xs mr-auto">{results.length} תוצאות</span>
         </div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4 px-4">
@@ -282,17 +284,17 @@ export default function Home() {
             {loading && <div className="text-center py-16"><div className="inline-block w-7 h-7 border-[3px] border-stone-200 border-t-stone-800 rounded-full animate-spin"></div></div>}
             {sorted.map((p: Product) => (
               <div key={p.id} className={"group rounded-xl transition-all bg-white border " + (sel?.id === p.id ? "border-emerald-500 shadow-md ring-1 ring-emerald-500/20" : "border-stone-100 hover:border-stone-200 hover:shadow-sm")}>
-                <button onClick={() => pick(p)} className="w-full text-right p-3.5 sm:p-3.5">
+                <button onClick={() => pick(p)} className="w-full text-right p-4 sm:p-3.5">
                   <div className="flex items-center gap-3">
-                    <ProductImg barcode={p.barcode} name={p.name} size={56} imageUrl={productImages[p.id] || p.imageUrl} />
-                    <div className="min-w-0 flex-1"><div className="font-bold text-stone-800 text-sm sm:text-sm truncate">{p.name}</div><div className="text-xs sm:text-[11px] text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
+                    <ProductImg barcode={p.barcode} name={p.name} size={60} imageUrl={productImages[p.id] || p.imageUrl} />
+                    <div className="min-w-0 flex-1"><div className="font-bold text-stone-800 text-base sm:text-sm truncate">{p.name}</div><div className="text-sm sm:text-xs text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
                     <div className="text-left shrink-0 flex items-center gap-2 sm:gap-3">
-                      <div>{p.minPrice && <div className="font-mono font-black text-lg sm:text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-[11px] sm:text-[10px] text-stone-300 mt-0.5">{p.storeCount} חנויות</div>}</div>
-                      <span className="text-stone-200 group-hover:text-stone-400 transition">‹</span>
+                      <div>{p.minPrice && <div className="font-mono font-black text-xl sm:text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-xs sm:text-[11px] text-stone-300 mt-0.5">{p.storeCount} חנויות</div>}</div>
+                      <span className="text-stone-200 group-hover:text-stone-400 transition text-lg">‹</span>
                     </div>
                   </div>
                 </button>
-                <div className="px-3.5 pb-3 -mt-1"><button onClick={() => addToList(p)} className="text-xs sm:text-[11px] px-4 sm:px-3 py-1.5 sm:py-1 rounded-lg bg-emerald-50 text-emerald-600 font-semibold hover:bg-emerald-100 transition">+ לרשימה</button></div>
+                <div className="px-4 pb-3 -mt-1"><button onClick={() => addToList(p)} className="text-sm sm:text-xs px-5 sm:px-4 py-2 sm:py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-semibold hover:bg-emerald-100 transition">+ לרשימה</button></div>
               </div>
             ))}
             {!loading && !q.trim() && <div className="text-center py-20"><div className="text-4xl mb-3 opacity-30">🔍</div><div className="text-stone-300 text-sm">התחילו לחפש מוצר</div></div>}
@@ -301,39 +303,39 @@ export default function Home() {
 
           {/* Price panel - desktop: side panel, mobile: bottom sheet */}
           <div className="hidden lg:block">{sel ? (<div className="rounded-xl bg-white border border-stone-100 shadow-sm overflow-hidden sticky top-16">
-            <div className="p-4 border-b border-stone-100">
-              <div className="flex items-start gap-3">
-                <ProductImg barcode={sel.barcode} name={sel.name} size={64} imageUrl={selImage} />
+            <div className="p-5 border-b border-stone-100">
+              <div className="flex items-start gap-4">
+                <ProductImg barcode={sel.barcode} name={sel.name} size={72} imageUrl={selImage} />
                 <div className="min-w-0 flex-1">
-                  <div className="font-black text-lg text-stone-800 leading-snug">{sel.name}</div>
-                  <div className="text-xs text-stone-400 mt-1">{sel.brand}{sel.barcode && ` · ${sel.barcode}`}</div>
-                  {fp.length > 0 && <div className="mt-2 flex items-baseline gap-2"><span className="font-mono font-black text-2xl text-emerald-600">₪{cheap.toFixed(2)}</span>{exp > cheap && <span className="text-xs text-stone-400">— ₪{exp.toFixed(2)} ({((exp - cheap) / cheap * 100).toFixed(0)}% הפרש)</span>}</div>}
+                  <div className="font-black text-xl text-stone-800 leading-snug">{sel.name}</div>
+                  <div className="text-sm text-stone-400 mt-1">{sel.brand}{sel.barcode && ` · ${sel.barcode}`}</div>
+                  {fp.length > 0 && <div className="mt-2 flex items-baseline gap-2"><span className="font-mono font-black text-3xl text-emerald-600">₪{cheap.toFixed(2)}</span>{exp > cheap && <span className="text-sm text-stone-400">— ₪{exp.toFixed(2)} ({((exp - cheap) / cheap * 100).toFixed(0)}% הפרש)</span>}</div>}
                 </div>
               </div>
             </div>
-            {uChains.length > 1 && <div className="px-4 py-2.5 bg-stone-50/80 border-b flex flex-wrap gap-1">
-              <button onClick={() => setChainFilter(null)} className={"px-2 py-0.5 rounded text-[10px] font-semibold transition " + (!chainFilter ? "bg-stone-900 text-white" : "text-stone-400 hover:text-stone-600")}>הכל</button>
-              {uChains.map((ch: string) => (<button key={ch} onClick={() => setChainFilter(chainFilter === ch ? null : ch)} className={"px-2 py-0.5 rounded text-[10px] font-semibold transition flex items-center gap-1 " + (chainFilter === ch ? "text-white" : "text-stone-400 hover:text-stone-600")} style={chainFilter === ch ? { backgroundColor: chainClr(ch) } : {}}>
-                <CLogo name={ch} size={14} />{chainHe(ch)}
+            {uChains.length > 1 && <div className="px-4 py-3 bg-stone-50/80 border-b flex flex-wrap gap-1.5">
+              <button onClick={() => setChainFilter(null)} className={"px-3 py-1 rounded text-xs font-semibold transition " + (!chainFilter ? "bg-stone-900 text-white" : "text-stone-400 hover:text-stone-600")}>הכל</button>
+              {uChains.map((ch: string) => (<button key={ch} onClick={() => setChainFilter(chainFilter === ch ? null : ch)} className={"px-3 py-1 rounded text-xs font-semibold transition flex items-center gap-1.5 " + (chainFilter === ch ? "text-white" : "text-stone-400 hover:text-stone-600")} style={chainFilter === ch ? { backgroundColor: chainClr(ch) } : {}}>
+                <CLogo name={ch} size={18} />{chainHe(ch)}
               </button>))}
             </div>}
             <div className="max-h-[52vh] overflow-y-auto divide-y divide-stone-50">
               {pLoading ? <div className="p-10 text-center"><div className="inline-block w-6 h-6 border-2 border-stone-200 border-t-stone-700 rounded-full animate-spin"></div></div> :
-              !fp.length ? <div className="p-10 text-center text-stone-300 text-xs">אין מחירים</div> :
+              !fp.length ? <div className="p-10 text-center text-stone-300 text-sm">אין מחירים</div> :
               fp.map((p: Price, i: number) => (
-                <div key={i} className={"flex items-center justify-between px-4 py-3 transition hover:bg-stone-50 " + (i === 0 ? "bg-emerald-50/40" : "")}>
+                <div key={i} className={"flex items-center justify-between px-5 py-4 transition hover:bg-stone-50 " + (i === 0 ? "bg-emerald-50/40" : "")}>
                   <div className="flex items-center gap-3">
-                    <CLogo name={p.chainName} size={34} />
+                    <CLogo name={p.chainName} size={40} />
                     <div>
-                      <div className="font-bold text-sm text-stone-700">{chainHe(p.chainName)}</div>
-                      <div className="text-[11px] text-stone-400">
+                      <div className="font-bold text-base text-stone-700">{chainHe(p.chainName)}</div>
+                      <div className="text-sm text-stone-400">
                         {p.storeName}{p.city && p.city !== '0' && !p.city.match(/^\d+$/) && ` · ${p.city}`}
                         {p.dist !== undefined && p.dist !== null && <span className="text-blue-400 mr-1"> · {distToKm(p.dist).toFixed(1)} ק״מ</span>}
                         {cheap > 0 && p.price > cheap && <span className="text-red-400 mr-1"> +{((p.price - cheap) / cheap * 100).toFixed(0)}%</span>}
                       </div>
                     </div>
                   </div>
-                  <div className={"font-mono font-black text-base " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>
+                  <div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>
                 </div>
               ))}
             </div>
