@@ -10,8 +10,8 @@ async function f(p: string, o?: RequestInit): Promise<any> {
 export const api = {
   search: (q: string, mode: string = 'name') =>
     f('/search?q=' + encodeURIComponent(q) + '&mode=' + mode),
-  prices: (id: number) =>
-    f('/product/' + id + '/prices?limit=50'),
+  prices: (id: number, lat?: number, lng?: number) =>
+    f('/product/' + id + '/prices?limit=50' + (lat && lng ? `&lat=${lat}&lng=${lng}` : '')),
   image: (id: number) =>
     f('/product/' + id + '/image'),
   list: (items: { productId: number; qty: number }[]) =>
