@@ -14,6 +14,6 @@ export const api = {
     f('/product/' + id + '/prices?limit=50' + (lat && lng ? `&lat=${lat}&lng=${lng}` : '')),
   image: (id: number) =>
     f('/product/' + id + '/image'),
-  list: (items: { productId: number; qty: number }[]) =>
-    f('/list', { method: 'POST', body: JSON.stringify({ items, topN: 5 }) }),
+  list: (items: { productId: number; qty: number }[], lat?: number, lng?: number, radiusKm?: number) =>
+    f('/list', { method: 'POST', body: JSON.stringify({ items, topN: 5, lat, lng, radiusKm }) }),
 };
