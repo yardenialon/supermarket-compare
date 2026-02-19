@@ -4,12 +4,15 @@ const SERP_KEY = '2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a7
 
 async function fetchProductImage(barcode: string, name: string): Promise<string | null> {
   try {
-    const q = encodeURIComponent(barcode);
-    const url = `https://serpapi.com/search.json?engine=google_images&q=${q}&api_key=${SERP_KEY}&num=1`;
+    const q = encodeURIComponent(barcode + ' ' + name + ' מוצר');
+    const url = `https://serpapi.com/search.json?engine=google_images&q=${q}&api_key=${SERP_KEY}&num=3`;
     const res = await fetch(url);
     const data = await res.json();
     if (data.images_results && data.images_results.length > 0) {
-      return data.images_results[0].original || data.images_results[0].thumbnail;
+      const best = data.images_results.find((r: any) => 
+        r.original && (r.original.includes(barcode) || r.source?.includes('shufersal') || r.source?.includes('rfranco') || r.source?.includes('tnuva') || r.source?.includes('mybundles'))
+      ) || data.images_results[0];
+      return best.original || best.thumbnail;
     }
     return null;
   } catch { return null; }
