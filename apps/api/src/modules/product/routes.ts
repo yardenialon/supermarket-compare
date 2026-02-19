@@ -1,57 +1,85 @@
 import { query } from '../../db.js';
 
-export async function listRoutes(app) {
-  app.post('/list', async (req) => {
-    const { items, topN = 5, lat, lng, radiusKm } = req.body;
-    if (!items || !items.length) return { bestStoreCandidates: [] };
+const SERP_KEY = '2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a778';
 
-    const pids = items.map(i => i.productId);
-    const qtyMap = Object.fromEntries(items.map(i => [i.productId, i.qty]));
+const TRUSTED_DOMAINS = ['shufersal.co.il', 'rfranco.com', 'tnuva.co.il', 'mybundles.co.il', 'mega.co.il', 'victoria.co.il', 'osheread.co.il', 'ramielevy.co.il', 'pricez.co.il', 'ha-pricelist.co.il', 'super-pharm.co.il', 'schnellers.co.il', 'yochananof.co.il'];
 
-    let sql, params;
+function isTrustedImage(url, barcode) {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  if (lower.includes(barcode)) return true;
+  for (const d of TRUSTED_DOMAINS) { if (lower.includes(d)) return true; }
+  return false;
+}
+
+async function fetchProductImage(barcode, name) {
+  try {
+    const q = encodeURIComponent(barcode + ' ' + name + ' מוצר');
+    const url = `https://serpapi.com/search.json?engine=google_images&q=${q}&api_key=${SERP_KEY}&num=10&hl=he&gl=il`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.images_results || !data.images_results.length) return null;
+    const trusted = data.images_results.find((r) => isTrustedImage(r.original, barcode));
+    if (trusted) return trusted.original;
+    const trustedThumb = data.images_results.find((r) => isTrustedImage(r.link, barcode));
+    if (trustedThumb) return trustedThumb.original || trustedThumb.thumbnail;
+    const withBarcode = data.images_results.find((r) => r.link?.includes(barcode));
+    if (withBarcode) return withBarcode.original || withBarcode.thumbnail;
+    return null;
+  } catch { return null; }
+}
+
+export async function productRoutes(app) {
+  app.get('/product/:id/prices', async (req) => {
+    const { id } = req.params;
+    const { lat, lng } = req.query;
+    const prod = await query('SELECT image_url FROM product WHERE id=$1', [id]);
+
+    let prices;
     if (lat && lng) {
-      const radDeg = (radiusKm || 10) / 111;
-      sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo,
-             s.name as store_name, s.city, rc.name as chain_name,
-             ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
-             FROM store_price sp
-             JOIN store s ON s.id = sp.store_id
-             JOIN retailer_chain rc ON rc.id = s.chain_id
-             WHERE sp.product_id = ANY($1) AND s.lat IS NOT NULL
-             AND s.lat BETWEEN $2 - $4 AND $2 + $4
-             AND s.lng BETWEEN $3 - $4 AND $3 + $4`;
-      params = [pids, parseFloat(lat), parseFloat(lng), radDeg];
+      const uLat = parseFloat(lat);
+      const uLng = parseFloat(lng);
+      prices = await query(`
+        SELECT DISTINCT ON (rc.name)
+          sp.price, sp.is_promo as "isPromo",
+          s.id as "storeId", s.name as "storeName", s.city,
+          rc.name as "chainName",
+          ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
+        FROM store_price sp
+        JOIN store s ON s.id = sp.store_id
+        JOIN retailer_chain rc ON rc.id = s.chain_id
+        WHERE sp.product_id = $1 AND s.lat IS NOT NULL
+        ORDER BY rc.name, (s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3) ASC
+      `, [id, uLat, uLng]);
     } else {
-      sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo,
-             s.name as store_name, s.city, rc.name as chain_name
-             FROM store_price sp
-             JOIN store s ON s.id = sp.store_id
-             JOIN retailer_chain rc ON rc.id = s.chain_id
-             WHERE sp.product_id = ANY($1)`;
-      params = [pids];
+      prices = await query(`
+        SELECT DISTINCT ON (rc.name)
+          sp.price, sp.is_promo as "isPromo",
+          s.id as "storeId", s.name as "storeName", s.city,
+          rc.name as "chainName"
+        FROM store_price sp
+        JOIN store s ON s.id = sp.store_id
+        JOIN retailer_chain rc ON rc.id = s.chain_id
+        WHERE sp.product_id = $1
+        ORDER BY rc.name, sp.price ASC
+      `, [id]);
     }
 
-    const { rows } = await query(sql, params);
+    return {
+      productId: +id,
+      imageUrl: prod.rows[0]?.image_url || null,
+      prices: prices.rows.map(r => ({ ...r, price: +r.price })).sort((a, b) => a.price - b.price)
+    };
+  });
 
-    const sm = new Map();
-    for (const r of rows) {
-      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, city: r.city, dist: r.dist, prices: new Map() });
-      const cur = sm.get(r.store_id).prices.get(r.product_id);
-      if (!cur || +r.price < cur) sm.get(r.store_id).prices.set(r.product_id, +r.price);
-    }
-
-    const cands = [];
-    for (const [sid, s] of sm) {
-      let total = 0; const bd = []; let miss = 0;
-      for (const it of items) {
-        const p = s.prices.get(it.productId);
-        if (p !== undefined) { total += p * it.qty; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) }); }
-        else miss++;
-      }
-      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, city: s.city, dist: s.dist, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, breakdown: bd });
-    }
-
-    cands.sort((a, b) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
-    return { bestStoreCandidates: cands.slice(0, topN), totalStoresSearched: sm.size };
+  app.get('/product/:id/image', async (req) => {
+    const { id } = req.params;
+    const prod = await query('SELECT barcode, name, image_url FROM product WHERE id=$1', [id]);
+    if (!prod.rows[0]) return { imageUrl: null };
+    const { barcode, name, image_url } = prod.rows[0];
+    if (image_url) return { imageUrl: image_url };
+    const imgUrl = await fetchProductImage(barcode, name);
+    if (imgUrl) await query('UPDATE product SET image_url=$1 WHERE id=$2', [imgUrl, id]);
+    return { imageUrl: imgUrl };
   });
 }
