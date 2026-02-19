@@ -204,7 +204,7 @@ export default function Home() {
   const removeFromList = (id: number) => setList(prev => prev.filter(i => i.product.id !== id));
   const updateQty = (id: number, qty: number) => { if (qty <= 0) { removeFromList(id); return; } setList(prev => prev.map(i => i.product.id === id ? { ...i, qty } : i)); };
 
-  useEffect(() => { if (!list.length) { setListResults([]); return; } setListLoading(true); api.list(list.map(i => ({ productId: i.product.id, qty: i.qty }))).then((d: any) => setListResults(d.bestStoreCandidates || [])).catch(() => {}).finally(() => setListLoading(false)); }, [list]);
+  useEffect(() => { if (!list.length) { setListResults([]); return; } setListLoading(true); const useLoc = locMode === 'nearby' && userLoc; api.list(list.map(i => ({ productId: i.product.id, qty: i.qty })), useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined, locMode === 'nearby' ? radius : undefined).then((d: any) => setListResults(d.bestStoreCandidates || [])).catch(() => {}).finally(() => setListLoading(false)); }, [list, locMode, radius, userLoc]);
 
   const fp = prices.filter((p: Price) => {
     if (chainFilter && p.chainName !== chainFilter) return false;
