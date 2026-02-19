@@ -2,18 +2,37 @@ import { query } from '../../db.js';
 
 const SERP_KEY = '2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a778';
 
+const TRUSTED_DOMAINS = ['shufersal.co.il', 'rfranco.com', 'tnuva.co.il', 'mybundles.co.il', 'mega.co.il', 'victoria.co.il', 'osheread.co.il', 'ramielevy.co.il', 'pricez.co.il', 'ha-pricelist.co.il', 'super-pharm.co.il', 'schnellers.co.il', 'yochananof.co.il'];
+
+function isTrustedImage(url: string, barcode: string): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  if (lower.includes(barcode)) return true;
+  for (const d of TRUSTED_DOMAINS) { if (lower.includes(d)) return true; }
+  return false;
+}
+
 async function fetchProductImage(barcode: string, name: string): Promise<string | null> {
   try {
-    const q = encodeURIComponent(barcode + ' ' + name + ' מוצר');
-    const url = `https://serpapi.com/search.json?engine=google_images&q=${q}&api_key=${SERP_KEY}&num=3`;
+    const q = encodeURIComponent(barcode + ' ' + name);
+    const url = `https://serpapi.com/search.json?engine=google_images&q=${q}&api_key=${SERP_KEY}&num=10&hl=he&gl=il`;
     const res = await fetch(url);
     const data = await res.json();
-    if (data.images_results && data.images_results.length > 0) {
-      const best = data.images_results.find((r: any) => 
-        r.original && (r.original.includes(barcode) || r.source?.includes('shufersal') || r.source?.includes('rfranco') || r.source?.includes('tnuva') || r.source?.includes('mybundles'))
-      ) || data.images_results[0];
-      return best.original || best.thumbnail;
-    }
+    if (!data.images_results || !data.images_results.length) return null;
+    
+    // Priority 1: trusted domain or URL contains barcode
+    const trusted = data.images_results.find((r: any) => isTrustedImage(r.original, barcode));
+    if (trusted) return trusted.original;
+    
+    // Priority 2: thumbnail from trusted source
+    const trustedThumb = data.images_results.find((r: any) => isTrustedImage(r.link, barcode));
+    if (trustedThumb) return trustedThumb.original || trustedThumb.thumbnail;
+    
+    // Priority 3: first result that contains barcode in page URL
+    const withBarcode = data.images_results.find((r: any) => r.link?.includes(barcode));
+    if (withBarcode) return withBarcode.original || withBarcode.thumbnail;
+    
+    // Skip if no trusted source found - better no image than wrong image
     return null;
   } catch { return null; }
 }
