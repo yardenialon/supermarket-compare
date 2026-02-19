@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { api } from "@/lib/api";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
-interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; }
+interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; dist?: number; }
 interface ListItem { product: Product; qty: number; }
 interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
@@ -148,13 +148,27 @@ export default function Home() {
   const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
+  const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
+  const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
+
+  // Request geolocation on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      setLocStatus('loading');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); },
+        () => { setLocStatus('denied'); },
+        { enableHighAccuracy: false, timeout: 10000 }
+      );
+    }
+  }, []);
 
   const search = useCallback((v: string) => { if (!v.trim()) { setResults([]); return; } setLoading(true); api.search(v).then((d: any) => setResults(d.results || [])).catch(() => {}).finally(() => setLoading(false)); }, []);
   const onInput = (v: string) => { setQ(v); clearTimeout(db.current); db.current = setTimeout(() => search(v), 300); };
   const pick = (p: Product) => {
     setSel(p); setPLoading(true); setChainFilter(null);
     setSelImage(productImages[p.id] || p.imageUrl || null);
-    api.prices(p.id).then((d: any) => {
+    api.prices(p.id, userLoc?.lat, userLoc?.lng).then((d: any) => {
       setPrices(d.prices || []);
       if (d.imageUrl) { setSelImage(d.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d.imageUrl })); }
       else if (!p.imageUrl) {
@@ -203,6 +217,8 @@ export default function Home() {
       {tab === 'search' && (<div>
         <div className="max-w-2xl mx-auto">
           <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-5 py-4 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-xl">🔍</span></div>
+          {locStatus === 'granted' && <div className="mt-2 flex justify-center"><span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-semibold">📍 מחירים לפי הסניף הקרוב אליך</span></div>}
+          {locStatus === 'denied' && <div className="mt-2 flex justify-center"><button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => setLocStatus('denied')); }} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-stone-100 text-stone-400 text-[11px] font-semibold hover:bg-stone-200 transition">📍 הפעל מיקום לסניפים קרובים</button></div>}
           <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
             <button onClick={() => setShowCats(p => !p)} className={"px-3.5 py-1.5 rounded-lg text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
             {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'}].map(qs => (
