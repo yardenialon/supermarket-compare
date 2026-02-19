@@ -96,6 +96,12 @@ function ProductImg({ barcode, name, size = 48, imageUrl, clickable = true }: { 
   );
 }
 
+/* ---- Distance helper ---- */
+function distToKm(dist: number): number {
+  // dist is (dlat^2 + dlng^2), approximate km using 111km per degree
+  return Math.sqrt(dist) * 111;
+}
+
 /* ---- Animated logo marquee ---- */
 const LOGO_LIST = Object.entries(CHAINS).filter(([_, v]) => v.logo).map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
@@ -151,6 +157,12 @@ export default function Home() {
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
   const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
+  const [radius, setRadius] = useState<number>(10);
+
+  // Re-fetch prices when mode changes
+  useEffect(() => {
+    if (sel) pick(sel);
+  }, [locMode]);
 
   // Request geolocation on mount
   useEffect(() => {
@@ -194,7 +206,14 @@ export default function Home() {
 
   useEffect(() => { if (!list.length) { setListResults([]); return; } setListLoading(true); api.list(list.map(i => ({ productId: i.product.id, qty: i.qty }))).then((d: any) => setListResults(d.bestStoreCandidates || [])).catch(() => {}).finally(() => setListLoading(false)); }, [list]);
 
-  const fp = prices.filter((p: Price) => !chainFilter || p.chainName === chainFilter).sort((a, b) => a.price - b.price);
+  const fp = prices.filter((p: Price) => {
+    if (chainFilter && p.chainName !== chainFilter) return false;
+    if (locMode === 'nearby' && p.dist !== undefined && p.dist !== null) {
+      const km = distToKm(p.dist);
+      if (km > radius) return false;
+    }
+    return true;
+  }).sort((a, b) => a.price - b.price);
   const uChains = [...new Set(prices.map((p: Price) => p.chainName))].sort();
   const sorted = [...results].sort((a, b) => sortBy === 'price' ? (a.minPrice || 999) - (b.minPrice || 999) : sortBy === 'stores' ? (b.storeCount || 0) - (a.storeCount || 0) : a.name.localeCompare(b.name, 'he'));
   const cheap = fp.length ? Math.min(...fp.map(p => p.price)) : 0;
@@ -235,6 +254,13 @@ export default function Home() {
               <button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
             )}
           </div>
+          {locMode === 'nearby' && locStatus === 'granted' && (
+            <div className="mt-2 flex justify-center gap-1.5">
+              {[5, 10, 20, 50].map(r => (
+                <button key={r} onClick={() => setRadius(r)} className={"px-2.5 py-1 rounded-lg text-[10px] font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
+              ))}
+            </div>
+          )}
           <div className="flex flex-wrap gap-1.5 mt-3 justify-center">
             <button onClick={() => setShowCats(p => !p)} className={"px-3.5 py-1.5 rounded-lg text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
             {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'}].map(qs => (
@@ -300,7 +326,11 @@ export default function Home() {
                     <CLogo name={p.chainName} size={34} />
                     <div>
                       <div className="font-bold text-sm text-stone-700">{chainHe(p.chainName)}</div>
-                      <div className="text-[11px] text-stone-400">{p.storeName}{p.city && ` · ${p.city}`}{cheap > 0 && p.price > cheap && <span className="text-red-400 mr-1"> +{((p.price - cheap) / cheap * 100).toFixed(0)}%</span>}</div>
+                      <div className="text-[11px] text-stone-400">
+                        {p.storeName}{p.city && p.city !== '0' && p.city !== '9000' && ` · ${p.city}`}
+                        {p.dist !== undefined && p.dist !== null && <span className="text-blue-400 mr-1"> · {distToKm(p.dist).toFixed(1)} ק״מ</span>}
+                        {cheap > 0 && p.price > cheap && <span className="text-red-400 mr-1"> +{((p.price - cheap) / cheap * 100).toFixed(0)}%</span>}
+                      </div>
                     </div>
                   </div>
                   <div className={"font-mono font-black text-base " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>
