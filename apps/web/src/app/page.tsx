@@ -102,37 +102,22 @@ function distToKm(dist: number): number {
   return Math.sqrt(dist) * 111;
 }
 
-/* ---- Animated logo marquee ---- */
+/* ---- Logo scroll strip ---- */
 const LOGO_LIST = Object.entries(CHAINS).filter(([k, v]) => v.logo && k !== 'Mega').map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
-  // Triple the list to ensure seamless loop
-  const items = [...LOGO_LIST, ...LOGO_LIST, ...LOGO_LIST];
   return (
-    <div className="relative w-full overflow-hidden py-4 sm:py-5 -mt-2" style={{ maskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to left, transparent 0%, black 8%, black 92%, transparent 100%)' }}>
-      <div className="marquee-track">
-        {items.map((c, i) => (
-          <div key={i} className="shrink-0 flex flex-col items-center gap-1 sm:gap-1.5 group cursor-default mx-3 sm:mx-4">
-            <div className="rounded-xl sm:rounded-2xl bg-white shadow-md border border-stone-100 p-2 sm:p-2.5 group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-              <img src={c.logo} alt={c.he} className="object-contain w-12 h-12 sm:w-16 sm:h-16" />
+    <div className="w-full overflow-x-auto py-4 -mt-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex gap-3 sm:gap-4 px-4 w-max mx-auto">
+        {LOGO_LIST.map((c) => (
+          <div key={c.key} className="shrink-0 flex flex-col items-center gap-1.5 group cursor-default">
+            <div className="rounded-xl sm:rounded-2xl bg-white shadow-md border border-stone-100 p-2 sm:p-2.5 group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+              <img src={c.logo} alt={c.he} className="object-contain w-11 h-11 sm:w-14 sm:h-14" />
             </div>
-            <span className="text-[10px] text-stone-400 group-hover:text-stone-600 font-semibold transition-colors">{c.he}</span>
+            <span className="text-[10px] sm:text-xs text-stone-400 group-hover:text-stone-600 font-semibold transition-colors">{c.he}</span>
           </div>
         ))}
       </div>
-      <style>{`
-        .marquee-track {
-          display: flex;
-          width: max-content;
-          animation: marquee ${LOGO_LIST.length * 3}s linear infinite;
-        }
-        .marquee-track:hover {
-          animation-play-state: paused;
-        }
-        @keyframes marquee {
-          from { transform: translateX(0); }
-          to { transform: translateX(-33.333%); }
-        }
-      `}</style>
+      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
     </div>
   );
 }
