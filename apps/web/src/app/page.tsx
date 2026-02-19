@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; dist?: number; }
 interface ListItem { product: Product; qty: number; }
-interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
+interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',        color: '#e11d48', logo: '/logos/shufersal.png' },
@@ -403,7 +403,11 @@ export default function Home() {
                             </div>
                             <div>
                               <div className="font-black text-base text-stone-800">{chainHe(store.chainName)}</div>
-                              <div className="text-[11px] text-stone-400 mt-0.5">{store.storeName}{store.city && ` · ${store.city}`}</div>
+                              <div className="text-[11px] text-stone-400 mt-0.5">
+                                {store.storeName}
+                                {store.city && store.city !== '0' && !store.city.match(/^\d+$/) && ` · ${store.city}`}
+                                {store.dist !== undefined && store.dist !== null && <span className="text-blue-400"> · {distToKm(store.dist).toFixed(1)} ק״מ</span>}
+                              </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-semibold">{store.availableCount} נמצאו</span>
                                 {store.missingCount > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-500 font-semibold">{store.missingCount} חסרים</span>}
@@ -475,6 +479,20 @@ export default function Home() {
                             <div className="mt-3 text-center text-xs font-bold text-emerald-600 bg-emerald-50 py-2 rounded-lg">
                               💰 חיסכון של ₪{(listResults[listResults.length - 1].total - store.total).toFixed(2)} לעומת הכי יקר
                             </div>
+                          )}
+
+                          {/* Navigate button */}
+                          {store.storeName && (
+                            <a
+                              href={`https://waze.com/ul?q=${encodeURIComponent(store.storeName + (store.city && !store.city.match(/^\d+$/) ? ' ' + store.city : '') + ' ישראל')}&navigate=yes`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-[#33ccff] hover:bg-[#28b8e8] text-white text-sm font-bold transition shadow-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.54 6.63c-1.41-4.35-6.2-5.95-10.14-4.89C7.5 2.59 5.1 4.59 4.28 7.27c-.83 2.68-.2 5.62 1.6 7.67l5.87 7.07c.3.36.8.36 1.1 0l5.87-7.07c1.19-1.35 1.89-3.09 1.89-4.95 0-1.14-.24-2.25-.69-3.26l.62-.1zM12 13.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 4.5 12 4.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/></svg>
+                              נווט עם Waze
+                            </a>
                           )}
                         </div>
                       )}
