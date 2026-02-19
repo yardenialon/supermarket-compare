@@ -381,7 +381,22 @@ export default function Home() {
 
             {/* Store comparison - 3 cols */}
             <div className="lg:col-span-3">
-              <h3 className="font-black text-lg text-stone-800 mb-3">השוואת סלים</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-black text-lg text-stone-800">השוואת סלים</h3>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => setLocMode('cheapest')} className={"px-2.5 py-1 rounded-lg text-[10px] font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 זול</button>
+                  {locStatus === 'granted' && (
+                    <button onClick={() => setLocMode('nearby')} className={"px-2.5 py-1 rounded-lg text-[10px] font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 קרוב</button>
+                  )}
+                </div>
+              </div>
+              {locMode === 'nearby' && locStatus === 'granted' && (
+                <div className="mb-3 flex gap-1.5">
+                  {[5, 10, 20, 50].map(r => (
+                    <button key={r} onClick={() => setRadius(r)} className={"px-2.5 py-1 rounded-lg text-[10px] font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
+                  ))}
+                </div>
+              )}
               {listLoading ? <div className="text-center py-16"><div className="inline-block w-7 h-7 border-[3px] border-stone-200 border-t-stone-800 rounded-full animate-spin"></div></div> :
               !listResults.length ? <div className="text-center py-16 text-stone-300 text-sm">לא נמצאו חנויות</div> :
               <div className="space-y-3">
