@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { api } from "@/lib/api";
 
-interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; }
+interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; }
 interface ListItem { product: Product; qty: number; }
 interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
@@ -152,13 +152,12 @@ export default function Home() {
   const search = useCallback((v: string) => { if (!v.trim()) { setResults([]); return; } setLoading(true); api.search(v).then((d: any) => setResults(d.results || [])).catch(() => {}).finally(() => setLoading(false)); }, []);
   const onInput = (v: string) => { setQ(v); clearTimeout(db.current); db.current = setTimeout(() => search(v), 300); };
   const pick = (p: Product) => {
-    setSel(p); setPLoading(true); setChainFilter(null); setSelImage(productImages[p.id] || null);
-    // Fast: get prices
+    setSel(p); setPLoading(true); setChainFilter(null);
+    setSelImage(productImages[p.id] || p.imageUrl || null);
     api.prices(p.id).then((d: any) => {
       setPrices(d.prices || []);
       if (d.imageUrl) { setSelImage(d.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: d.imageUrl })); }
-      else {
-        // Background: fetch image from Google (slow, non-blocking)
+      else if (!p.imageUrl) {
         api.image(p.id).then((img: any) => {
           if (img.imageUrl) { setSelImage(img.imageUrl); setProductImages(prev => ({ ...prev, [p.id]: img.imageUrl })); }
         }).catch(() => {});
@@ -227,7 +226,7 @@ export default function Home() {
               <div key={p.id} className={"group rounded-xl transition-all bg-white border " + (sel?.id === p.id ? "border-emerald-500 shadow-md ring-1 ring-emerald-500/20" : "border-stone-100 hover:border-stone-200 hover:shadow-sm")}>
                 <button onClick={() => pick(p)} className="w-full text-right p-3.5">
                   <div className="flex items-center gap-3">
-                    <ProductImg barcode={p.barcode} name={p.name} size={52} imageUrl={productImages[p.id]} />
+                    <ProductImg barcode={p.barcode} name={p.name} size={52} imageUrl={productImages[p.id] || p.imageUrl} />
                     <div className="min-w-0 flex-1"><div className="font-bold text-stone-800 text-sm truncate">{p.name}</div><div className="text-[11px] text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
                     <div className="text-left shrink-0 flex items-center gap-3">
                       <div>{p.minPrice && <div className="font-mono font-black text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-[10px] text-stone-300 mt-0.5">{p.storeCount} חנויות</div>}</div>
@@ -304,7 +303,7 @@ export default function Home() {
                 {list.map(item => (
                   <div key={item.product.id} className="bg-white rounded-xl p-3 border border-stone-100 flex items-center justify-between">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <ProductImg barcode={item.product.barcode} name={item.product.name} size={40} imageUrl={productImages[item.product.id]} />
+                      <ProductImg barcode={item.product.barcode} name={item.product.name} size={40} imageUrl={productImages[item.product.id] || item.product.imageUrl} />
                       <div className="min-w-0"><div className="font-bold text-sm text-stone-800 truncate">{item.product.name}</div><div className="text-[11px] text-stone-400">{item.product.minPrice ? `מ-₪${Number(item.product.minPrice).toFixed(2)}` : ''}{item.product.brand && ` · ${item.product.brand}`}</div></div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 mr-2">
