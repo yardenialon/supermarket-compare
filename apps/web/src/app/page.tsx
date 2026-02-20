@@ -139,6 +139,21 @@ export default function Home() {
   const [showCats, setShowCats] = useState(false); const [chainFilter, setChainFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price' | 'stores' | 'name'>('price'); const db = useRef<any>(null);
   const [list, setList] = useState<ListItem[]>([]); const [listResults, setListResults] = useState<StoreResult[]>([]);
+
+  // Load list from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('savy-list');
+      if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed) && parsed.length > 0) setList(parsed); }
+    } catch {}
+  }, []);
+
+  // Save list to localStorage on change
+  const listLoaded = useRef(false);
+  useEffect(() => {
+    if (!listLoaded.current) { listLoaded.current = true; return; }
+    try { localStorage.setItem('savy-list', JSON.stringify(list)); } catch {}
+  }, [list]);
   const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
