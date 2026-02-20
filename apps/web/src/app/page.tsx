@@ -151,14 +151,14 @@ export default function Home() {
     if (sel) pick(sel);
   }, [locMode]);
 
-  // Request geolocation on mount
+  // Request geolocation on mount - silently, don't auto-switch
   useEffect(() => {
     if (navigator.geolocation) {
       setLocStatus('loading');
       navigator.geolocation.getCurrentPosition(
-        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); setLocMode('nearby'); },
+        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); },
         () => { setLocStatus('denied'); },
-        { enableHighAccuracy: false, timeout: 10000 }
+        { enableHighAccuracy: false, timeout: 5000 }
       );
     }
   }, []);
@@ -235,13 +235,15 @@ export default function Home() {
           <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span></div>
           <div className="mt-3 flex justify-center gap-2">
             <button onClick={() => setLocMode('cheapest')} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 הכי זול בארץ</button>
-            {locStatus === 'granted' ? (
-              <button onClick={() => setLocMode('nearby')} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 סניפים קרובים</button>
+            {locStatus === 'denied' ? (
+              <button onClick={() => { navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
             ) : (
-              <button onClick={() => { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
+              <button onClick={() => { if (locStatus === 'granted') { setLocMode('nearby'); } else { navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); } }} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>
+                {locStatus === 'loading' ? '📍 מאתר...' : '📍 סניפים קרובים'}
+              </button>
             )}
           </div>
-          {locMode === 'nearby' && locStatus === 'granted' && (
+          {locMode === 'nearby' && userLoc && (
             <div className="mt-2 flex justify-center gap-2">
               {[5, 10, 20, 50].map(r => (
                 <button key={r} onClick={() => setRadius(r)} className={"px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
