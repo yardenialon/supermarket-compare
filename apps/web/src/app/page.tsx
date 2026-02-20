@@ -253,10 +253,10 @@ export default function Home() {
           <div className="flex flex-wrap gap-2 mt-3 justify-center">
             <button onClick={() => setShowCats(p => !p)} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
             {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'}].map(qs => (
-              <button key={qs.q} onClick={() => { setQ(qs.q); search(qs.q); }} className="px-4 py-2.5 sm:py-2 rounded-lg bg-white border border-stone-200 text-sm sm:text-xs hover:border-emerald-400 hover:bg-emerald-50 transition">{qs.e} {qs.l}</button>
+              <button key={qs.q} onClick={() => { setQ(qs.q); search(qs.q); setSortBy('stores'); }} className="px-4 py-2.5 sm:py-2 rounded-lg bg-white border border-stone-200 text-sm sm:text-xs hover:border-emerald-400 hover:bg-emerald-50 transition">{qs.e} {qs.l}</button>
             ))}
           </div>
-          {showCats && <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">{CATS.map(c => (<button key={c.label} onClick={() => { setQ(c.q); search(c.q); setShowCats(false); }} className="flex flex-col items-center gap-1.5 p-3.5 sm:p-3 rounded-xl bg-white border border-stone-100 hover:border-emerald-400 hover:bg-emerald-50 transition"><span className="text-2xl">{c.emoji}</span><span className="text-xs sm:text-[11px] font-semibold text-stone-500">{c.label}</span></button>))}</div>}
+          {showCats && <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">{CATS.map(c => (<button key={c.label} onClick={() => { setQ(c.q); search(c.q); setShowCats(false); setSortBy('stores'); }} className="flex flex-col items-center gap-1.5 p-3.5 sm:p-3 rounded-xl bg-white border border-stone-100 hover:border-emerald-400 hover:bg-emerald-50 transition"><span className="text-2xl">{c.emoji}</span><span className="text-xs sm:text-[11px] font-semibold text-stone-500">{c.label}</span></button>))}</div>}
         </div>
 
         {results.length > 0 && <div className="max-w-2xl mx-auto mt-4 flex items-center gap-2 px-4">
