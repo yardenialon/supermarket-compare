@@ -32,14 +32,15 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Maayan 2000':  { he: 'מעיין 2000',    color: '#0ea5e9', logo: '' },
   'Meshmat Yosef':{ he: 'משמת יוסף',     color: '#d97706', logo: '' },
   'Netiv Hased':  { he: 'נתיב החסד',     color: '#be185d', logo: '' },
-  'Salach Dabach':{ he: 'סאלח דבאח',     color: '#b45309', logo: '' },
+  'Salach Dabach':{ he: 'סאלח דבאח',     color: '#b45309', logo: '/logos/salach-dabach.png' },
   'Shefa Barcart Ashem': { he: 'שפע ברכת השם', color: '#4f46e5', logo: '' },
   'Shuk Ahir':    { he: 'שוק אחיר',      color: '#0369a1', logo: '' },
-  'Stop Market':  { he: 'סטופ מרקט',     color: '#dc2626', logo: '' },
+  'Stop Market':  { he: 'סטופ מרקט',     color: '#dc2626', logo: '/logos/stopmarket.png' },
   'Super Sapir':  { he: 'סופר ספיר',     color: '#0284c7', logo: '' },
-  'Super Yuda':   { he: 'סופר יודה',     color: '#15803d', logo: '' },
+  'Super Yuda':   { he: 'סופר יודה',     color: '#15803d', logo: '/logos/super-yuda.png' },
   'Wolt':         { he: 'וולט',          color: '#00c2e8', logo: '' },
   'Super Dosh':   { he: 'סופר דוש',      color: '#7e22ce', logo: '' },
+  'Carrefour':    { he: 'קרפור',         color: '#004e9f', logo: '/logos/Carrefour.png' },
 };
 const chainHe = (n: string) => CHAINS[n]?.he || n;
 const chainClr = (n: string) => CHAINS[n]?.color || '#6b7280';
