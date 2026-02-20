@@ -260,10 +260,36 @@ export default function Home() {
             )}
           </div>
           {locMode === 'nearby' && userLoc && (
-            <div className="mt-2 flex justify-center gap-2">
-              {[5, 10, 20, 50].map(r => (
-                <button key={r} onClick={() => setRadius(r)} className={"px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
-              ))}
+            <div className="mt-3 mx-auto max-w-sm">
+              <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-stone-400">📍 רדיוס חיפוש</span>
+                  <span className="font-mono font-black text-lg text-emerald-600">{radius} <span className="text-xs font-semibold text-stone-400">ק״מ</span></span>
+                </div>
+                <div className="relative">
+                  <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-l from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{ width: `${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}%` }} />
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={6}
+                    value={[1,3,5,10,15,20,50].indexOf(radius)}
+                    onChange={e => setRadius([1,3,5,10,15,20,50][parseInt(e.target.value)])}
+                    className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                    style={{ height: '36px', top: '-14px' }}
+                  />
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none"
+                    style={{ left: `calc(${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}% - 10px)` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-2 px-0.5">
+                  {[1,3,5,10,15,20,50].map((v, i) => (
+                    <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-300 hover:text-stone-400")}>{v}</button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           <div className="flex flex-wrap gap-2 mt-3 justify-center">
@@ -441,10 +467,25 @@ export default function Home() {
                 </div>
               </div>
               {locMode === 'nearby' && locStatus === 'granted' && (
-                <div className="mb-3 flex gap-2">
-                  {[5, 10, 20, 50].map(r => (
-                    <button key={r} onClick={() => setRadius(r)} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (radius === r ? "border-stone-800 bg-stone-800 text-white" : "border-stone-200 bg-white text-stone-400 hover:border-stone-300")}>{r} ק״מ</button>
-                  ))}
+                <div className="mb-3">
+                  <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-semibold text-stone-400">📍 רדיוס חיפוש</span>
+                      <span className="font-mono font-black text-lg text-emerald-600">{radius} <span className="text-xs font-semibold text-stone-400">ק״מ</span></span>
+                    </div>
+                    <div className="relative">
+                      <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-l from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{ width: `${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}%` }} />
+                      </div>
+                      <input type="range" min={0} max={6} value={[1,3,5,10,15,20,50].indexOf(radius)} onChange={e => setRadius([1,3,5,10,15,20,50][parseInt(e.target.value)])} className="absolute inset-0 w-full opacity-0 cursor-pointer" style={{ height: '36px', top: '-14px' }} />
+                      <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none" style={{ left: `calc(${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}% - 10px)` }} />
+                    </div>
+                    <div className="flex justify-between mt-2 px-0.5">
+                      {[1,3,5,10,15,20,50].map(v => (
+                        <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-300 hover:text-stone-400")}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
               {listLoading ? <div className="text-center py-16"><div className="inline-block w-7 h-7 border-[3px] border-stone-200 border-t-stone-800 rounded-full animate-spin"></div></div> :
