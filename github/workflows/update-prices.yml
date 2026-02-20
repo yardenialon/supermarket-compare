@@ -1,1 +1,271 @@
+#!/usr/bin/env python3
+"""
+Daily price update script.
+Pulls latest data from Kaggle and updates changed prices in the DB.
+Runs via GitHub Actions cron.
+"""
+import os
+import sys
+import csv
+import zipfile
+import psycopg2
+from pathlib import Path
 
+DB_URL = os.environ.get('DATABASE_URL')
+if not DB_URL:
+    print("ERROR: DATABASE_URL not set")
+    sys.exit(1)
+
+KAGGLE_DATASET = "erlichsefi/israeli-supermarkets-2024"
+EXTRACT_DIR = Path("kaggle_data")
+
+# Chain name mapping: filename prefix -> DB chain name
+CHAIN_MAP = {
+    'shufersal': 'Shufersal',
+    'rami_levy': 'Rami Levy',
+    'yochananof': 'Yochananof',
+    'victory': 'Victory',
+    'osher_ad': 'Osher Ad',
+    'mega': 'Mega',
+    'tiv_taam': 'Tiv Taam',
+    'hazi_hinam': 'Hazi Hinam',
+    'keshet_taamim': 'Keshet Taamim',
+    'freshmarket': 'Freshmarket',
+    'bareket': 'Bareket',
+    'city_market': 'City Market',
+    'dor_alon': 'Dor Alon',
+    'good_pharm': 'Good Pharm',
+    'het_cohen': 'Het Cohen',
+    'king_store': 'King Store',
+    'maayan_2000': 'Maayan 2000',
+    'mahsani_ashuk': 'Mahsani Ashuk',
+    'meshmat_yosef': 'Meshmat Yosef',
+    'netiv_hased': 'Netiv Hased',
+    'polizer': 'Polizer',
+    'salach_dabach': 'Salach Dabach',
+    'shefa_barcart_ashem': 'Shefa Barcart Ashem',
+    'shuk_ahir': 'Shuk Ahir',
+    'stop_market': 'Stop Market',
+    'super_sapir': 'Super Sapir',
+    'super_yuda': 'Super Yuda',
+    'super_dosh': 'Super Dosh',
+    'wolt': 'Wolt',
+    'zol_vebegadol': 'Zol Vebegadol',
+    'yayno_bitan_and_carrefour': 'Carrefour',
+    'yellow': None,  # Skip, merged into Carrefour
+}
+
+
+def download_dataset():
+    """Download and extract Kaggle dataset."""
+    print("Downloading dataset from Kaggle...")
+    os.system(f"kaggle datasets download -d {KAGGLE_DATASET} -p kaggle_data --unzip")
+    print("Download complete.")
+
+
+def get_chain_id(cur, chain_name):
+    """Get chain ID from DB."""
+    cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
+    row = cur.fetchone()
+    return row[0] if row else None
+
+
+def get_store_map(cur, chain_id):
+    """Get store_code -> store_id mapping."""
+    cur.execute("SELECT id, store_code FROM store WHERE chain_id=%s", (chain_id,))
+    return {code: sid for sid, code in cur.fetchall()}
+
+
+def process_price_file(cur, filepath, chain_name):
+    """Process a price_file CSV (incremental updates only)."""
+    chain_id = get_chain_id(cur, chain_name)
+    if not chain_id:
+        print(f"  Chain '{chain_name}' not found in DB, skipping")
+        return 0
+
+    store_map = get_store_map(cur, chain_id)
+    if not store_map:
+        print(f"  No stores for '{chain_name}', skipping")
+        return 0
+
+    updated = 0
+    last_store = None
+
+    with open(filepath, encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sid = row.get('storeid', '').strip()
+            if sid:
+                last_store = sid
+            else:
+                sid = last_store
+
+            barcode = row.get('itemcode', '').strip()
+            price_str = row.get('itemprice', '').strip()
+            name = row.get('itemname', '').strip()
+
+            if not sid or not barcode or not price_str or not name:
+                continue
+
+            store_id = store_map.get(sid)
+            if not store_id:
+                # Try with leading zeros stripped
+                store_id = store_map.get(str(int(sid))) if sid.isdigit() else None
+            if not store_id:
+                continue
+
+            try:
+                price = float(price_str)
+            except ValueError:
+                continue
+
+            if price <= 0:
+                continue
+
+            # Upsert product
+            cur.execute("SELECT id FROM product WHERE barcode=%s", (barcode,))
+            prod = cur.fetchone()
+            if not prod:
+                cur.execute(
+                    "INSERT INTO product (barcode, name) VALUES (%s, %s) RETURNING id",
+                    (barcode, name)
+                )
+                prod = cur.fetchone()
+
+            # Upsert price
+            cur.execute("""
+                INSERT INTO store_price (product_id, store_id, price)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (product_id, store_id)
+                DO UPDATE SET price = EXCLUDED.price, updated_at = NOW()
+            """, (prod[0], store_id, price))
+            updated += 1
+
+    return updated
+
+
+def process_stores_file(cur, filepath, chain_name):
+    """Process a store_file CSV to add new stores."""
+    chain_id = get_chain_id(cur, chain_name)
+    if not chain_id:
+        return 0
+
+    existing = set()
+    cur.execute("SELECT store_code FROM store WHERE chain_id=%s", (chain_id,))
+    for row in cur.fetchall():
+        existing.add(row[0])
+
+    added = 0
+    with open(filepath, encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sid = row.get('storeid', '').strip()
+            name = row.get('storename', '').strip()
+            city = row.get('city', '').strip()
+            addr = row.get('address', '').strip()
+
+            if not sid or not name:
+                continue
+            if sid in existing:
+                continue
+
+            cur.execute(
+                "INSERT INTO store (chain_id, store_code, name, city, address) VALUES (%s,%s,%s,%s,%s)",
+                (chain_id, sid, name, city, addr)
+            )
+            existing.add(sid)
+            added += 1
+
+    return added
+
+
+def main():
+    # Step 1: Download
+    download_dataset()
+
+    # Step 2: Connect to DB
+    print("Connecting to database...")
+    conn = psycopg2.connect(DB_URL, connect_timeout=30)
+    cur = conn.cursor()
+
+    # Ensure updated_at column exists
+    try:
+        cur.execute("ALTER TABLE store_price ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+
+    # Step 3: Find and process files
+    data_dir = EXTRACT_DIR
+    if not data_dir.exists():
+        print(f"ERROR: Data directory {data_dir} not found")
+        sys.exit(1)
+
+    # Process store files first (to add new stores)
+    print("\n=== Processing store files ===")
+    for f in sorted(data_dir.glob("store_file_*.csv")):
+        chain_key = f.stem.replace('store_file_', '')
+        chain_name = CHAIN_MAP.get(chain_key)
+        if not chain_name:
+            continue
+        added = process_stores_file(cur, f, chain_name)
+        if added > 0:
+            print(f"  {chain_name}: +{added} new stores")
+            conn.commit()
+
+    # Process price files (use price_file for incremental, not price_full_file)
+    print("\n=== Processing price files ===")
+    total_updated = 0
+
+    for f in sorted(data_dir.glob("price_file_*.csv")):
+        chain_key = f.stem.replace('price_file_', '')
+        chain_name = CHAIN_MAP.get(chain_key)
+        if not chain_name:
+            continue
+
+        print(f"  Processing {chain_name}...", end=' ', flush=True)
+        updated = process_price_file(cur, f, chain_name)
+        conn.commit()
+        print(f"{updated} prices updated")
+        total_updated += updated
+
+    # If no price_file found, fall back to price_full_file
+    if total_updated == 0:
+        print("\n  No price_file updates found, trying price_full_file...")
+        for f in sorted(data_dir.glob("price_full_file_*.csv")):
+            chain_key = f.stem.replace('price_full_file_', '')
+            chain_name = CHAIN_MAP.get(chain_key)
+            if not chain_name:
+                continue
+
+            print(f"  Processing {chain_name} (full)...", end=' ', flush=True)
+            updated = process_price_file(cur, f, chain_name)
+            conn.commit()
+            print(f"{updated} prices updated")
+            total_updated += updated
+
+    # Update product search index (min price + store count)
+    print("\n=== Updating product stats ===")
+    cur.execute("""
+        UPDATE product p SET
+            min_price = sub.min_price,
+            store_count = sub.store_count
+        FROM (
+            SELECT product_id, MIN(price) as min_price, COUNT(DISTINCT store_id) as store_count
+            FROM store_price
+            GROUP BY product_id
+        ) sub
+        WHERE p.id = sub.product_id
+        AND (p.min_price IS DISTINCT FROM sub.min_price OR p.store_count IS DISTINCT FROM sub.store_count)
+    """)
+    stats_updated = cur.rowcount
+    conn.commit()
+    print(f"  Updated stats for {stats_updated} products")
+
+    print(f"\n=== DONE: {total_updated} total price updates ===")
+
+    conn.close()
+
+
+if __name__ == '__main__':
+    main()
