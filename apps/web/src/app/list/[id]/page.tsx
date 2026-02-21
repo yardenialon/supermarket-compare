@@ -66,7 +66,7 @@ export default function SharedList() {
       </div>
       <div className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-100 px-4 py-3">
         <div className="max-w-lg mx-auto flex gap-3">
-          <button onClick={saveChanges} disabled={saving} className="flex-1 py-3 rounded-xl bg-stone-900 text-white font-bold text-sm disabled:opacity-50">{saving ? 'שומר...' : '💾 שמור שינויים'}</button>
+          <button onClick={importToApp} className="flex-1 py-3 rounded-xl bg-stone-900 text-white font-bold text-sm disabled:opacity-50">➕ הוסף מוצרים</button>
           <button onClick={importToApp} className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm">🔍 השווה מחירים</button>
         </div>
       </div>

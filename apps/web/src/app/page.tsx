@@ -247,6 +247,7 @@ export default function Home() {
 
       {/* Hero */}
       <section className="text-center pt-6 sm:pt-8 pb-1 px-4">
+        <div className="flex justify-center mb-2"><img src="/icons/savy-logo.png" alt="Savy" className="h-10 sm:h-12 object-contain" /></div>
         <h2 className="font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-stone-800 leading-tight">כמה אתם <span className="bg-gradient-to-l from-emerald-600 to-teal-500 bg-clip-text text-transparent">באמת</span> משלמים?</h2>
         <p className="text-stone-400 text-sm sm:text-base mt-2 font-medium">משווים מחירים מכל רשתות השיווק בישראל</p>
       </section>
