@@ -81,7 +81,11 @@ def process_prices_batch(cur, conn, filepath, chain_name):
     total = len(rows)
     for i in range(0, total, BATCH):
         batch = rows[i:i+BATCH]
-        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
+        seen = {}
+        for r in batch:
+            seen[(r[0], r[2])] = r
+        deduped = list(seen.values())
+        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in deduped)
         cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
         cur.execute("""INSERT INTO product (barcode, name)
             SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
