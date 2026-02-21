@@ -112,7 +112,7 @@ function LogoMarquee() {
         {LOGO_LIST.map((c) => (
           <div key={c.key} className="shrink-0 flex flex-col items-center gap-1.5 group cursor-default">
             <div className="rounded-xl sm:rounded-2xl bg-white shadow-md border border-stone-100 p-2 sm:p-2.5 group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
-              <img src={c.logo} alt={c.he} className="object-contain w-11 h-11 sm:w-14 sm:h-14" />
+              <img src={c.logo} alt={c.he} className="object-contain w-20 h-20 sm:w-24 sm:h-24" />
             </div>
             <span className="text-[10px] sm:text-xs text-stone-400 group-hover:text-stone-600 font-semibold transition-colors">{c.he}</span>
           </div>
