@@ -81,6 +81,7 @@ def process_prices_batch(cur, conn, filepath, chain_name):
     total = len(rows)
     for i in range(0, total, BATCH):
         batch = rows[i:i+BATCH]
+       # Deduplicate: keep last price per (barcode, store_id)
         seen = {}
         for r in batch:
             seen[(r[0], r[2])] = r
