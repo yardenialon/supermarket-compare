@@ -54,3 +54,35 @@ export async function listRoutes(app) {
     return { bestStoreCandidates: cands.slice(0, topN), totalStoresSearched: sm.size };
   });
 }
+
+// --- Shared Lists ---
+import crypto from 'crypto';
+
+export async function sharedListRoutes(app: any) {
+  // Create shared list
+  app.post('/shared-list', async (req: any) => {
+    const { items } = req.body;
+    if (!items || !Array.isArray(items)) return { error: 'items required' };
+    const id = crypto.randomBytes(4).toString('hex');
+    await query('INSERT INTO shared_list (id, items) VALUES ($1, $2)', [id, JSON.stringify(items)]);
+    return { id, items };
+  });
+
+  // Get shared list
+  app.get('/shared-list/:id', async (req: any) => {
+    const { id } = req.params;
+    const result = await query('SELECT items, created_at, updated_at FROM shared_list WHERE id=$1', [id]);
+    if (!result.rows[0]) return { error: 'Not found' };
+    return { id, items: result.rows[0].items, createdAt: result.rows[0].created_at, updatedAt: result.rows[0].updated_at };
+  });
+
+  // Update shared list
+  app.put('/shared-list/:id', async (req: any) => {
+    const { id } = req.params;
+    const { items } = req.body;
+    if (!items || !Array.isArray(items)) return { error: 'items required' };
+    const result = await query('UPDATE shared_list SET items=$1, updated_at=NOW() WHERE id=$2 RETURNING items, updated_at', [JSON.stringify(items), id]);
+    if (!result.rows[0]) return { error: 'Not found' };
+    return { id, items: result.rows[0].items, updatedAt: result.rows[0].updated_at };
+  });
+}

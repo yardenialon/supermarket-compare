@@ -154,7 +154,7 @@ export default function Home() {
     if (!listLoaded.current) { listLoaded.current = true; return; }
     try { localStorage.setItem('savy-list', JSON.stringify(list)); } catch {}
   }, [list]);
-  const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null);
+  const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null); const [sharing, setSharing] = useState(false);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
@@ -206,6 +206,24 @@ export default function Home() {
   const addToList = (p: Product) => { setList(prev => { const ex = prev.find(i => i.product.id === p.id); if (ex) return prev.map(i => i.product.id === p.id ? { ...i, qty: i.qty + 1 } : i); return [...prev, { product: p, qty: 1 }]; }); setToast(p.name); setTimeout(() => setToast(""), 2000); };
   const removeFromList = (id: number) => setList(prev => prev.filter(i => i.product.id !== id));
   const updateQty = (id: number, qty: number) => { if (qty <= 0) { removeFromList(id); return; } setList(prev => prev.map(i => i.product.id === id ? { ...i, qty } : i)); };
+
+  const shareList = async () => {
+    if (!list.length) return;
+    setSharing(true);
+    try {
+      const API = process.env.NEXT_PUBLIC_API || 'https://supermarket-compare-production.up.railway.app';
+      const res = await fetch(`${API}/api/shared-list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: list.map(i => ({ productId: i.product.id, name: i.product.name, barcode: i.product.barcode, brand: i.product.brand, qty: i.qty, minPrice: i.product.minPrice })) }) });
+      const data = await res.json();
+      if (data.id) {
+        const url = `${window.location.origin}/list/${data.id}`;
+        const cheapest = listResults[0];
+        const chainHe = (name: string) => CHAINS[name]?.he || name;
+        const text = `🛒 הרשימה שלנו ב-Savy\n${list.length} מוצרים${cheapest ? ` · הכי זול: ₪${cheapest.total.toFixed(0)} ב${chainHe(cheapest.chainName)}` : ''}\n👉 ${url}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      }
+    } catch { setToast('שגיאה בשיתוף'); setTimeout(() => setToast(''), 2000); }
+    setSharing(false);
+  };
 
   useEffect(() => { if (!list.length) { setListResults([]); return; } setListLoading(true); const useLoc = locMode === 'nearby' && userLoc; api.list(list.map(i => ({ productId: i.product.id, qty: i.qty })), useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined, locMode === 'nearby' ? radius : undefined).then((d: any) => setListResults(d.bestStoreCandidates || [])).catch(() => {}).finally(() => setListLoading(false)); }, [list, locMode, radius, userLoc]);
 
@@ -433,6 +451,7 @@ export default function Home() {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-black text-lg text-stone-800">הרשימה שלי <span className="text-stone-300 font-medium text-sm">({list.length})</span></h3>
                 <div className="flex gap-2">
+                  <button onClick={shareList} disabled={sharing} className="text-xs px-4 py-2 rounded-lg bg-green-600 text-white font-bold hover:bg-green-500 transition disabled:opacity-50">{sharing ? "..." : "📤 שתף"}</button>
                   <button onClick={() => setTab('search')} className="text-xs px-4 py-2 rounded-lg bg-stone-900 text-white font-bold hover:bg-stone-800 transition">+ הוסף</button>
                   <button onClick={() => { setList([]); setListResults([]); }} className="text-xs px-4 py-2 rounded-lg bg-white border border-stone-200 text-stone-400 font-bold hover:text-red-500 hover:border-red-200 transition">נקה</button>
                 </div>
