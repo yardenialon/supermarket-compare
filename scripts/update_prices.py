@@ -74,23 +74,30 @@ def process_prices_batch(cur, conn, filepath, chain_name):
     if skipped_store > 0:
         print(f"    Skipped {skipped_store} (unknown store), {skipped_barcode} (short barcode)", flush=True)
     if not rows: return 0
+    # Global dedup: keep last price per (barcode, store_id)
+    seen = {}
+    for r in rows:
+        seen[(r[0], r[2])] = r
+    rows = list(seen.values())
 
     cur.execute("CREATE TEMP TABLE IF NOT EXISTS tmp_prices (barcode TEXT, name TEXT, store_id INTEGER, price NUMERIC)")
     cur.execute("DELETE FROM tmp_prices")
     BATCH = 10000
     total = len(rows)
     for i in range(0, total, BATCH):
-        batch = rows[i:i+BATCH]
-       # Deduplicate: keep last price per (barcode, store_id)
-        seen = {}
-        for r in batch:
-            seen[(r[0], r[2])] = r
-        deduped = list(seen.values())
-        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in deduped)
+        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
         cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
         cur.execute("""INSERT INTO product (barcode, name)
             SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
-            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)""")
+            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
+            ON CONFLICT (barcode) DO NOTHING""")
+        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
+        cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
+        cur.execute("""INSERT INTO product (barcode, name)
+            SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
+            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
+            ON CONFLICT (barcode) DO NOTHING""")
+        batch = rows[i:i+BATCH]
         cur.execute("""INSERT INTO store_price (product_id, store_id, price)
             SELECT p.id, t.store_id, t.price FROM tmp_prices t JOIN product p ON p.barcode = t.barcode
             ON CONFLICT (product_id, store_id) DO UPDATE SET price = EXCLUDED.price, updated_at = NOW()""")
