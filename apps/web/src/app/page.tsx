@@ -268,15 +268,11 @@ export default function Home() {
       {tab === 'search' && (<div>
         <div className="max-w-2xl mx-auto px-4">
           <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span></div>
-          <div className="mt-3 flex justify-center gap-2">
-            <button onClick={() => setLocMode('cheapest')} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 הכי זול בארץ</button>
-            {locStatus === 'denied' ? (
-              <button onClick={() => { navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); }} className="px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border border-stone-200 bg-white text-stone-400 hover:border-stone-300">📍 הפעל מיקום</button>
-            ) : (
-              <button onClick={() => { if (locStatus === 'granted') { setLocMode('nearby'); } else { navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied')); } }} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>
-                {locStatus === 'loading' ? '📍 מאתר...' : '📍 סניפים קרובים'}
-              </button>
-            )}
+          <div className="mt-4 flex justify-center gap-2">
+            <button onClick={() => setLocMode('cheapest')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'cheapest' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>💰 הכי זול בארץ</button>
+            <button onClick={() => { if (locStatus === 'granted') { setLocMode('nearby'); } else { setLocStatus('loading'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); setLocMode('nearby'); }, () => setLocStatus('denied'), { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }); } }} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'nearby' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : locStatus === 'loading' ? "bg-amber-50 border border-amber-300 text-amber-600 animate-pulse" : "bg-white border-2 border-emerald-400 text-emerald-600 hover:bg-emerald-50 shadow-sm")}>
+              {locStatus === 'loading' ? '📍 מאתר...' : '📍 הכי זול ליד'}
+            </button>
           </div>
           {locMode === 'nearby' && userLoc && (
             <div className="mt-3 mx-auto max-w-sm">
