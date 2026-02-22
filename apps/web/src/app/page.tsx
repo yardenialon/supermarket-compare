@@ -322,7 +322,7 @@ export default function Home() {
                     <a href="mailto:info@savy.co.il" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-stone-50 hover:bg-stone-100 transition-colors">
                       <span className="text-xl">📧</span><span className="font-bold text-stone-700">info@savy.co.il</span>
                     </a>
-                    <a href="https://wa.me/972500000000" target="_blank" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors">
+                    <a href="https://wa.me/972555635578" target="_blank" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors">
                       <span className="text-xl">💬</span><span className="font-bold text-[#25D366]">WhatsApp</span>
                     </a>
                     <p className="text-xs text-stone-400 mt-4">Savy — השוואת מחירי סופרמרקט בישראל 🇮🇱</p>
