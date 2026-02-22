@@ -85,20 +85,13 @@ def process_prices_batch(cur, conn, filepath, chain_name):
     BATCH = 10000
     total = len(rows)
     for i in range(0, total, BATCH):
-        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
-        cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
-        cur.execute("""INSERT INTO product (barcode, name)
-            SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
-            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
-            ON CONFLICT (barcode) DO NOTHING""")
-        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
-        cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
-        cur.execute("""INSERT INTO product (barcode, name)
-            SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
-            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
-            ON CONFLICT (barcode) DO NOTHING""")
         batch = rows[i:i+BATCH]
-        cur.execute("""INSERT INTO store_price (product_id, store_id, price)
+        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
+        cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
+        cur.execute("""INSERT INTO product (barcode, name)
+            SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
+            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
+            ON CONFLICT (barcode) DO NOTHING""")
             SELECT p.id, t.store_id, t.price FROM tmp_prices t JOIN product p ON p.barcode = t.barcode
             ON CONFLICT (product_id, store_id) DO UPDATE SET price = EXCLUDED.price, updated_at = NOW()""")
         cur.execute("DELETE FROM tmp_prices")
