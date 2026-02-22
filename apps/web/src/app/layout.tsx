@@ -4,7 +4,22 @@ import Script from 'next/script';
 
 export const metadata = {
   title: 'Savy — השוואת מחירי סופרמרקט',
-  description: 'משווים מחירים מכל רשתות השיווק בישראל. חוסכים בקליק.',
+  description: 'משווים מחירים מכל רשתות השיווק בישראל. 17+ רשתות, 6.5 מיליון מחירים. חוסכים בקליק.',
+  openGraph: {
+    title: 'Savy — השוואת מחירי סופרמרקט',
+    description: 'משווים מחירים מכל רשתות השיווק בישראל. 17+ רשתות, 6.5 מיליון מחירים. חוסכים בקליק.',
+    url: 'https://savy.co.il',
+    siteName: 'Savy',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Savy - השוואת מחירי סופרמרקט' }],
+    locale: 'he_IL',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Savy — השוואת מחירי סופרמרקט',
+    description: 'משווים מחירים מכל רשתות השיווק בישראל. חוסכים בקליק.',
+    images: ['/og-image.png'],
+  },
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
