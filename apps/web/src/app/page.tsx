@@ -287,24 +287,24 @@ export default function Home() {
                 </div>
                 <div className="relative">
                   <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-l from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{ width: `${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}%` }} />
+                    <div className="h-full bg-gradient-to-l from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{ width: `${([1,3,5,10,15,20,30,50].indexOf(radius) / 7) * 100}%` }} />
                   </div>
                   <input
                     type="range"
                     min={0}
-                    max={6}
-                    value={[1,3,5,10,15,20,50].indexOf(radius)}
-                    onChange={e => setRadius([1,3,5,10,15,20,50][parseInt(e.target.value)])}
+                    max={7}
+                    value={[1,3,5,10,15,20,30,50].indexOf(radius)}
+                    onChange={e => setRadius([1,3,5,10,15,20,30,50][parseInt(e.target.value)])}
                     className="absolute inset-0 w-full opacity-0 cursor-pointer"
                     style={{ height: '36px', top: '-14px' }}
                   />
                   <div
                     className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none"
-                    style={{ left: `calc(${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}% - 10px)` }}
+                    style={{ left: `calc(${([1,3,5,10,15,20,30,50].indexOf(radius) / 7) * 100}% - 10px)` }}
                   />
                 </div>
                 <div className="flex justify-between mt-2 px-0.5">
-                  {[1,3,5,10,15,20,50].map((v, i) => (
+                  {[1,3,5,10,15,20,30,50].map((v, i) => (
                     <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-300 hover:text-stone-400")}>{v}</button>
                   ))}
                 </div>
@@ -495,10 +495,10 @@ export default function Home() {
                     </div>
                     <div className="relative">
                       <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-l from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{ width: `${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}%` }} />
+                        <div className="h-full bg-gradient-to-l from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{ width: `${([1,3,5,10,15,20,30,50].indexOf(radius) / 7) * 100}%` }} />
                       </div>
-                      <input type="range" min={0} max={6} value={[1,3,5,10,15,20,50].indexOf(radius)} onChange={e => setRadius([1,3,5,10,15,20,50][parseInt(e.target.value)])} className="absolute inset-0 w-full opacity-0 cursor-pointer" style={{ height: '36px', top: '-14px' }} />
-                      <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none" style={{ left: `calc(${([1,3,5,10,15,20,50].indexOf(radius) / 6) * 100}% - 10px)` }} />
+                      <input type="range" min={0} max={7} value={[1,3,5,10,15,20,30,50].indexOf(radius)} onChange={e => setRadius([1,3,5,10,15,20,30,50][parseInt(e.target.value)])} className="absolute inset-0 w-full opacity-0 cursor-pointer" style={{ height: '36px', top: '-14px' }} />
+                      <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none" style={{ left: `calc(${([1,3,5,10,15,20,30,50].indexOf(radius) / 7) * 100}% - 10px)` }} />
                     </div>
                     <div className="flex justify-between mt-2 px-0.5">
                       {[1,3,5,10,15,20,50].map(v => (
