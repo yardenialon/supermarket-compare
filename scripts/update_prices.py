@@ -92,6 +92,7 @@ def process_prices_batch(cur, conn, filepath, chain_name):
             SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
             WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
             ON CONFLICT (barcode) DO NOTHING""")
+        cur.execute("""INSERT INTO store_price (product_id, store_id, price)
             SELECT p.id, t.store_id, t.price FROM tmp_prices t JOIN product p ON p.barcode = t.barcode
             ON CONFLICT (product_id, store_id) DO UPDATE SET price = EXCLUDED.price, updated_at = NOW()""")
         cur.execute("DELETE FROM tmp_prices")
