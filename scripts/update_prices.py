@@ -80,7 +80,6 @@ def process_prices_batch(cur, conn, filepath, chain_name):
         seen[(r[0], r[2])] = r
     rows = list(seen.values())
 
-    cur.execute("CREATE TEMP TABLE IF NOT EXISTS tmp_prices (barcode TEXT, name TEXT, store_id INTEGER, price NUMERIC)")
     cur.execute("DELETE FROM tmp_prices")
     BATCH = 10000
     total = len(rows)
@@ -150,6 +149,8 @@ def main():
         cur.execute("ALTER TABLE store_price ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()")
         conn.commit()
     except: conn.rollback()
+    cur.execute("CREATE TEMP TABLE IF NOT EXISTS tmp_prices (barcode TEXT, name TEXT, store_id INTEGER, price NUMERIC) ON COMMIT PRESERVE ROWS")
+    conn.commit()
 
     # Stores
     print("\n=== Stores ===", flush=True)
