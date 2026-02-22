@@ -154,7 +154,7 @@ export default function Home() {
     if (!listLoaded.current) { listLoaded.current = true; return; }
     try { localStorage.setItem('savy-list', JSON.stringify(list)); } catch {}
   }, [list]);
-  const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null); const [sharing, setSharing] = useState(false);
+  const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null); const [sharing, setSharing] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [menuPage, setMenuPage] = useState<"about"|"privacy"|"contact"|null>(null);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
