@@ -131,8 +131,8 @@ export default function OnlinePage() {
         <div className="flex flex-wrap gap-2 justify-center">
           {['Shufersal','Rami Levy','Hazi Hinam','Victory','Mahsani Ashuk','Dor Alon','Carrefour','Shuk Ahir','Wolt'].map(chain => (
             <div key={chain} className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 shadow-sm border border-stone-100 text-xs font-medium text-stone-700">
-              <CLogo name={chain} size={32} />
-              {chainHe(chain)}
+              <CLogo name={chain} size={56} />
+              
             </div>
           ))}
         </div>
