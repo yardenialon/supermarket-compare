@@ -111,7 +111,7 @@ export default function OnlinePage() {
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-stone-100 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-stone-500 hover:text-stone-800 transition-colors text-sm">
-            <span>→</span> חזרה לסייבי
+            <span>→</span> חזרה לעמוד הראשי
           </Link>
           <div className="flex items-center gap-2">
             <span className="text-2xl">🛒</span>
@@ -124,10 +124,14 @@ export default function OnlinePage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+        <div className="text-center mb-2">
+          <p className="text-stone-600 font-medium text-base">השוו מחירי סל קניות בין כל חנויות האונליין הגדולות —</p>
+          <p className="text-stone-400 text-sm">הוסיפו מוצרים לסל וגלו איפה הכי משתלם להזמין עד הבית 🏠</p>
+        </div>
         <div className="flex flex-wrap gap-2 justify-center">
           {['Shufersal','Rami Levy','Hazi Hinam','Victory','Mahsani Ashuk','Dor Alon','Carrefour','Shuk Ahir','Wolt'].map(chain => (
             <div key={chain} className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 shadow-sm border border-stone-100 text-xs font-medium text-stone-700">
-              <CLogo name={chain} size={20} />
+              <CLogo name={chain} size={32} />
               {chainHe(chain)}
             </div>
           ))}
