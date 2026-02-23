@@ -64,7 +64,7 @@ export default function OnlinePage() {
       try {
         const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=8`);
         const data = await res.json();
-        setSuggestions(data.products || []);
+        setSuggestions(data.results || []);
       } finally { setLoading(false); }
     }, 300);
   }, []);
