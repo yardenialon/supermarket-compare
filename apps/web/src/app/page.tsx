@@ -468,7 +468,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>
+                  <div className="flex items-center gap-1.5"><div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none">🔥 מבצע</span>}</div>
                 </div>
               ))}
             </div>
@@ -513,7 +513,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>
+                  <div className="flex items-center gap-1"><div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <span className="text-[9px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full leading-none">🔥</span>}</div>
                 </div>
               ))}
             </div>
