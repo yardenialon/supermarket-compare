@@ -63,7 +63,7 @@ export default function StatusPage() {
         <div className="max-w-2xl mx-auto mb-8 bg-gradient-to-l from-emerald-600 to-teal-500 rounded-2xl p-6 text-white shadow-lg shadow-emerald-200">
           <div className="flex items-center justify-between">
             <div><div className="text-sm opacity-80 mb-1">עדכון אחרון</div><div className="font-black text-xl">{fmtDate(lastGlobal)}</div></div>
-            <div className="text-4xl">✅</div>
+            <div className="text-4xl"></div>
           </div>
           <div className="flex gap-4 mt-4 pt-4 border-t border-white/20">
             <div className="text-center flex-1"><div className="font-black text-2xl">{fmtNum(totals.prices)}</div><div className="text-xs opacity-80">מחירים</div></div>
