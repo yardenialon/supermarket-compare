@@ -154,9 +154,19 @@ export default function Home() {
     if (!listLoaded.current) { listLoaded.current = true; return; }
     try { localStorage.setItem('savy-list', JSON.stringify(list)); } catch {}
   }, [list]);
-  const [listLoading, setListLoading] = useState(false); const [toast, setToast] = useState(""); const [expandedStore, setExpandedStore] = useState<number | null>(null); const [sharing, setSharing] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [menuPage, setMenuPage] = useState<"about"|"privacy"|"contact"|null>(null);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
+  // Load productImages from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('savy-images');
+      if (saved) setProductImages(JSON.parse(saved));
+    } catch {}
+  }, []);
+  // Save productImages to localStorage on change
+  useEffect(() => {
+    try { localStorage.setItem('savy-images', JSON.stringify(productImages)); } catch {}
+  }, [productImages]);
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
   const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
