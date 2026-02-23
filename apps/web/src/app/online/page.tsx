@@ -56,6 +56,19 @@ export default function OnlinePage() {
   const [expandedStore, setExpandedStore] = useState<number | null>(null);
   const [sharing, setSharing] = useState(false);
   const [toast, setToast] = useState('');
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('savy-online-list');
+      if (saved) setList(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  // Save to localStorage on change
+  useEffect(() => {
+    try { localStorage.setItem('savy-online-list', JSON.stringify(list)); } catch {}
+  }, [list]);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // טעינת רשימה משותפת מ-URL
