@@ -14,7 +14,7 @@ async function main() {
   await app.register(productRoutes, { prefix: '/api' });
   await app.register(listRoutes, { prefix: '/api' });
   await app.register(sharedListRoutes, { prefix: '/api' });
-await app.register(onlineListRoutes, { prefix: '/api' });
+  await app.register(onlineListRoutes, { prefix: '/api' });
   await app.register(storeRoutes, { prefix: '/api' });
   await app.register(statusRoutes);
   const port = parseInt(process.env.API_PORT || '3001');
