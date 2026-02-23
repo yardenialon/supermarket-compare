@@ -271,6 +271,10 @@ export default function Home() {
 
                   <div className="border-t border-stone-100 my-3"></div>
 
+                  <a href="/status" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right hover:bg-stone-50 transition-colors">
+                    <span className="relative flex h-5 w-5 items-center justify-center"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>
+                    <span className="text-stone-600">סטטוס מערכת</span>
+                  </a>
                   <button onClick={() => setMenuPage('about')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right hover:bg-stone-50 transition-colors">
                     <span className="text-xl">ℹ️</span><span className="text-stone-600">אודות Savy</span>
                   </button>
