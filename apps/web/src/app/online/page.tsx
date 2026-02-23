@@ -62,7 +62,7 @@ export default function OnlinePage() {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API}/products/search?q=${encodeURIComponent(q)}&limit=8`);
+        const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=8`);
         const data = await res.json();
         setSuggestions(data.products || []);
       } finally { setLoading(false); }
