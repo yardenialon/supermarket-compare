@@ -53,6 +53,7 @@ export default function OnlinePage() {
   const [results, setResults] = useState<StoreResult[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [comparing, setComparing] = useState(false);
+  const [expandedStore, setExpandedStore] = useState<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const search = useCallback((q: string) => {
@@ -93,6 +94,7 @@ export default function OnlinePage() {
   const compare = async () => {
     if (!list.length) return;
     setComparing(true);
+    setExpandedStore(null);
     try {
       const res = await fetch(`${API}/online-compare`, {
         method: 'POST',
@@ -128,11 +130,11 @@ export default function OnlinePage() {
           <p className="text-stone-600 font-medium text-base">השוו מחירי סל קניות בין כל חנויות האונליין הגדולות —</p>
           <p className="text-stone-400 text-sm">הוסיפו מוצרים לסל וגלו איפה הכי משתלם להזמין עד הבית 🏠</p>
         </div>
-        <div className="flex flex-wrap gap-2 justify-center">
+
+        <div className="flex flex-wrap gap-3 justify-center">
           {['Shufersal','Rami Levy','Hazi Hinam','Victory','Mahsani Ashuk','Dor Alon','Carrefour','Shuk Ahir','Wolt'].map(chain => (
-            <div key={chain} className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 shadow-sm border border-stone-100 text-xs font-medium text-stone-700">
+            <div key={chain} className="flex items-center justify-center bg-white rounded-2xl p-2 shadow-sm border border-stone-100">
               <CLogo name={chain} size={56} />
-              
             </div>
           ))}
         </div>
@@ -212,9 +214,12 @@ export default function OnlinePage() {
             {results.map((store, idx) => {
               const isFirst = idx === 0;
               const savings = isFirst ? 0 : +(store.total - results[0].total).toFixed(2);
+              const isExpanded = expandedStore === store.storeId;
+              const foundIds = new Set(store.breakdown.map(b => b.productId));
+              const missingItems = list.filter(i => !foundIds.has(i.product.id));
               return (
                 <div key={store.storeId} className={`bg-white rounded-2xl shadow-md border overflow-hidden transition-all ${isFirst ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-stone-100'}`}>
-                  <div className="flex items-center gap-3 px-4 py-3">
+                  <button className="w-full flex items-center gap-3 px-4 py-3 text-right" onClick={() => setExpandedStore(isExpanded ? null : store.storeId)}>
                     <div className="relative">
                       <CLogo name={store.chainName} size={48} />
                       {isFirst && <span className="absolute -top-1 -right-1 text-base">🥇</span>}
@@ -223,15 +228,38 @@ export default function OnlinePage() {
                       <div className="font-bold text-stone-800">{chainHe(store.chainName)}</div>
                       <div className="text-xs text-stone-400 truncate">{store.storeName}</div>
                       {store.missingCount > 0 && (
-                        <div className="text-xs text-amber-500 font-medium">⚠️ חסרים {store.missingCount} מוצרים</div>
+                        <div className="text-xs text-amber-500 font-medium">⚠️ חסרים {store.missingCount} מוצרים — לחץ לפירוט</div>
                       )}
                     </div>
-                    <div className="text-left">
+                    <div className="text-left flex flex-col items-end gap-1">
                       <div className={`font-black text-xl ${isFirst ? 'text-emerald-600' : 'text-stone-700'}`}>₪{store.total.toFixed(2)}</div>
-                      {!isFirst && savings > 0 && <div className="text-xs text-red-400 text-left">+₪{savings.toFixed(2)}</div>}
-                      {isFirst && <div className="text-xs text-emerald-500 font-medium text-left">הכי זול! ✨</div>}
+                      {!isFirst && savings > 0 && <div className="text-xs text-red-400">+₪{savings.toFixed(2)}</div>}
+                      {isFirst && <div className="text-xs text-emerald-500 font-medium">הכי זול! ✨</div>}
+                      <span className="text-stone-300 text-xs">{isExpanded ? '▲' : '▼'}</span>
                     </div>
-                  </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-stone-100 px-4 py-3 space-y-2">
+                      {store.breakdown.map(b => {
+                        const item = list.find(i => i.product.id === b.productId);
+                        return (
+                          <div key={b.productId} className="flex items-center gap-2 text-sm">
+                            <span className="text-emerald-500">✓</span>
+                            <span className="flex-1 text-stone-700 truncate">{item?.product.name || b.productId}</span>
+                            <span className="text-stone-500 font-medium">₪{b.price.toFixed(2)}</span>
+                            {b.qty > 1 && <span className="text-stone-400 text-xs">×{b.qty}</span>}
+                          </div>
+                        );
+                      })}
+                      {missingItems.map(item => (
+                        <div key={item.product.id} className="flex items-center gap-2 text-sm">
+                          <span className="text-red-400">✗</span>
+                          <span className="flex-1 text-stone-400 truncate line-through">{item.product.name}</span>
+                          <span className="text-red-300 text-xs">לא נמצא</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
