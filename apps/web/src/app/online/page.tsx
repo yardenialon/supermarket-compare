@@ -1,7 +1,8 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
-import { api } from "@/lib/api";
 import Link from "next/link";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface ListItem { product: Product; qty: number; }
@@ -61,7 +62,7 @@ export default function OnlinePage() {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${api}/products/search?q=${encodeURIComponent(q)}&limit=8`);
+        const res = await fetch(`${API}/products/search?q=${encodeURIComponent(q)}&limit=8`);
         const data = await res.json();
         setSuggestions(data.products || []);
       } finally { setLoading(false); }
@@ -93,7 +94,7 @@ export default function OnlinePage() {
     if (!list.length) return;
     setComparing(true);
     try {
-      const res = await fetch(`${api}/online-compare`, {
+      const res = await fetch(`${API}/online-compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: list.map(i => ({ productId: i.product.id, qty: i.qty })), topN: 10 }),
@@ -107,7 +108,6 @@ export default function OnlinePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-emerald-50" dir="rtl">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-stone-100 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-stone-500 hover:text-stone-800 transition-colors text-sm">
@@ -124,8 +124,6 @@ export default function OnlinePage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-
-        {/* Online stores badges */}
         <div className="flex flex-wrap gap-2 justify-center">
           {['Shufersal','Rami Levy','Hazi Hinam','Victory','Mahsani Ashuk','Dor Alon','Carrefour','Shuk Ahir','Wolt'].map(chain => (
             <div key={chain} className="flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 shadow-sm border border-stone-100 text-xs font-medium text-stone-700">
@@ -135,7 +133,6 @@ export default function OnlinePage() {
           ))}
         </div>
 
-        {/* Search */}
         <div className="relative">
           <div className="flex items-center bg-white rounded-2xl shadow-md border border-stone-200 px-4 py-3 gap-3">
             <span className="text-xl">🔍</span>
@@ -164,7 +161,6 @@ export default function OnlinePage() {
           )}
         </div>
 
-        {/* List */}
         {list.length > 0 && (
           <div className="bg-white rounded-2xl shadow-md border border-stone-100 overflow-hidden">
             <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
@@ -199,7 +195,6 @@ export default function OnlinePage() {
           </div>
         )}
 
-        {/* Results */}
         {results && results.length === 0 && (
           <div className="text-center py-12 text-stone-400">
             <div className="text-4xl mb-3">😕</div>
@@ -239,7 +234,6 @@ export default function OnlinePage() {
           </div>
         )}
 
-        {/* Empty state */}
         {list.length === 0 && (
           <div className="text-center py-16 text-stone-400">
             <div className="text-5xl mb-4">🛍️</div>
@@ -247,7 +241,6 @@ export default function OnlinePage() {
             <p className="text-sm mt-1">נמצא לך את ההזמנה הכי משתלמת לביתך</p>
           </div>
         )}
-
       </main>
     </div>
   );
