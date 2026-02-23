@@ -1,8 +1,9 @@
 import { FastifyInstance } from 'fastify';
+import { query } from '../../db.js';
 
 export async function statusRoutes(app: FastifyInstance) {
   app.get('/api/status', async () => {
-    const { rows } = await app.pg.query(`
+    const { rows } = await query(`
       SELECT rc.name,
              COUNT(DISTINCT s.id)::int as stores,
              COUNT(sp.id)::int as prices,
