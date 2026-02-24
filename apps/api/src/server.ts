@@ -24,8 +24,8 @@ main().catch(err => { console.error(err); process.exit(1); });
 
 // TEMP: test open israel supermarkets API
 app.get('/api/test-open-api', async () => {
-  const res = await fetch('https://data.openisraelisupermarkets.co.il/health/data-freshness', {
-    headers: { 'Authorization': 'Bearer 1ad34fd6-918d-4dc3-9742-85cc966b462a' }
+  const res = await fetch('https://data.openisraelisupermarkets.co.il/analytics/promotions/product/7290004131074', {
+    headers: { 'Authorization': 'Bearer 6e509ff7-00a4-490b-baa5-dde6e17e53fc' }
   });
   return res.json();
 });
