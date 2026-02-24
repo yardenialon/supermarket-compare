@@ -173,6 +173,7 @@ export default function Home() {
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
   const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
   const [radius, setRadius] = useState<number>(10);
+  const [toast, setToast] = useState(""); const [sharing, setSharing] = useState(false); const [listLoading, setListLoading] = useState(false); const [expandedStore, setExpandedStore] = useState<number | null>(null); const [menuOpen, setMenuOpen] = useState(false); const [menuPage, setMenuPage] = useState<"about"|"privacy"|"contact"|null>(null);
 
   // Re-fetch prices when mode changes
   useEffect(() => {
