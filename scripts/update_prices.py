@@ -202,7 +202,9 @@ def main():
         cur.execute("ALTER TABLE store_price ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()")
         conn.commit()
     except: conn.rollback()
-    cur.execute("CREATE TEMP TABLE IF NOT EXISTS tmp_prices (barcode TEXT, name TEXT, store_id INTEGER, price NUMERIC) ON COMMIT PRESERVE ROWS")
+    cur.execute("DROP TABLE IF EXISTS tmp_prices")
+    conn.commit()
+    cur.execute("CREATE TABLE tmp_prices (barcode TEXT, name TEXT, store_id INTEGER, price NUMERIC)")
     conn.commit()
 
     # Stores
