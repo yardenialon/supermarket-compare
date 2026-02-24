@@ -284,6 +284,10 @@ export default function Home() {
 
                   <div className="border-t border-stone-100 my-3"></div>
 
+                  <a href="/receipt" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right hover:bg-stone-50 transition-colors">
+                    <span className="text-xl">🧾</span>
+                    <span className="text-stone-600">סריקת קבלה</span>
+                  </a>
                   <a href="/online" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right hover:bg-stone-50 transition-colors">
                     <span className="text-xl">🛒</span>
                     <span className="text-stone-600">קניות אונליין</span>
