@@ -21,3 +21,11 @@ async function main() {
   await app.listen({ port, host: '0.0.0.0' });
 }
 main().catch(err => { console.error(err); process.exit(1); });
+
+// TEMP: test open israel supermarkets API
+app.get('/api/test-open-api', async () => {
+  const res = await fetch('https://data.openisraelisupermarkets.co.il/health/data-freshness', {
+    headers: { 'Authorization': 'Bearer 1ad34fd6-918d-4dc3-9742-85cc966b462a' }
+  });
+  return res.json();
+});
