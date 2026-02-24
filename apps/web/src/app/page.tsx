@@ -51,7 +51,8 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
   const logo = chainLogo(name);
   const color = chainClr(name);
   const he = chainHe(name);
-  if (logo) return <img src={logo} alt={he} width={size} height={size} className="object-contain" style={{ width: size, height: size, borderRadius: size > 40 ? 16 : 10 }} />;
+  const [err, setErr] = useState(false);
+  if (logo && !err) return <div style={{ width: size, height: size, borderRadius: size > 40 ? 16 : 10, backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}><img src={logo} alt={he} width={size} height={size} onError={() => setErr(true)} className="object-contain p-1" style={{ width: size, height: size }} /></div>;
   return <span className="flex items-center justify-center text-white font-black" style={{ backgroundColor: color, width: size, height: size, borderRadius: size > 40 ? 16 : 10, fontSize: size * 0.42 }}>{he.charAt(0)}</span>;
 }
 
