@@ -102,7 +102,7 @@ export default function OnlinePage() {
       });
       const data = await res.json();
       const url = `https://savy.co.il/online?list=${data.id}`;
-      const text = `🛒 *רשימת קניות אונליין - סייבי*\n─────────────────────\n${list.map(i => `☐ ${i.product.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`).join('\n')}\n─────────────────────\n👉 ${url}`;
+      const text = `🛒 *רשימת קניות אונליין - סאבי*\n─────────────────────\n${list.map(i => `☐ ${i.product.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`).join('\n')}\n─────────────────────\n👉 ${url}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     } finally { setSharing(false); }
   };
