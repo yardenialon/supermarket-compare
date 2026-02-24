@@ -13,8 +13,10 @@ export async function receiptRoutes(app: FastifyInstance) {
       headers: { 'X-API-Key': DOCUPIPE_KEY, 'Content-Type': 'application/json', 'accept': 'application/json' },
       body: JSON.stringify({ document: { base64, filename: filename || 'receipt.jpg' } }),
     });
-    const uploadData = await uploadRes.json() as any;
-    if (!uploadRes.ok) return reply.code(500).send({ error: 'שגיאה בהעלאה ל-Docupipe' });
+    const uploadText = await uploadRes.text();
+    console.log('Docupipe upload:', uploadRes.status, uploadText.substring(0, 200));
+    if (!uploadRes.ok) return reply.code(500).send({ error: 'שגיאה: ' + uploadText });
+    const uploadData = JSON.parse(uploadText) as any;
 
     const { jobId, documentId } = uploadData;
 
