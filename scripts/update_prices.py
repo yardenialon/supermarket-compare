@@ -49,7 +49,8 @@ def process_prices_batch(cur, conn, filepath, chain_name):
     skipped_store = 0
     skipped_barcode = 0
 
-    with open(filepath, encoding='utf-8') as f:
+    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             sid, barcode, name, price_str = get_row_fields(row)
@@ -109,7 +110,8 @@ def process_stores_file(cur, filepath, chain_name):
     cur.execute("SELECT store_code FROM store WHERE chain_id=%s", (chain_id,))
     existing = {r[0] for r in cur.fetchall()}
     added = 0
-    with open(filepath, encoding='utf-8') as f:
+    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    with open(filepath, encoding="utf-8") as f:
         for row in csv.DictReader(f):
             sid = row.get('storeid', '').strip()
             name = row.get('storename', '').strip()
@@ -131,7 +133,8 @@ def process_promos_batch(cur, conn, filepath, chain_name):
 
     rows = []
     last_store = None
-    with open(filepath, encoding='utf-8') as f:
+    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             sid = row.get('storeid', '').strip()
