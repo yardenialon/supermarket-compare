@@ -106,7 +106,7 @@ function distToKm(dist: number): number {
 }
 
 /* ---- Logo scroll strip ---- */
-const LOGO_LIST = Object.entries(CHAINS).filter(([k, v]) => v.logo && k !== 'Mega' && k !== 'Good Pharm' && k !== 'Yellow' && k !== 'Dor Alon').map(([k, v]) => ({ key: k, ...v }));
+const LOGO_LIST = Object.entries(CHAINS).filter(([k, v]) => v.logo && k !== 'Mega' && k !== 'Yellow').map(([k, v]) => ({ key: k, ...v }));
 function LogoMarquee() {
   return (
     <div className="w-full overflow-x-auto py-4 -mt-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
