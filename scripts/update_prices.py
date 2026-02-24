@@ -119,6 +119,56 @@ def process_stores_file(cur, filepath, chain_name):
             existing.add(sid); added += 1
     return added
 
+def process_promos_batch(cur, conn, filepath, chain_name):
+    """Process promo files and update is_promo/promo_price in store_price."""
+    cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
+    row = cur.fetchone()
+    if not row: return 0
+    chain_id = row[0]
+    cur.execute("SELECT id, store_code FROM store WHERE chain_id=%s", (chain_id,))
+    store_map = {code: sid for sid, code in cur.fetchall()}
+    if not store_map: return 0
+
+    rows = []
+    last_store = None
+    with open(filepath, encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sid = row.get('storeid', '').strip()
+            if sid: last_store = sid
+            else: sid = last_store
+            barcode = row.get('itemcode', '').strip()
+            if not sid or not barcode or len(barcode) < 5: continue
+            store_id = store_map.get(sid) or (store_map.get(str(int(sid))) if sid.isdigit() else None)
+            if not store_id: continue
+            promo_price_str = row.get('promoprice', row.get('itemprice', '')).strip()
+            try: promo_price = float(promo_price_str)
+            except: continue
+            if promo_price <= 0: continue
+            rows.append((barcode, store_id, promo_price))
+
+    if not rows: return 0
+    # Dedup
+    seen = {}
+    for r in rows: seen[(r[0], r[1])] = r
+    rows = list(seen.values())
+
+    print(f"    {len(rows)} promo items...", end=' ', flush=True)
+    BATCH = 5000
+    updated = 0
+    for i in range(0, len(rows), BATCH):
+        batch = rows[i:i+BATCH]
+        values = ','.join(cur.mogrify("(%s,%s,%s)", r).decode() for r in batch)
+        cur.execute(f"""
+            UPDATE store_price sp SET is_promo = true, promo_price = t.promo_price
+            FROM (VALUES {values}) AS t(barcode, store_id, promo_price)
+            JOIN product p ON p.barcode = t.barcode
+            WHERE sp.product_id = p.id AND sp.store_id = t.store_id::int
+        """)
+        updated += cur.rowcount
+        conn.commit()
+    return updated
+
 def main():
     start = time.time()
     print("Downloading dataset...", flush=True)
@@ -206,53 +256,3 @@ def main():
     conn.close()
 
 if __name__ == '__main__': main()
-
-def process_promos_batch(cur, conn, filepath, chain_name):
-    """Process promo files and update is_promo/promo_price in store_price."""
-    cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
-    row = cur.fetchone()
-    if not row: return 0
-    chain_id = row[0]
-    cur.execute("SELECT id, store_code FROM store WHERE chain_id=%s", (chain_id,))
-    store_map = {code: sid for sid, code in cur.fetchall()}
-    if not store_map: return 0
-
-    rows = []
-    last_store = None
-    with open(filepath, encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            sid = row.get('storeid', '').strip()
-            if sid: last_store = sid
-            else: sid = last_store
-            barcode = row.get('itemcode', '').strip()
-            if not sid or not barcode or len(barcode) < 5: continue
-            store_id = store_map.get(sid) or (store_map.get(str(int(sid))) if sid.isdigit() else None)
-            if not store_id: continue
-            promo_price_str = row.get('promoprice', row.get('itemprice', '')).strip()
-            try: promo_price = float(promo_price_str)
-            except: continue
-            if promo_price <= 0: continue
-            rows.append((barcode, store_id, promo_price))
-
-    if not rows: return 0
-    # Dedup
-    seen = {}
-    for r in rows: seen[(r[0], r[1])] = r
-    rows = list(seen.values())
-
-    print(f"    {len(rows)} promo items...", end=' ', flush=True)
-    BATCH = 5000
-    updated = 0
-    for i in range(0, len(rows), BATCH):
-        batch = rows[i:i+BATCH]
-        values = ','.join(cur.mogrify("(%s,%s,%s)", r).decode() for r in batch)
-        cur.execute(f"""
-            UPDATE store_price sp SET is_promo = true, promo_price = t.promo_price
-            FROM (VALUES {values}) AS t(barcode, store_id, promo_price)
-            JOIN product p ON p.barcode = t.barcode
-            WHERE sp.product_id = p.id AND sp.store_id = t.store_id::int
-        """)
-        updated += cur.rowcount
-        conn.commit()
-    return updated
