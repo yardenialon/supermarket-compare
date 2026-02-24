@@ -53,7 +53,7 @@ function CLogo({ name, size = 40 }: { name: string; size?: number }) {
   const he = chainHe(name);
   const [err, setErr] = useState(false);
   if (typeof window !== 'undefined') console.log('CLogo:', name, logo);
-  if (logo && !err) return <div style={{ width: size, height: size, borderRadius: size > 40 ? 16 : 10, backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}><img src={logo} alt={he} width={size} height={size} onError={() => setErr(true)} className="object-contain p-1" style={{ width: size, height: size }} /></div>;
+  if (logo && !err) return <div style={{ width: size, height: size, borderRadius: size > 40 ? 16 : 10, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}><img src={logo} alt={he} width={size} height={size} onError={() => setErr(true)} className="object-contain p-1" style={{ width: size, height: size }} /></div>;
   return <span className="flex items-center justify-center text-white font-black" style={{ backgroundColor: color, width: size, height: size, borderRadius: size > 40 ? 16 : 10, fontSize: size * 0.42 }}>{he.charAt(0)}</span>;
 }
 
