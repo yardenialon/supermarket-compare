@@ -136,6 +136,7 @@ def process_promos_batch(cur, conn, filepath, chain_name):
     csv.field_size_limit(10 * 1024 * 1024)  # 10MB
     with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        print(f"    DEBUG headers: {reader.fieldnames}", flush=True)
         for row in reader:
             sid = row.get('storeid', '').strip()
             if sid: last_store = sid
