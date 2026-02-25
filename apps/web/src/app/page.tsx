@@ -3,9 +3,9 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { api } from "@/lib/api";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
-interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; dist?: number; }
+interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
 interface ListItem { product: Product; qty: number; }
-interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
+interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; total: number; availableCount: number; missingCount: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',        color: '#e11d48', logo: '/logos/shufersal.png' },
@@ -42,17 +42,31 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Super Dosh':   { he: 'סופר דוש',      color: '#7e22ce', logo: '' },
   'Carrefour':    { he: 'קרפור',         color: '#004e9f', logo: '/logos/Carrefour.png' },
 };
+const SUBCHAINS: Record<string, { he: string; logo: string }> = {
+  'שופרסל שלי':    { he: 'שופרסל שלי',    logo: '/logos/subchains/shufersal-sheli.png' },
+  'שופרסל דיל':    { he: 'שופרסל דיל',    logo: '/logos/subchains/shufersal-deal.png' },
+  'שופרסל אקספרס': { he: 'שופרסל אקספרס', logo: '/logos/subchains/shufersal-express.png' },
+  'Be':            { he: 'BE',             logo: '/logos/subchains/be.png' },
+  'יש חסד':        { he: 'יש חסד',         logo: '/logos/subchains/yesh-hesed.png' },
+  'יוניברס':       { he: 'יוניברס',        logo: '/logos/subchains/universe.png' },
+  'יש בשכונה':     { he: 'יש בשכונה',      logo: '/logos/subchains/yesh-bashchuna.png' },
+  'יש Good':       { he: 'יש Good',        logo: '/logos/subchains/yesh-good.png' },
+  'שערי רווחה':    { he: 'שערי רווחה',     logo: '/logos/subchains/shaarei-revaha.png' },
+  'Cash&Carry':    { he: 'Cash & Carry',   logo: '/logos/subchains/cash-carry.png' },
+};
 const chainHe = (n: string) => CHAINS[n]?.he || n;
 const chainClr = (n: string) => CHAINS[n]?.color || '#6b7280';
 const chainLogo = (n: string) => CHAINS[n]?.logo || '';
+const subchainLogo = (sub?: string) => sub ? (SUBCHAINS[sub]?.logo || '') : '';
+const subchainHe = (sub?: string) => sub ? (SUBCHAINS[sub]?.he || sub) : '';
 
 /* ---- Logo component with fallback initial ---- */
-function CLogo({ name, size = 40 }: { name: string; size?: number }) {
-  const logo = chainLogo(name);
+function CLogo({ name, subchain, size = 40 }: { name: string; subchain?: string; size?: number }) {
+  const sLogo = subchainLogo(subchain);
+  const logo = sLogo || chainLogo(name);
   const color = chainClr(name);
-  const he = chainHe(name);
+  const he = subchain ? subchainHe(subchain) : chainHe(name);
   const [err, setErr] = useState(false);
-  if (typeof window !== 'undefined') console.log('CLogo:', name, logo);
   if (logo && !err) return <div style={{ width: size, height: size, borderRadius: size > 40 ? 16 : 10, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}><img src={logo} alt={he} width={size} height={size} onError={() => setErr(true)} className="object-contain p-1" style={{ width: size, height: size }} /></div>;
   return <span className="flex items-center justify-center text-white font-black" style={{ backgroundColor: color, width: size, height: size, borderRadius: size > 40 ? 16 : 10, fontSize: size * 0.42 }}>{he.charAt(0)}</span>;
 }
@@ -195,6 +209,7 @@ export default function Home() {
   const search = useCallback((v: string) => {
     if (!v.trim()) { setResults([]); return; }
     setLoading(true);
+    setSortBy('stores');
     api.search(v)
       .then((d: any) => setResults(d.results || []))
       .catch((err: any) => {
@@ -497,9 +512,9 @@ export default function Home() {
               fp.map((p: Price, i: number) => (
                 <div key={i} className={"flex items-center justify-between px-5 py-4 transition hover:bg-stone-50 " + (i === 0 ? "bg-emerald-50/40" : "")}>
                   <div className="flex items-center gap-3">
-                    <CLogo name={p.chainName} size={40} />
+                    <CLogo name={p.chainName} subchain={p.subchainName} size={40} />
                     <div>
-                      <div className="font-bold text-base text-stone-700">{chainHe(p.chainName)}</div>
+                      <div className="font-bold text-base text-stone-700">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}</div>
                       <div className="text-sm text-stone-400">
                         {p.storeName}{p.city && p.city !== '0' && !p.city.match(/^\d+$/) && ` · ${p.city}`}
                         {p.dist !== undefined && p.dist !== null && <span className="text-blue-400 mr-1"> · {distToKm(p.dist).toFixed(1)} ק״מ</span>}
@@ -542,9 +557,9 @@ export default function Home() {
               fp.map((p: Price, i: number) => (
                 <div key={i} className={"flex items-center justify-between px-4 py-3.5 " + (i === 0 ? "bg-emerald-50/40" : "")}>
                   <div className="flex items-center gap-3">
-                    <CLogo name={p.chainName} size={38} />
+                    <CLogo name={p.chainName} subchain={p.subchainName} size={38} />
                     <div>
-                      <div className="font-bold text-sm text-stone-700">{chainHe(p.chainName)}</div>
+                      <div className="font-bold text-sm text-stone-700">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}</div>
                       <div className="text-xs text-stone-400">
                         {p.storeName}{p.city && p.city !== '0' && !p.city.match(/^\d+$/) && ` · ${p.city}`}
                         {p.dist !== undefined && p.dist !== null && <span className="text-blue-400 mr-1"> · {distToKm(p.dist).toFixed(1)} ק״מ</span>}
@@ -648,11 +663,11 @@ export default function Home() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="relative shrink-0">
-                              <CLogo name={store.chainName} size={48} />
+                              <CLogo name={store.chainName} subchain={store.subchainName} size={48} />
                               {isWinner && <span className="absolute -top-1.5 -right-1.5 text-sm">🏆</span>}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-black text-base text-stone-800">{chainHe(store.chainName)}</div>
+                              <div className="font-black text-base text-stone-800">{store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}</div>
                               <div className="text-xs sm:text-[11px] text-stone-400 mt-0.5 truncate">
                                 {store.storeName}
                                 {store.city && store.city !== '0' && !store.city.match(/^\d+$/) && ` · ${store.city}`}
