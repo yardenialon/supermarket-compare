@@ -162,6 +162,8 @@ export default function Home() {
       const saved = localStorage.getItem('savy-list');
       if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed) && parsed.length > 0) setList(parsed); }
     } catch {}
+    // Warm up API + DB connection
+    api.search('x').catch(() => {});
   }, []);
 
   // Save list to localStorage on change
