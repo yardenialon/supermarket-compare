@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
   if (file.type === 'application/pdf') {
     const pdfjsLib = await import('pdfjs-dist');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     const page = await pdf.getPage(1);
