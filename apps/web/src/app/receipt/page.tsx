@@ -1,47 +1,38 @@
 'use client';
 import { useState, useRef } from 'react';
 
-async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
-  if (file.type === 'application/pdf') {
-    const pdfjsLib = await import('pdfjs-dist');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({ scale: 2 });
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext('2d')!;
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    return { base64: dataUrl.split(',')[1], mimeType: 'image/jpeg' };
-  }
+async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = () => resolve({ base64: (reader.result as string).split(',')[1], mimeType: file.type || 'image/jpeg' });
+    reader.onload = () => resolve((reader.result as string).split(',')[1]);
     reader.readAsDataURL(file);
   });
 }
 
 export default function ReceiptPage() {
-  const [image, setImage] = useState<string | null>(null);
+  const [parts, setParts] = useState<{ url: string; base64: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isPdf, setIsPdf] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
-  async function handleFile(file: File) {
+  async function addFile(file: File) {
+    const base64 = await fileToBase64(file);
+    const url = URL.createObjectURL(file);
+    setParts(prev => [...prev, { url, base64 }]);
+  }
+
+  async function scan() {
+    if (!parts.length) return;
     setLoading(true);
     setError(null);
     setResults(null);
     try {
-      const { base64, mimeType } = await fileToBase64(file);
       const res = await fetch('/api/receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64, filename: file.name, mimeType }),
+        body: JSON.stringify({ parts: parts.map(p => p.base64) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
@@ -53,53 +44,61 @@ export default function ReceiptPage() {
     }
   }
 
-  function handleFileSelect(file: File) {
-    const pdf = file.type === 'application/pdf';
-    setIsPdf(pdf);
-    setImage(pdf ? null : URL.createObjectURL(file));
-    handleFile(file);
-  }
+  function reset() { setParts([]); setResults(null); setError(null); }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100 font-sans" dir="rtl">
       <div className="max-w-xl mx-auto px-4 py-8">
-        <a href="/" className="text-sm text-stone-400 hover:text-stone-600 mb-6 inline-block">← חזרה לעמוד הראשי</a>
+        <a href="/" className="text-sm text-stone-400 hover:text-stone-600 mb-6 inline-block">← חזרה</a>
         <h1 className="text-2xl font-black text-stone-800 mb-2">סריקת קבלה 🧾</h1>
-        <p className="text-stone-500 mb-6 text-sm">העלה קבלה מהסופר ונבדוק אם יכולת לחסוך</p>
+        <p className="text-stone-500 mb-6 text-sm">צלמו את הקבלה — גם כמה חלקים — ונבדוק אם יכולתם לחסוך</p>
 
-        <div
-          onClick={() => fileRef.current?.click()}
-          onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFileSelect(f); }}
-          onDragOver={(e) => e.preventDefault()}
-          className="border-2 border-dashed border-stone-300 rounded-2xl p-8 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/30 transition-all"
-        >
-          {isPdf ? (
-            <div className="py-4"><div className="text-5xl mb-2">📄</div><p className="text-stone-500 font-medium text-sm">קובץ PDF נטען</p></div>
-          ) : image ? (
-            <img src={image} alt="קבלה" className="max-h-56 mx-auto rounded-xl object-contain" />
-          ) : (
-            <>
-              <div className="text-5xl mb-3">📷</div>
-              <p className="text-stone-500 font-medium">לחץ לצלם או לבחור קובץ</p>
-              <p className="text-stone-400 text-xs mt-1">JPG, PNG, HEIC, <strong>PDF</strong></p>
-            </>
-          )}
-        </div>
-        <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }} />
+        {!results && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 py-6 rounded-2xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-200">
+                <span className="text-3xl">📷</span><span>צלם קבלה</span>
+              </button>
+              <button onClick={() => galleryRef.current?.click()} className="flex flex-col items-center gap-2 py-6 rounded-2xl bg-white border-2 border-stone-200 text-stone-600 font-bold hover:border-emerald-400 hover:bg-emerald-50 transition">
+                <span className="text-3xl">🖼️</span><span>בחר מגלריה</span>
+              </button>
+            </div>
+            <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ''; }} />
+            <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { Array.from(e.target.files || []).forEach(f => addFile(f)); e.target.value = ''; }} />
+
+            {parts.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-sm font-bold text-stone-500">{parts.length} חלקים צולמו</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {parts.map((p, i) => (
+                    <div key={i} className="relative rounded-xl overflow-hidden aspect-[3/4] bg-stone-100">
+                      <img src={p.url} alt={`חלק ${i + 1}`} className="w-full h-full object-cover" />
+                      <button onClick={() => setParts(prev => prev.filter((_, j) => j !== i))} className="absolute top-1 left-1 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold shadow">✕</button>
+                      <div className="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-full">{i + 1}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => cameraRef.current?.click()} className="flex-1 py-3 rounded-xl border-2 border-dashed border-emerald-400 text-emerald-600 font-bold text-sm hover:bg-emerald-50 transition">+ הוסף חלק</button>
+                  <button onClick={scan} disabled={loading} className="flex-1 py-3 rounded-xl bg-stone-900 text-white font-bold text-sm hover:bg-stone-800 transition disabled:opacity-50">✅ סיים וסרוק</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {loading && (
           <div className="mt-8 text-center space-y-3">
             <div className="inline-block w-8 h-8 border-[3px] border-stone-200 border-t-emerald-500 rounded-full animate-spin"></div>
-            <p className="text-stone-500 text-sm">מנתח את הקבלה עם AI...</p>
-            <p className="text-stone-400 text-xs">זה עשוי לקחת 10-20 שניות</p>
+            <p className="text-stone-500 text-sm">מנתח {parts.length} חלקי קבלה עם AI...</p>
+            <p className="text-stone-400 text-xs">10-20 שניות</p>
           </div>
         )}
 
         {error && <div className="mt-6 bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
 
         {results && (
-          <div className="mt-6 space-y-4">
+          <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
               <h2 className="font-black text-stone-800 text-lg mb-4">פרטי הקבלה</h2>
               <div className="grid grid-cols-2 gap-3">
@@ -109,10 +108,10 @@ export default function ReceiptPage() {
                 {results.date && <div className="bg-stone-50 rounded-xl p-3"><div className="text-xs text-stone-400 mb-1">תאריך</div><div className="font-bold text-stone-700">{results.date}</div></div>}
               </div>
             </div>
-
             <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-              <div className="px-5 py-4 border-b border-stone-100">
+              <div className="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
                 <h2 className="font-black text-stone-800">מוצרים שזוהו</h2>
+                <span className="text-xs text-stone-400">{results.items?.length} מוצרים</span>
               </div>
               <div className="divide-y divide-stone-50">
                 {results.items?.map((item: any, i: number) => (
@@ -122,13 +121,12 @@ export default function ReceiptPage() {
                         <div className="font-semibold text-stone-800 text-sm">{item.name}</div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           {item.barcode && <span className="text-xs text-stone-400 font-mono">{item.barcode}</span>}
-                          {item.qty > 1 && <span className="text-xs text-stone-400">×{item.qty}</span>}
+                          {item.qty > 1 && <span className="text-xs text-stone-400">x{item.qty}</span>}
                           {item.savings > 0 && <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">חיסכון ₪{item.savings.toFixed(2)}</span>}
                         </div>
                       </div>
                       <div className="text-left shrink-0">
                         <div className="font-bold text-stone-800">₪{Number(item.price).toFixed(2)}</div>
-                        {item.qty > 1 && <div className="text-xs text-stone-400">סה״כ ₪{Number(item.subtotal || item.price * item.qty).toFixed(2)}</div>}
                         {item.minPrice && item.minPrice < item.price && <div className="text-xs text-emerald-600">מינימום ₪{Number(item.minPrice).toFixed(2)}</div>}
                       </div>
                     </div>
@@ -142,30 +140,16 @@ export default function ReceiptPage() {
                 </div>
               )}
             </div>
-
             {results.savings != null && (
               <div className={`rounded-2xl p-5 ${results.savings > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-emerald-50 border border-emerald-200'}`}>
                 {results.savings > 0 ? (
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">💸</span>
-                    <div>
-                      <p className="font-black text-amber-700 text-lg">יכולת לחסוך ₪{results.savings.toFixed(2)}</p>
-                      <p className="text-amber-600 text-sm mt-0.5">על ידי קנייה בחנויות הזולות יותר</p>
-                    </div>
-                  </div>
+                  <div className="flex items-center gap-3"><span className="text-3xl">💸</span><div><p className="font-black text-amber-700 text-lg">יכולת לחסוך ₪{results.savings.toFixed(2)}</p><p className="text-amber-600 text-sm mt-0.5">על ידי קנייה בחנויות הזולות יותר</p></div></div>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">🎉</span>
-                    <p className="font-black text-emerald-700 text-lg">קנית במחיר הטוב ביותר!</p>
-                  </div>
+                  <div className="flex items-center gap-3"><span className="text-3xl">🎉</span><p className="font-black text-emerald-700 text-lg">קנית במחיר הטוב ביותר!</p></div>
                 )}
               </div>
             )}
-
-            <button onClick={() => { setResults(null); setImage(null); setError(null); setIsPdf(false); }}
-              className="w-full py-3 rounded-xl border border-stone-200 text-stone-500 text-sm font-bold hover:bg-stone-100 transition">
-              סרוק קבלה נוספת
-            </button>
+            <button onClick={reset} className="w-full py-3 rounded-xl border border-stone-200 text-stone-500 text-sm font-bold hover:bg-stone-100 transition">סרוק קבלה נוספת</button>
           </div>
         )}
       </div>
