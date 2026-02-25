@@ -2,12 +2,21 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const API = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://supermarket-compare-production.up.railway.app';
+const API = 'https://supermarket-compare-production.up.railway.app';
 
 export async function POST(req: NextRequest) {
   try {
-    const { base64, filename } = await req.json();
+    const { base64, mimeType } = await req.json();
     if (!base64) return NextResponse.json({ error: 'חסרה תמונה' }, { status: 400 });
+
+    const isPdf = mimeType === 'application/pdf';
+    const source = isPdf
+      ? { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
+      : { type: 'base64' as const, media_type: (mimeType || 'image/jpeg') as any, data: base64 };
+
+    const contentBlock = isPdf
+      ? { type: 'document' as const, source }
+      : { type: 'image' as const, source };
 
     const msg = await client.messages.create({
       model: 'claude-opus-4-5',
@@ -15,8 +24,8 @@ export async function POST(req: NextRequest) {
       messages: [{
         role: 'user',
         content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-          { type: 'text', text: `זוהי קבלה מסופרמרקט ישראלי. חלץ את כל הפרטים.\nהחזר JSON בלבד, ללא טקסט נוסף:\n{\n  "store": "שם הרשת",\n  "branch": "שם הסניף",\n  "receipt_number": "מספר קבלה",\n  "date": "תאריך",\n  "total": 123.45,\n  "items": [\n    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים: ברקוד לא קיים=null, כמות ברירת מחדל=1, הנחות חבר למחיר הסופי, total=סך לתשלום בתחתית.\nאם לא ניתן לקרוא: {"error": "לא ניתן לקרוא את הקבלה"}` }
+          contentBlock as any,
+          { type: 'text', text: `זוהי קבלה מסופרמרקט ישראלי. חלץ את כל הפרטים.\nהחזר JSON בלבד:\n{\n  "store": "שם הרשת",\n  "branch": "שם הסניף",\n  "receipt_number": "מספר קבלה",\n  "date": "תאריך",\n  "total": 123.45,\n  "items": [\n    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים: ברקוד לא קיים=null, כמות ברירת מחדל=1, הנחות חבר למחיר הסופי.\nאם לא ניתן לקרוא: {"error": "לא ניתן לקרוא את הקבלה"}` }
         ],
       }],
     });
@@ -25,7 +34,6 @@ export async function POST(req: NextRequest) {
     let parsed;
     try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()); }
     catch { return NextResponse.json({ error: 'לא הצלחנו לנתח את הקבלה' }, { status: 422 }); }
-
     if (parsed.error) return NextResponse.json({ error: parsed.error }, { status: 422 });
 
     const itemsWithSavings = await Promise.all(
@@ -35,9 +43,8 @@ export async function POST(req: NextRequest) {
           const res = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&limit=1`);
           const data = await res.json();
           const match = data.results?.[0];
-          if (match && match.minPrice && match.minPrice < item.price) {
+          if (match && match.minPrice && match.minPrice < item.price)
             return { ...item, minPrice: match.minPrice, savings: +(item.price - match.minPrice).toFixed(2) };
-          }
           return { ...item, minPrice: match?.minPrice || null, savings: 0 };
         } catch { return { ...item, savings: 0 }; }
       })
@@ -48,6 +55,6 @@ export async function POST(req: NextRequest) {
 
   } catch (e: any) {
     console.error('Receipt error:', e);
-    return NextResponse.json({ error: e.message || 'שגיאה בעיבוד הקבלה' }, { status: 500 });
+    return NextResponse.json({ error: e.message || 'שגיאה' }, { status: 500 });
   }
 }
