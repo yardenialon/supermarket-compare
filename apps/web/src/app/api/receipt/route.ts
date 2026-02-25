@@ -9,10 +9,9 @@ export async function POST(req: NextRequest) {
     const { base64, filename } = await req.json();
     if (!base64) return NextResponse.json({ error: 'חסרה תמונה' }, { status: 400 });
 
-    // 1. Claude Vision מזהה מוצרים ומחירים
     const msg = await client.messages.create({
       model: 'claude-opus-4-5',
-      max_tokens: 1024,
+      max_tokens: 2048,
       messages: [{
         role: 'user',
         content: [
@@ -22,16 +21,25 @@ export async function POST(req: NextRequest) {
           },
           {
             type: 'text',
-            text: `זוהי קבלה מסופרמרקט ישראלי. אנא חלץ את רשימת המוצרים והמחירים.
-החזר JSON בלבד, ללא טקסט נוסף, בפורמט הזה:
+            text: `זוהי קבלה מסופרמרקט ישראלי. חלץ את כל הפרטים.
+החזר JSON בלבד, ללא טקסט נוסף:
 {
-  "store": "שם הרשת",
+  "store": "שם הרשת (שופרסל/רמי לוי/ויקטורי וכו')",
+  "branch": "שם הסניף",
+  "receipt_number": "מספר חשבונית או קבלה",
+  "date": "תאריך",
   "total": 123.45,
   "items": [
-    { "name": "שם המוצר", "price": 12.90, "qty": 1 }
+    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }
   ]
 }
-אם לא ניתן לקרוא את הקבלה, החזר: {"error": "לא ניתן לקרוא את הקבלה"}`
+חוקים:
+- אם ברקוד לא מופיע — null
+- כמות ברירת מחדל 1
+- הנחות/מבצעים — חבר למחיר הסופי של המוצר, אל תוסיף שורה נפרדת
+- subtotal = price * qty
+- total = סך הכל לתשלום בתחתית הקבלה
+- אם לא ניתן לקרוא: {"error": "לא ניתן לקרוא את הקבלה"}`
           }
         ],
       }],
@@ -47,11 +55,13 @@ export async function POST(req: NextRequest) {
 
     if (parsed.error) return NextResponse.json({ error: parsed.error }, { status: 422 });
 
-    // 2. לכל מוצר — חפש מחיר זול יותר
+    // לכל מוצר — חפש מחיר זול יותר
     const itemsWithSavings = await Promise.all(
       (parsed.items || []).map(async (item: any) => {
         try {
-          const res = await fetch(`${API}/api/search?q=${encodeURIComponent(item.name)}&limit=1`);
+          // נסה חיפוש לפי ברקוד קודם, אחר כך שם
+          const q = item.barcode || item.name;
+          const res = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&limit=1`);
           const data = await res.json();
           const match = data.results?.[0];
           if (match && match.minPrice && match.minPrice < item.price) {
@@ -68,6 +78,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       store: parsed.store,
+      branch: parsed.branch,
+      receipt_number: parsed.receipt_number,
+      date: parsed.date,
       total: parsed.total,
       items: itemsWithSavings,
       savings: +totalSavings.toFixed(2),
