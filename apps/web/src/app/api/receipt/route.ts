@@ -15,51 +15,22 @@ export async function POST(req: NextRequest) {
       messages: [{
         role: 'user',
         content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: base64 },
-          },
-          {
-            type: 'text',
-            text: `זוהי קבלה מסופרמרקט ישראלי. חלץ את כל הפרטים.
-החזר JSON בלבד, ללא טקסט נוסף:
-{
-  "store": "שם הרשת (שופרסל/רמי לוי/ויקטורי וכו')",
-  "branch": "שם הסניף",
-  "receipt_number": "מספר חשבונית או קבלה",
-  "date": "תאריך",
-  "total": 123.45,
-  "items": [
-    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }
-  ]
-}
-חוקים:
-- אם ברקוד לא מופיע — null
-- כמות ברירת מחדל 1
-- הנחות/מבצעים — חבר למחיר הסופי של המוצר, אל תוסיף שורה נפרדת
-- subtotal = price * qty
-- total = סך הכל לתשלום בתחתית הקבלה
-- אם לא ניתן לקרוא: {"error": "לא ניתן לקרוא את הקבלה"}`
-          }
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+          { type: 'text', text: `זוהי קבלה מסופרמרקט ישראלי. חלץ את כל הפרטים.\nהחזר JSON בלבד, ללא טקסט נוסף:\n{\n  "store": "שם הרשת",\n  "branch": "שם הסניף",\n  "receipt_number": "מספר קבלה",\n  "date": "תאריך",\n  "total": 123.45,\n  "items": [\n    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים: ברקוד לא קיים=null, כמות ברירת מחדל=1, הנחות חבר למחיר הסופי, total=סך לתשלום בתחתית.\nאם לא ניתן לקרוא: {"error": "לא ניתן לקרוא את הקבלה"}` }
         ],
       }],
     });
 
     const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
     let parsed;
-    try {
-      parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-    } catch {
-      return NextResponse.json({ error: 'לא הצלחנו לנתח את הקבלה' }, { status: 422 });
-    }
+    try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()); }
+    catch { return NextResponse.json({ error: 'לא הצלחנו לנתח את הקבלה' }, { status: 422 }); }
 
     if (parsed.error) return NextResponse.json({ error: parsed.error }, { status: 422 });
 
-    // לכל מוצר — חפש מחיר זול יותר
     const itemsWithSavings = await Promise.all(
       (parsed.items || []).map(async (item: any) => {
         try {
-          // נסה חיפוש לפי ברקוד קודם, אחר כך שם
           const q = item.barcode || item.name;
           const res = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&limit=1`);
           const data = await res.json();
@@ -68,23 +39,12 @@ export async function POST(req: NextRequest) {
             return { ...item, minPrice: match.minPrice, savings: +(item.price - match.minPrice).toFixed(2) };
           }
           return { ...item, minPrice: match?.minPrice || null, savings: 0 };
-        } catch {
-          return { ...item, savings: 0 };
-        }
+        } catch { return { ...item, savings: 0 }; }
       })
     );
 
     const totalSavings = itemsWithSavings.reduce((s, i) => s + (i.savings || 0), 0);
-
-    return NextResponse.json({
-      store: parsed.store,
-      branch: parsed.branch,
-      receipt_number: parsed.receipt_number,
-      date: parsed.date,
-      total: parsed.total,
-      items: itemsWithSavings,
-      savings: +totalSavings.toFixed(2),
-    });
+    return NextResponse.json({ store: parsed.store, branch: parsed.branch, receipt_number: parsed.receipt_number, date: parsed.date, total: parsed.total, items: itemsWithSavings, savings: +totalSavings.toFixed(2) });
 
   } catch (e: any) {
     console.error('Receipt error:', e);
