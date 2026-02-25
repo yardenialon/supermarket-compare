@@ -1,8 +1,6 @@
 import { query } from '../../db.js';
-
 const SERP_KEY = '2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a778';
 const TRUSTED_DOMAINS = ['shufersal.co.il', 'rfranco.com', 'tnuva.co.il', 'mybundles.co.il', 'mega.co.il', 'victoria.co.il', 'osheread.co.il', 'ramielevy.co.il', 'pricez.co.il', 'ha-pricelist.co.il', 'super-pharm.co.il', 'schnellers.co.il', 'yochananof.co.il'];
-
 function isTrustedImage(url: string | undefined, barcode: string) {
   if (!url) return false;
   const lower = url.toLowerCase();
@@ -10,7 +8,6 @@ function isTrustedImage(url: string | undefined, barcode: string) {
   for (const d of TRUSTED_DOMAINS) { if (lower.includes(d)) return true; }
   return false;
 }
-
 async function fetchProductImage(barcode: string, name: string) {
   try {
     const q = encodeURIComponent(barcode + ' ' + name + ' מוצר');
@@ -27,13 +24,11 @@ async function fetchProductImage(barcode: string, name: string) {
     return null;
   } catch { return null; }
 }
-
 export async function productRoutes(app: any) {
   app.get('/product/:id/prices', async (req: any) => {
     const { id } = req.params;
     const { lat, lng } = req.query;
     const prod = await query('SELECT image_url FROM product WHERE id=$1', [id]);
-
     let prices;
     if (lat && lng) {
       const uLat = parseFloat(lat as string);
@@ -43,6 +38,7 @@ export async function productRoutes(app: any) {
           sp.price, sp.is_promo as "isPromo",
           s.id as "storeId", s.name as "storeName", s.city,
           rc.name as "chainName",
+          s.subchain_name as "subchainName",
           ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
@@ -56,7 +52,8 @@ export async function productRoutes(app: any) {
         SELECT
           sp.price, sp.is_promo as "isPromo",
           s.id as "storeId", s.name as "storeName", s.city,
-          rc.name as "chainName"
+          rc.name as "chainName",
+          s.subchain_name as "subchainName"
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
         JOIN retailer_chain rc ON rc.id = s.chain_id
@@ -65,14 +62,12 @@ export async function productRoutes(app: any) {
         LIMIT 50
       `, [id]);
     }
-
     return {
       productId: +id,
       imageUrl: prod.rows[0]?.image_url || null,
       prices: prices.rows.map((r: any) => ({ ...r, price: +r.price })).sort((a: any, b: any) => a.price - b.price)
     };
   });
-
   app.get('/product/:id/image', async (req: any) => {
     const { id } = req.params;
     const prod = await query('SELECT barcode, name, image_url FROM product WHERE id=$1', [id]);
