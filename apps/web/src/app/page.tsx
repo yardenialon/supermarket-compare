@@ -261,7 +261,8 @@ export default function Home() {
         const url = `${window.location.origin}/list/${data.id}`;
         const cheapest = listResults[0];
         const chainHe = (name: string) => CHAINS[name]?.he || name;
-        const text = `🛒 הרשימה שלנו ב-Savy\n${list.length} מוצרים${cheapest ? ` · הכי זול: ₪${cheapest.total.toFixed(0)} ב${chainHe(cheapest.chainName)}` : ''}\n👉 ${url}`;
+        const cheapestText = cheapest ? `\n─────────────────────\n🏆 הכי זול: ₪${cheapest.total.toFixed(0)} ב${chainHe(cheapest.subchainName || cheapest.chainName)}` : '';
+        const text = `🛒 *רשימת קניות - סאבי*\n─────────────────────\n${list.map(i => `☐ ${i.product.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`).join('\n')}${cheapestText}\n─────────────────────\n👉 ${url}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
       }
     } catch { setToast('שגיאה בשיתוף'); setTimeout(() => setToast(''), 2000); }
