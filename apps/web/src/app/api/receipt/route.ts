@@ -6,17 +6,16 @@ const API = 'https://supermarket-compare-production.up.railway.app';
 
 export async function POST(req: NextRequest) {
   try {
-    const { base64, mimeType } = await req.json();
-    if (!base64) return NextResponse.json({ error: 'חסרה תמונה' }, { status: 400 });
+    const { parts, base64, mimeType } = await req.json();
+    
+    // תמיכה בשני פורמטים: parts (מערך) או base64 בודד
+    const images: string[] = parts || (base64 ? [base64] : []);
+    if (!images.length) return NextResponse.json({ error: 'חסרות תמונות' }, { status: 400 });
 
-    const isPdf = mimeType === 'application/pdf';
-    const source = isPdf
-      ? { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 }
-      : { type: 'base64' as const, media_type: (mimeType || 'image/jpeg') as any, data: base64 };
-
-    const contentBlock = isPdf
-      ? { type: 'document' as const, source }
-      : { type: 'image' as const, source };
+    const imageBlocks = images.map(b64 => ({
+      type: 'image' as const,
+      source: { type: 'base64' as const, media_type: 'image/jpeg' as const, data: b64 }
+    }));
 
     const msg = await client.messages.create({
       model: 'claude-opus-4-5',
@@ -24,8 +23,8 @@ export async function POST(req: NextRequest) {
       messages: [{
         role: 'user',
         content: [
-          contentBlock as any,
-          { type: 'text', text: `זוהי קבלה מסופרמרקט ישראלי. חלץ את כל הפרטים.\nהחזר JSON בלבד:\n{\n  "store": "שם הרשת",\n  "branch": "שם הסניף",\n  "receipt_number": "מספר קבלה",\n  "date": "תאריך",\n  "total": 123.45,\n  "items": [\n    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים: ברקוד לא קיים=null, כמות ברירת מחדל=1, הנחות חבר למחיר הסופי.\nאם לא ניתן לקרוא: {"error": "לא ניתן לקרוא את הקבלה"}` }
+          ...imageBlocks,
+          { type: 'text', text: `אלו ${images.length} תמונות של קבלה מסופרמרקט ישראלי (ייתכן שהן חלקים שונים של אותה קבלה). חלץ את כל הפרטים ואחד לרשימה אחת ללא כפילויות.\nהחזר JSON בלבד:\n{\n  "store": "שם הרשת",\n  "branch": "שם הסניף",\n  "receipt_number": "מספר קבלה",\n  "date": "תאריך",\n  "total": 123.45,\n  "items": [\n    { "name": "שם המוצר", "barcode": "1234567890123", "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים: ברקוד לא קיים=null, כמות ברירת מחדל=1, הנחות חבר למחיר הסופי, אל תכפיל מוצרים.\nאם לא ניתן לקרוא: {"error": "לא ניתן לקרוא"}` }
         ],
       }],
     });
