@@ -628,9 +628,20 @@ export default function Home() {
                 <h3 className="font-black text-lg text-stone-800">השוואת סלים</h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setLocMode('cheapest')} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 זול</button>
-                  {locStatus === 'granted' && (
-                    <button onClick={() => setLocMode('nearby')} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 קרוב</button>
-                  )}
+                  {locStatus === 'granted' ? (
+                    <button onClick={() => setLocMode('nearby')} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 קרוב אליי</button>
+                  ) : locStatus === 'loading' ? (
+                    <button disabled className="px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold border border-amber-300 bg-amber-50 text-amber-600 animate-pulse">📍 מאתר...</button>
+                  ) : locStatus !== 'denied' ? (
+                    <button onClick={() => {
+                      setLocStatus('loading');
+                      navigator.geolocation?.getCurrentPosition(
+                        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); setLocMode('nearby'); },
+                        () => { setLocStatus('denied'); },
+                        { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+                      );
+                    }} className="px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border border-emerald-400 bg-white text-emerald-600 hover:bg-emerald-50">📍 קרוב אליי</button>
+                  ) : null}
                 </div>
               </div>
               {locMode === 'nearby' && locStatus === 'granted' && (
