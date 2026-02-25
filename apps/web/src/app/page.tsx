@@ -191,7 +191,21 @@ export default function Home() {
     }
   }, []);
 
-  const search = useCallback((v: string) => { if (!v.trim()) { setResults([]); return; } setLoading(true); api.search(v).then((d: any) => setResults(d.results || [])).catch(() => {}).finally(() => setLoading(false)); }, []);
+  // ✅ FIXED: AbortError is ignored — only the last search request wins
+  const search = useCallback((v: string) => {
+    if (!v.trim()) { setResults([]); return; }
+    setLoading(true);
+    api.search(v)
+      .then((d: any) => setResults(d.results || []))
+      .catch((err: any) => {
+        // Ignore abort errors — they're intentional (new search started)
+        if (err?.name !== 'AbortError') {
+          setResults([]);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   const onInput = (v: string) => { setQ(v); clearTimeout(db.current); db.current = setTimeout(() => search(v), 300); };
   const pick = (p: Product) => {
     setSel(p); setPLoading(true); setChainFilter(null);
