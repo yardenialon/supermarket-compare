@@ -42,7 +42,7 @@ export async function dealsRoutes(app: any) {
         AND pr.description IS NOT NULL
         AND pr.description != ''
         ${chainFilter}
-      GROUP BY pr.id, rc.name, s.name, s.city, s.subchain_name
+      GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, s.subchain_name
       ORDER BY pr.id DESC
       LIMIT $1 OFFSET $2
     `, params);
