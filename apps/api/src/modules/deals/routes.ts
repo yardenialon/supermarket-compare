@@ -88,4 +88,48 @@ export async function dealsRoutes(app: any) {
       discountedPrice: r.discountedPrice ? +r.discountedPrice : null,
     }))};
   });
+  // GET /api/deals/top - מבצעים הכי משתלמים לדף הבית
+  app.get('/deals/top', async (req: any) => {
+    const { limit = 20 } = req.query;
+    const result = await query(`
+      SELECT
+        pr.id as "promotionId",
+        pr.description,
+        pr.discounted_price as "discountedPrice",
+        pr.discount_rate as "discountRate",
+        pr.min_qty as "minQty",
+        pr.end_date as "endDate",
+        pr.is_club_only as "isClubOnly",
+        rc.name as "chainName",
+        s.subchain_name as "subchainName",
+        MIN(p.id) as "productId",
+        MIN(p.name) as "productName",
+        MIN(p.barcode) as "barcode",
+        MIN(p.image_url) as "imageUrl",
+        MIN(sp.price) as "regularPrice"
+      FROM promotion pr
+      JOIN store s ON s.id = pr.store_id
+      JOIN retailer_chain rc ON rc.id = s.chain_id
+      JOIN promotion_item pi ON pi.promotion_id = pr.id
+      JOIN product p ON p.id = pi.product_id
+      LEFT JOIN store_price sp ON sp.product_id = p.id AND sp.store_id = pr.store_id
+      WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
+        AND pr.description IS NOT NULL
+        AND pr.discounted_price IS NOT NULL
+        AND pr.discounted_price > 0
+      GROUP BY pr.id, rc.name, s.subchain_name
+      HAVING MIN(sp.price) IS NOT NULL AND MIN(sp.price) > pr.discounted_price
+      ORDER BY (MIN(sp.price) - pr.discounted_price) / MIN(sp.price) DESC
+      LIMIT $1
+    `, [parseInt(limit)]);
+    return {
+      deals: result.rows.map((r: any) => ({
+        ...r,
+        discountedPrice: +r.discountedPrice,
+        regularPrice: r.regularPrice ? +r.regularPrice : null,
+        savingPct: r.regularPrice ? Math.round((+r.regularPrice - +r.discountedPrice) / +r.regularPrice * 100) : null,
+      }))
+    };
+  });
+
 }
