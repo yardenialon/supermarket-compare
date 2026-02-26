@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -16,14 +16,14 @@ export default function ReceiptPage() {
   const [error, setError] = useState<string | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   // בקש מיקום בשקט
-  useState(() => {
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+  useEffect(() => {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => {}
       );
     }
-  });
+  }, []);
   const galleryRef = useRef<HTMLInputElement>(null);
 
   async function addFile(file: File) {
