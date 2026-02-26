@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { api, dealsApi } from "@/lib/api";
+import { DealModal } from "@/components/DealModal";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
@@ -179,29 +180,57 @@ const CHAIN_HE: Record<string, string> = {
 
 function HotDeals() {
   const [deals, setDeals] = useState<any[]>([]);
+  const [selectedDeal, setSelectedDeal] = useState<any | null>(null);
+  const [toast, setToast] = useState('');
+
   useEffect(() => {
     dealsApi.top(20).then((d: any) => setDeals(d.deals || [])).catch(() => {});
   }, []);
+
+  const handleAddToList = (deal: any) => {
+    try {
+      const saved = localStorage.getItem('savy-list');
+      const list = saved ? JSON.parse(saved) : [];
+      if (!list.find((i: any) => i.product?.id === deal.productId)) {
+        list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 });
+        localStorage.setItem('savy-list', JSON.stringify(list));
+      }
+      setToast(deal.productName);
+      setTimeout(() => setToast(''), 2500);
+    } catch {}
+  };
+
   if (!deals.length) return null;
   return (
     <div className="mb-4" dir="rtl">
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>
+            {toast} נוסף לרשימה
+          </div>
+        </div>
+      )}
+      {selectedDeal && (
+        <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />
+      )}
       <div className="flex items-center justify-between px-4 mb-2">
         <a href="/deals" className="text-xs text-emerald-600 font-medium">כל המבצעים ←</a>
         <h2 className="text-base font-bold text-stone-800">🔥 מבצעים חמים היום</h2>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 px-4" style={{ scrollSnapType: 'x mandatory' }}>
         {deals.map((deal: any) => (
-          <a key={deal.promotionId} href="/deals" style={{ scrollSnapAlign: 'start' }}
-            className="shrink-0 w-40 bg-white rounded-2xl shadow-sm border border-stone-100 p-3 flex flex-col gap-2 hover:shadow-md transition-shadow">
+          <button key={deal.promotionId} onClick={() => setSelectedDeal(deal)} style={{ scrollSnapAlign: 'start' }}
+            className="shrink-0 w-40 bg-white rounded-2xl shadow-sm border border-stone-100 p-3 flex flex-col gap-2 hover:shadow-md transition-shadow text-right">
             <div className="w-full h-20 bg-stone-50 rounded-xl flex items-center justify-center overflow-hidden">
               {deal.imageUrl
                 ? <img src={deal.imageUrl} alt={deal.productName} className="object-contain max-h-full max-w-full p-1" />
                 : <span className="text-3xl">🏷️</span>
               }
             </div>
-            <p className="text-xs font-semibold text-stone-700 leading-tight line-clamp-2 text-right">{deal.productName}</p>
+            <p className="text-xs font-semibold text-stone-700 leading-tight line-clamp-2">{deal.productName}</p>
             <div className="bg-red-50 rounded-lg px-2 py-1">
-              <p className="text-[11px] text-red-600 font-medium leading-tight line-clamp-1 text-right">{deal.description}</p>
+              <p className="text-[11px] text-red-600 font-medium leading-tight line-clamp-1">{deal.description}</p>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full">
@@ -216,7 +245,7 @@ function HotDeals() {
                 {(CHAIN_HE[deal.chainName] || deal.chainName).charAt(0)}
               </div>
             </div>
-          </a>
+          </button>
         ))}
       </div>
     </div>
