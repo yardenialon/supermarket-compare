@@ -37,13 +37,15 @@ export async function POST(req: NextRequest) {
     const itemsWithSavings = await Promise.all(
       (parsed.items || []).map(async (item: any) => {
         try {
-          const q = item.barcode || item.name;
-          const res = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}&limit=1`);
+          // חפש לפי ברקוד בלבד - מדויק יותר
+          if (!item.barcode) return { ...item, savings: 0 };
+          const res = await fetch(`${API}/api/search?q=${encodeURIComponent(item.barcode)}&limit=1`);
           const data = await res.json();
           const match = data.results?.[0];
-          if (match && match.minPrice && match.minPrice < item.price)
+          if (!match) return { ...item, savings: 0 };
+          if (match.minPrice && match.minPrice < item.price)
             return { ...item, productId: match.id, minPrice: match.minPrice, savings: +(item.price - match.minPrice).toFixed(2) };
-          return { ...item, productId: match?.id || null, minPrice: match?.minPrice || null, savings: 0 };
+          return { ...item, productId: match.id, minPrice: match.minPrice || null, savings: 0 };
         } catch { return { ...item, savings: 0 }; }
       })
     );
