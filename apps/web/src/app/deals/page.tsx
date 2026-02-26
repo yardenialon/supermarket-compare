@@ -82,8 +82,9 @@ function DealModal({ deal, onClose, onAddToList }: { deal: any; onClose: () => v
             <div className="flex items-center justify-between">
               <div className="text-right">
                 {promoPrice && <p className="text-3xl font-black text-emerald-600">₪{promoPrice}</p>}
-                {pricePerUnit && <p className="text-sm text-stone-500">₪{pricePerUnit} ליחידה</p>}
-                {regularPrice && <p className="text-sm text-stone-400 line-through">מחיר רגיל: ₪{(regularPrice * minQty).toFixed(2)}</p>}
+                {pricePerUnit && <p className="text-sm text-emerald-700 font-medium">₪{pricePerUnit} ליחידה במבצע</p>}
+                {regularPrice && minQty > 1 && <p className="text-sm text-stone-500">₪{regularPrice.toFixed(2)} ליחידה רגיל</p>}
+                {regularPrice && <p className="text-sm text-stone-400 line-through">סה״כ רגיל: ₪{(regularPrice * minQty).toFixed(2)}</p>}
               </div>
               {saving && +saving > 0 && (
                 <div className="bg-emerald-500 text-white rounded-2xl px-4 py-2 text-center">
