@@ -20,6 +20,23 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Wolt':         { he: 'וולט',        color: '#00c2e8', logo: '/logos/wolt.png' },
 };
 const chainHe = (n: string) => CHAINS[n]?.he || n;
+
+const chainUrl = (chainName: string): string | null => {
+  const n = (chainName || '').toLowerCase();
+  if (n.includes('shufersal')) return 'https://www.shufersal.co.il';
+  if (n.includes('rami')) return 'https://www.rami-levy.co.il';
+  if (n.includes('victory')) return 'https://www.victoryonline.co.il';
+  if (n.includes('yochananof')) return 'https://www.yochananof.co.il';
+  if (n.includes('tiv')) return 'https://www.tivtaam.co.il';
+  if (n.includes('keshet')) return 'https://www.keshet-teamim.co.il';
+  if (n.includes('hazi') || n.includes('half')) return 'https://www.half-price.co.il';
+  if (n.includes('mahsani')) return 'https://www.mahsaniashuk.co.il';
+  if (n.includes('osher')) return 'https://www.osherad.co.il';
+  if (n.includes('mega')) return 'https://www.mega.co.il';
+  if (n.includes('wolt')) return 'https://wolt.com/he/isr';
+  return null;
+};
+
 const chainClr = (n: string) => CHAINS[n]?.color || '#6b7280';
 const chainLogo = (n: string) => CHAINS[n]?.logo || '';
 
@@ -328,6 +345,16 @@ export default function OnlinePage() {
                           <span className="text-red-300 text-xs">לא נמצא</span>
                         </div>
                       ))}
+                      {chainUrl(store.chainName) && (
+                        
+                          href={chainUrl(store.chainName)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={"mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition " + (isFirst ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-stone-100 text-stone-600 hover:bg-stone-200")}
+                        >
+                          🛒 עבור לאתר {chainHe(store.chainName)}
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
