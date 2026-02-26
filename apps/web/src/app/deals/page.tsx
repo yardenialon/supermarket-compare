@@ -130,7 +130,7 @@ function DealModal({ deal, onClose, onAddToList }: { deal: any; onClose: () => v
           <div className="bg-stone-50 rounded-xl p-4">
             <div className="flex items-center gap-3 justify-between">
               
-                href={`https://waze.com/ul?q=${encodeURIComponent((deal.storeName || '') + ' ' + (deal.city || '') + ' ישראל')}&navigate=yes`}
+                href={`https://waze.com/ul?q=${encodeURIComponent((deal.storeName || '') + ' ' + (deal.city || '') + ' ישראל')}&amp;navigate=yes`}
                 target="_blank"
                 className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg font-medium"
               >
