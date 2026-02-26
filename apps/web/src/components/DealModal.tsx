@@ -204,23 +204,33 @@ function DealCardSlider({ deal, onClick }: { deal: any; onClick: () => void }) {
         </div>
       )}
 
-      <div className="flex items-center gap-1.5 mt-auto">
-        <ChainLogo name={deal.chainName} size={20} />
-        <span className="text-xs text-stone-400">{chainHe}</span>
+      <div className="flex flex-col gap-1 mt-auto">
+        <div className="flex items-center gap-1.5">
+          <ChainLogo name={deal.chainName} size={20} />
+          <span className="text-xs text-stone-500 font-medium">{chainHe}</span>
+        </div>
+        {deal.storeName && (
+          <p className="text-[10px] text-stone-400 leading-tight">
+            {deal.storeName}{deal.city ? ` · ${deal.city}` : ''}
+          </p>
+        )}
+        {deal.address && (
+          <p className="text-[10px] text-stone-300 leading-tight line-clamp-1">{deal.address}</p>
+        )}
       </div>
     </button>
   );
 }
 
-export function HotDealsSlider({ onAddToList }: { onAddToList: (deal: any) => void }) {
+export function HotDealsSlider({ onAddToList, userLat, userLng }: { onAddToList: (deal: any) => void; userLat?: number; userLng?: number }) {
   const [deals, setDeals] = useState<any[]>([]);
   const [selectedDeal, setSelectedDeal] = useState<any | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    dealsApi.top(20).then((d: any) => setDeals(d.deals || [])).catch(() => {});
-  }, []);
+    dealsApi.top(20, userLat, userLng).then((d: any) => setDeals(d.deals || [])).catch(() => {});
+  }, [userLat, userLng]);
 
   const scrollTo = (index: number) => {
     const el = sliderRef.current;
@@ -246,7 +256,7 @@ export function HotDealsSlider({ onAddToList }: { onAddToList: (deal: any) => vo
       )}
       <div className="flex items-center justify-between px-4 mb-2">
         <a href="/deals" className="text-xs text-emerald-600 font-medium">כל המבצעים ←</a>
-        <h2 className="text-base font-bold text-stone-800">🔥 מבצעים חמים היום</h2>
+        <h2 className="text-base font-bold text-stone-800">{userLat ? "📍 מבצעים קרובים אליך" : "🔥 מבצעים חמים היום"}</h2>
       </div>
 
       <div className="relative">

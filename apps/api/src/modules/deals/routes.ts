@@ -25,6 +25,9 @@ export async function dealsRoutes(app: any) {
         s.name as "storeName",
         s.city,
         s.subchain_name as "subchainName",
+        s.address as "address",
+        s.lat as "lat",
+        s.lng as "lng",
         COUNT(pi.id) as "itemCount",
         MIN(p.id) as "productId",
         MIN(p.name) as "productName",
@@ -90,7 +93,15 @@ export async function dealsRoutes(app: any) {
   });
   // GET /api/deals/top - מבצעים הכי משתלמים לדף הבית
   app.get('/deals/top', async (req: any) => {
-    const { limit = 20 } = req.query;
+    const { limit = 20, lat, lng } = req.query;
+    const hasLocation = lat && lng;
+    const params: any[] = [parseInt(limit)];
+    let locationFilter = '';
+    if (hasLocation) {
+      params.push(parseFloat(lat), parseFloat(lng));
+      locationFilter = `AND s.lat IS NOT NULL AND s.lng IS NOT NULL
+        AND (s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3) < 0.002025`;
+    }
     const result = await query(`
       SELECT
         pr.id as "promotionId",
@@ -101,7 +112,11 @@ export async function dealsRoutes(app: any) {
         pr.end_date as "endDate",
         pr.is_club_only as "isClubOnly",
         rc.name as "chainName",
-        s.subchain_name as "subchainName",
+        s.name as "storeName",
+        s.city as "city",
+        s.address as "address",
+        s.lat as "lat",
+        s.lng as "lng",
         MIN(p.id) as "productId",
         MIN(p.name) as "productName",
         MIN(p.barcode) as "barcode",
@@ -117,11 +132,12 @@ export async function dealsRoutes(app: any) {
         AND pr.description IS NOT NULL
         AND pr.discounted_price IS NOT NULL
         AND pr.discounted_price > 0
-      GROUP BY pr.id, rc.name, s.subchain_name
+        ${locationFilter}
+      GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng
       HAVING MIN(sp.price) IS NOT NULL AND MIN(sp.price) > pr.discounted_price
       ORDER BY (MIN(sp.price) - pr.discounted_price) / MIN(sp.price) DESC
       LIMIT $1
-    `, [parseInt(limit)]);
+    `, params);
     return {
       deals: result.rows.map((r: any) => ({
         ...r,

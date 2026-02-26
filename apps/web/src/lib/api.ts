@@ -45,6 +45,6 @@ export const dealsApi = {
     f('/deals?' + new URLSearchParams({ ...(chain ? { chain } : {}), limit: String(limit), offset: String(offset) }).toString()),
   items: (promotionId: number) =>
     f('/deals/' + promotionId + '/items'),
-  top: (limit = 20) =>
-    f('/deals/top?limit=' + limit),
+  top: (limit = 20, lat?: number, lng?: number) =>
+    f('/deals/top?limit=' + limit + (lat && lng ? `&lat=${lat}&lng=${lng}` : '')),
 };
