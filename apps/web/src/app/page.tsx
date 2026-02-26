@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { api, dealsApi } from "@/lib/api";
-import { DealModal } from "@/components/DealModal";
+import { DealModal, HotDealsSlider } from "@/components/DealModal";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
@@ -166,91 +166,6 @@ const CATS = [
 ];
 
 
-const CHAIN_COLORS: Record<string, string> = {
-  'Shufersal': '#e11d48', 'Rami Levy': '#2563eb', 'Victory': '#f59e0b',
-  'Mega': '#16a34a', 'Osher Ad': '#8b5cf6', 'Bareket': '#a855f7',
-  'Mahsani Ashuk': '#f97316', 'Hazi Hinam': '#ea580c', 'Het Cohen': '#7c3aed',
-};
-const CHAIN_HE: Record<string, string> = {
-  'Shufersal': 'שופרסל', 'Rami Levy': 'רמי לוי', 'Victory': 'ויקטורי',
-  'Mega': 'מגה', 'Osher Ad': 'אושר עד', 'Bareket': 'סופר ברקת',
-  'Mahsani Ashuk': 'מחסני השוק', 'Hazi Hinam': 'חצי חינם', 'Het Cohen': 'חט כהן',
-  'Good Pharm': 'גוד פארם', 'Keshet Taamim': 'קשת טעמים', 'Dor Alon': 'דור אלון',
-};
-
-function HotDeals() {
-  const [deals, setDeals] = useState<any[]>([]);
-  const [selectedDeal, setSelectedDeal] = useState<any | null>(null);
-  const [toast, setToast] = useState('');
-
-  useEffect(() => {
-    dealsApi.top(20).then((d: any) => setDeals(d.deals || [])).catch(() => {});
-  }, []);
-
-  const handleAddToList = (deal: any) => {
-    try {
-      const saved = localStorage.getItem('savy-list');
-      const list = saved ? JSON.parse(saved) : [];
-      if (!list.find((i: any) => i.product?.id === deal.productId)) {
-        list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 });
-        localStorage.setItem('savy-list', JSON.stringify(list));
-      }
-      setToast(deal.productName);
-      setTimeout(() => setToast(''), 2500);
-    } catch {}
-  };
-
-  if (!deals.length) return null;
-  return (
-    <div className="mb-4" dir="rtl">
-      {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-          <div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>
-            {toast} נוסף לרשימה
-          </div>
-        </div>
-      )}
-      {selectedDeal && (
-        <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />
-      )}
-      <div className="flex items-center justify-between px-4 mb-2">
-        <a href="/deals" className="text-xs text-emerald-600 font-medium">כל המבצעים ←</a>
-        <h2 className="text-base font-bold text-stone-800">🔥 מבצעים חמים היום</h2>
-      </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 px-4" style={{ scrollSnapType: 'x mandatory' }}>
-        {deals.map((deal: any) => (
-          <button key={deal.promotionId} onClick={() => setSelectedDeal(deal)} style={{ scrollSnapAlign: 'start' }}
-            className="shrink-0 w-40 bg-white rounded-2xl shadow-sm border border-stone-100 p-3 flex flex-col gap-2 hover:shadow-md transition-shadow text-right">
-            <div className="w-full h-20 bg-stone-50 rounded-xl flex items-center justify-center overflow-hidden">
-              {deal.imageUrl
-                ? <img src={deal.imageUrl} alt={deal.productName} className="object-contain max-h-full max-w-full p-1" />
-                : <span className="text-3xl">🏷️</span>
-              }
-            </div>
-            <p className="text-xs font-semibold text-stone-700 leading-tight line-clamp-2">{deal.productName}</p>
-            <div className="bg-red-50 rounded-lg px-2 py-1">
-              <p className="text-[11px] text-red-600 font-medium leading-tight line-clamp-1">{deal.description}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full">
-                -{deal.savingPct}%
-              </span>
-              <span className="text-sm font-black text-emerald-600">₪{deal.discountedPrice}</span>
-            </div>
-            <div className="flex items-center gap-1 justify-end">
-              <span className="text-[10px] text-stone-400">{CHAIN_HE[deal.chainName] || deal.chainName}</span>
-              <div className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-black"
-                style={{ backgroundColor: CHAIN_COLORS[deal.chainName] || '#6b7280' }}>
-                {(CHAIN_HE[deal.chainName] || deal.chainName).charAt(0)}
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const [tab, setTab] = useState<'search' | 'list'>('search');
@@ -520,7 +435,7 @@ export default function Home() {
 
       {/* ==================== SEARCH TAB ==================== */}
       {tab === 'search' && (<div>
-        <HotDeals />
+        <HotDealsSlider onAddToList={(deal) => { try { const saved = localStorage.getItem("savy-list"); const list = saved ? JSON.parse(saved) : []; if (!list.find((i: any) => i.product?.id === deal.productId)) { list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 }); localStorage.setItem("savy-list", JSON.stringify(list)); } } catch {} }} />
         <div className="max-w-2xl mx-auto px-4">
           <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span></div>
           <div className="mt-4 flex justify-center gap-2">
