@@ -731,13 +731,6 @@ export default function Home() {
                           {/* כפתור לאתר הרשת */}
                           {chainUrl(store.chainName) && (
                             
-                              href={chainUrl(store.chainName)!}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className={"mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition " + (isWinner ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-stone-100 text-stone-600 hover:bg-stone-200")}
-                            >
-                              🛒 עבור לאתר {store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}
                             </a>
                           )}
                           {chainUrl(store.chainName) && (
