@@ -29,11 +29,13 @@ const chainUrl = (chainName: string): string | null => {
   if (n.includes('yochananof')) return 'https://www.yochananof.co.il';
   if (n.includes('tiv')) return 'https://www.tivtaam.co.il';
   if (n.includes('keshet')) return 'https://www.keshet-teamim.co.il';
-  if (n.includes('hazi') || n.includes('half')) return 'https://www.half-price.co.il';
-  if (n.includes('mahsani')) return 'https://www.mahsaniashuk.co.il';
+  if (n.includes('hazi') || n.includes('half')) return 'https://shop.hazi-hinam.co.il';
+  if (n.includes('mahsani')) return 'https://www.mck.co.il';
   if (n.includes('osher')) return 'https://www.osherad.co.il';
   if (n.includes('mega')) return 'https://www.mega.co.il';
   if (n.includes('wolt')) return 'https://wolt.com/he/isr';
+  if (n.includes('carrefour')) return 'https://www.carrefour.co.il';
+  if (n.includes('shuk') || n.includes('ahir')) return 'https://www.shukcity.co.il';
   return null;
 };
 
