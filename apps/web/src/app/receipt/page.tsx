@@ -15,6 +15,15 @@ export default function ReceiptPage() {
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  // בקש מיקום בשקט
+  useState(() => {
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
+    }
+  });
   const galleryRef = useRef<HTMLInputElement>(null);
 
   async function addFile(file: File) {
@@ -32,7 +41,7 @@ export default function ReceiptPage() {
       const res = await fetch('/api/receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parts: parts.map(p => p.base64) }),
+        body: JSON.stringify({ parts: parts.map(p => p.base64), lat: userLoc?.lat, lng: userLoc?.lng }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
@@ -149,10 +158,10 @@ export default function ReceiptPage() {
                 )}
               </div>
             )}
-            {results.bestStores && results.bestStores.length > 0 && (
+            {results.bestStores && results.bestStores.length > 0 && results.bestStores[0]?.total < results.total && (
               <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-stone-100">
-                  <h2 className="font-black text-stone-800">איפה היה זול יותר? 🏪</h2>
+                  <h2 className="font-black text-stone-800">איפה תוכל לחסוך בפעם הבאה 🏪</h2>
                 </div>
                 <div className="divide-y divide-stone-50">
                   {results.bestStores.map((store: any, i: number) => (

@@ -6,7 +6,7 @@ const API = 'https://supermarket-compare-production.up.railway.app';
 
 export async function POST(req: NextRequest) {
   try {
-    const { parts, base64, mimeType } = await req.json();
+    const { parts, base64, mimeType, lat, lng } = await req.json();
     const images: string[] = parts || (base64 ? [base64] : []);
     if (!images.length) return NextResponse.json({ error: 'חסרות תמונות' }, { status: 400 });
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
         const listRes = await fetch(`${API}/api/list`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: listItems }),
+          body: JSON.stringify({ items: listItems, lat, lng }),
         });
         const listData = await listRes.json();
         bestStores = (listData.bestStoreCandidates || []).slice(0, 3);
