@@ -47,6 +47,7 @@ export default function ReceiptPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
       setResults(data);
+      console.log('DEBUG:', JSON.stringify({total: data.total, totalType: typeof data.total, bestStores: data.bestStores?.length, firstStore: data.bestStores?.[0]?.total}));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -159,6 +160,9 @@ export default function ReceiptPage() {
                 )}
               </div>
             )}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs font-mono">
+              total: {String(results.total)} | type: {typeof results.total} | stores: {results.bestStores?.length} | first: {String(results.bestStores?.[0]?.total)}
+            </div>
             {results.bestStores && results.bestStores.length > 0 && results.bestStores[0]?.total < Number(results.total) && (
               <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-stone-100">
