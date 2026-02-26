@@ -24,11 +24,13 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
 function ChainLogo({ name, size = 40 }: { name: string; size?: number }) {
   const c = CHAINS[name] || { he: name, color: '#6b7280', logo: '' };
   const [err, setErr] = useState(false);
-  if (c.logo && !err) return (
-    <div style={{ width: size, height: size, borderRadius: 10, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-      <img src={c.logo} alt={c.he} width={size} height={size} onError={() => setErr(true)} className="object-contain p-0.5" />
-    </div>
-  );
+  if (c.logo && !err) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: 10, backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        <img src={c.logo} alt={c.he} width={size} height={size} onError={() => setErr(true)} className="object-contain p-0.5" />
+      </div>
+    );
+  }
   return <span className="flex items-center justify-center text-white font-black text-sm rounded-xl" style={{ backgroundColor: c.color, width: size, height: size }}>{c.he.charAt(0)}</span>;
 }
 
