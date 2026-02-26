@@ -345,16 +345,23 @@ export default function OnlinePage() {
                           <span className="text-red-300 text-xs">לא נמצא</span>
                         </div>
                       ))}
-                      {chainUrl(store.chainName) && (
-                        <a
-                          href={chainUrl(store.chainName)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={"mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition " + (isFirst ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-stone-100 text-stone-600 hover:bg-stone-200")}
-                        >
-                          🛒 עבור לאתר {chainHe(store.chainName)}
-                        </a>
-                      )}
+                      <div className="flex gap-2 mt-2">
+                        {chainUrl(store.chainName) && (
+                          <a
+                            href={chainUrl(store.chainName)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition " + (isFirst ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-stone-100 text-stone-600 hover:bg-stone-200")}
+                          >
+                            🛒 עבור לאתר {chainHe(store.chainName)}
+                          </a>
+                        )}
+                        <button
+                          onClick={() => { const barcodes = list.map(i => i.product.barcode).filter(Boolean).join(','); navigator.clipboard.writeText(barcodes).then(() => { setToast('✅ מקטים הועתקו!'); setTimeout(() => setToast(''), 2000); }); }}
+                          className="px-4 py-3 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 transition text-sm font-bold shrink-0"
+                          title="העתק מקטים לרשימה המהירה"
+                        >📋</button>
+                      </div>
                     </div>
                   )}
                 </div>
