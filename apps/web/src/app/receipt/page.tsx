@@ -159,7 +159,7 @@ export default function ReceiptPage() {
                 )}
               </div>
             )}
-            {results.bestStores && results.bestStores.length > 0 && results.bestStores[0]?.total < results.total && (
+            {results.bestStores && results.bestStores.length > 0 && results.bestStores[0]?.total < Number(results.total) && (
               <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-stone-100">
                   <h2 className="font-black text-stone-800">איפה תוכל לחסוך בפעם הבאה 🏪</h2>
