@@ -7,7 +7,10 @@ import { listRoutes, sharedListRoutes, onlineListRoutes } from './modules/list/r
 import { storeRoutes } from './modules/store/routes.js';
 import { statusRoutes } from './modules/status/routes.js';
 import { receiptRoutes } from './modules/receipt/routes.js';
+import { dealsRoutes } from './modules/deals/routes.js';
+
 const app = Fastify({ logger: true });
+
 async function main() {
   await app.register(cors, { origin: process.env.CORS_ORIGIN || '*' });
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -19,8 +22,8 @@ async function main() {
   await app.register(storeRoutes, { prefix: '/api' });
   await app.register(statusRoutes);
   await app.register(receiptRoutes, { prefix: '/api' });
+  await app.register(dealsRoutes, { prefix: '/api' });
   const port = parseInt(process.env.API_PORT || '3001');
   await app.listen({ port, host: '0.0.0.0' });
 }
 main().catch(err => { console.error(err); process.exit(1); });
-
