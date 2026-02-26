@@ -46,7 +46,6 @@ export default function ReceiptPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
-      console.log('listItems:', JSON.stringify(data.debug_listItems));
       setResults(data);
     } catch (e: any) {
       setError(e.message);
@@ -168,8 +167,7 @@ export default function ReceiptPage() {
             {results.bestStores && results.bestStores.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-stone-100">
-                  <h2 className="font-black text-stone-800">השוואת מחירים לסל זה 🏪</h2>
-                  <p className="text-xs text-stone-400 mt-1">עבור {results.debug_listItems?.length || 0} מוצרים שזוהו לפי ברקוד</p>
+                  <h2 className="font-black text-stone-800">כך עולה הסל בחנויות אחרות 🏪</h2>
                 </div>
                 <div className="divide-y divide-stone-50">
                   {results.bestStores.map((store: any, i: number) => (
