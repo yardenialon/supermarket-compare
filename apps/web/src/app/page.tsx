@@ -531,7 +531,7 @@ export default function Home() {
               fp.map((p: Price, i: number) => (
                 <div key={i} className={"flex items-center justify-between px-5 py-4 transition hover:bg-stone-50 " + (i === 0 ? "bg-emerald-50/40" : "")}>
                   <div className="flex items-center gap-3">
-                    <CLogo name={p.chainName} subchain={p.subchainName} size={40} />
+                    <CLogo name={p.chainName} subchain={p.subchainName} size={80} />
                     <div>
                       <div className="font-bold text-base text-stone-700">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}</div>
                       <div className="text-sm text-stone-400">
@@ -576,7 +576,7 @@ export default function Home() {
               fp.map((p: Price, i: number) => (
                 <div key={i} className={"flex items-center justify-between px-4 py-3.5 " + (i === 0 ? "bg-emerald-50/40" : "")}>
                   <div className="flex items-center gap-3">
-                    <CLogo name={p.chainName} subchain={p.subchainName} size={38} />
+                    <CLogo name={p.chainName} subchain={p.subchainName} size={76} />
                     <div>
                       <div className="font-bold text-sm text-stone-700">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}</div>
                       <div className="text-xs text-stone-400">
