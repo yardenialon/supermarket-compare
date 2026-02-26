@@ -336,6 +336,10 @@ export default function Home() {
                     <span className="text-xl">🧾</span>
                     <span className="text-stone-600">סריקת קבלה</span>
                   </a>
+                  <a href="/deals" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right hover:bg-stone-50 transition-colors">
+                    <span className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-lg">🏷️</span>
+                    <div className="text-right"><div className="text-sm font-semibold text-stone-700">מבצעים</div><div className="text-xs text-stone-400">מבצעים לפי רשת</div></div>
+                  </a>
                   <a href="/online" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right hover:bg-stone-50 transition-colors">
                     <span className="text-xl">🛒</span>
                     <span className="text-stone-600">קניות אונליין</span>

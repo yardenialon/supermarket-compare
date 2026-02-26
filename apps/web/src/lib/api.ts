@@ -38,3 +38,11 @@ export const api = {
   list: (items: { productId: number; qty: number }[], lat?: number, lng?: number, radiusKm?: number) =>
     f('/list', { method: 'POST', body: JSON.stringify({ items, topN: 5, lat, lng, radiusKm }) }),
 };
+
+export const dealsApi = {
+  chains: () => f('/deals/chains'),
+  list: (chain?: string, limit = 50, offset = 0) =>
+    f('/deals?' + new URLSearchParams({ ...(chain ? { chain } : {}), limit: String(limit), offset: String(offset) }).toString()),
+  items: (promotionId: number) =>
+    f('/deals/' + promotionId + '/items'),
+};
