@@ -238,8 +238,12 @@ def main():
     # Promos
     print("\n=== Promos ===", flush=True)
     promo_total = 0
-    for f in sorted(data_path.glob("promo_file_*.csv")):
-        chain_key = f.stem.replace('promo_file_', '')
+    promo_files = sorted(data_path.glob("promo_full_file_*.csv"))
+    if not promo_files:
+        promo_files = sorted(data_path.glob("promo_file_*.csv"))
+    print(f"  Found {len(promo_files)} promo files", flush=True)
+    for f in promo_files:
+        chain_key = f.stem.replace('promo_full_file_', '').replace('promo_file_', '')
         chain_name = CHAIN_MAP.get(chain_key)
         if not chain_name: continue
         fsize = f.stat().st_size / (1024*1024)
