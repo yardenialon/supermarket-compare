@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       .filter(i => i.productId)
       .map(i => ({ productId: i.productId, qty: i.qty || 1 }));
 
+    console.log('listItems:', JSON.stringify(listItems));
     let bestStores: any[] = [];
     if (listItems.length > 0) {
       try {
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({ items: listItems, lat, lng }),
         });
         const listData = await listRes.json();
+        console.log('bestStoreCandidates:', listData.bestStoreCandidates?.length);
         bestStores = (listData.bestStoreCandidates || []).slice(0, 3);
       } catch {}
     }
