@@ -14,6 +14,7 @@ export default function ReceiptPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   // בקש מיקום בשקט
   useEffect(() => {
