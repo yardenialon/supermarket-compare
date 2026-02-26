@@ -346,7 +346,7 @@ export default function OnlinePage() {
                         </div>
                       ))}
                       {chainUrl(store.chainName) && (
-                        
+                        <a
                           href={chainUrl(store.chainName)!}
                           target="_blank"
                           rel="noopener noreferrer"
