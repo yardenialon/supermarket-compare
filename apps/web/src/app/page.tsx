@@ -55,6 +55,22 @@ const SUBCHAINS: Record<string, { he: string; logo: string }> = {
   'Cash&Carry':    { he: 'Cash & Carry',   logo: '/logos/subchains/cash-carry.png' },
 };
 const chainHe = (n: string) => CHAINS[n]?.he || n;
+
+const chainUrl = (chainName: string): string | null => {
+  const n = (chainName || '').toLowerCase();
+  if (n.includes('shufersal')) return 'https://www.shufersal.co.il';
+  if (n.includes('rami')) return 'https://www.rami-levy.co.il';
+  if (n.includes('victory')) return 'https://www.victoryonline.co.il';
+  if (n.includes('yochananof')) return 'https://www.yochananof.co.il';
+  if (n.includes('tiv')) return 'https://www.tivtaam.co.il';
+  if (n.includes('keshet')) return 'https://www.keshet-teamim.co.il';
+  if (n.includes('hazi') || n.includes('half')) return 'https://www.half-price.co.il';
+  if (n.includes('mahsani')) return 'https://www.mahsaniashuk.co.il';
+  if (n.includes('osher')) return 'https://www.osherad.co.il';
+  if (n.includes('mega')) return 'https://www.mega.co.il';
+  return null;
+};
+
 const chainClr = (n: string) => CHAINS[n]?.color || '#6b7280';
 const chainLogo = (n: string) => CHAINS[n]?.logo || '';
 const subchainLogo = (sub?: string) => sub ? (SUBCHAINS[sub]?.logo || '') : '';
@@ -721,6 +737,11 @@ export default function Home() {
                               onClick={(e) => e.stopPropagation()}
                               className={"mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition " + (isWinner ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-stone-100 text-stone-600 hover:bg-stone-200")}
                             >
+                              🛒 עבור לאתר {store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}
+                            </a>
+                          )}
+                          {chainUrl(store.chainName) && (
+                            <a href={chainUrl(store.chainName)!} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className={"mt-3 mb-1 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition " + (isWinner ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-stone-100 text-stone-600 hover:bg-stone-200")}>
                               🛒 עבור לאתר {store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}
                             </a>
                           )}
