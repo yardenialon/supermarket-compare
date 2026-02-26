@@ -47,6 +47,7 @@ export default function ReceiptPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
       setResults(data);
+      console.log('DEBUG2:', JSON.stringify(data.debug_listItems));
       console.log('DEBUG:', JSON.stringify({total: data.total, totalType: typeof data.total, bestStores: data.bestStores?.length, firstStore: data.bestStores?.[0]?.total}));
     } catch (e: any) {
       setError(e.message);
