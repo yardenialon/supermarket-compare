@@ -181,14 +181,7 @@ export default function ReceiptPage() {
                 </div>
               </div>
             )}
-            {results.bestStores && results.bestStores.length > 0 && results.bestStores[0]?.total > 0 && (
-              <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-                <div className="px-5 py-4 border-b border-stone-100">
-                  <h2 className="font-black text-stone-800">השוואת מחירים לסל זה 🏪</h2>
-                </div>
-                <div className="divide-y divide-stone-50">
-                  {results.bestStores.map((store: any, i: number) => (
-                    <div key={i} className={"flex items-center justify-between px-5 py-4 " + (i === 0 ? "bg-emerald-50/40" : "")}>
+            >
                       <div>
                         <div className="font-bold text-stone-800">{i === 0 && "🏆 "}{store.subchainName || store.chainName}</div>
                         <div className="text-xs text-stone-400">{store.storeName}{store.city && " · " + store.city}</div>

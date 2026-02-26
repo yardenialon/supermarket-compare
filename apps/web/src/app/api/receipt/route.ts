@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
       items: itemsWithSavings,
       savings: +totalSavings.toFixed(2),
       bestStores,
+      debug_listItems: listItems,
     });
 
   } catch (e: any) {
