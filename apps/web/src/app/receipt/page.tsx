@@ -16,7 +16,8 @@ export default function ReceiptPage() {
   const [error, setError] = useState<string | null>(null);
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  // בקש מיקום בשקט
+  const galleryRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -25,7 +26,6 @@ export default function ReceiptPage() {
       );
     }
   }, []);
-  const galleryRef = useRef<HTMLInputElement>(null);
 
   async function addFile(file: File) {
     const base64 = await fileToBase64(file);
@@ -46,9 +46,8 @@ export default function ReceiptPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
+      console.log('listItems:', JSON.stringify(data.debug_listItems));
       setResults(data);
-      console.log('DEBUG2:', JSON.stringify(data.debug_listItems));
-      console.log('DEBUG:', JSON.stringify({total: data.total, totalType: typeof data.total, bestStores: data.bestStores?.length, firstStore: data.bestStores?.[0]?.total}));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -120,6 +119,7 @@ export default function ReceiptPage() {
                 {results.date && <div className="bg-stone-50 rounded-xl p-3"><div className="text-xs text-stone-400 mb-1">תאריך</div><div className="font-bold text-stone-700">{results.date}</div></div>}
               </div>
             </div>
+
             <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
               <div className="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
                 <h2 className="font-black text-stone-800">מוצרים שזוהו</h2>
@@ -152,19 +152,24 @@ export default function ReceiptPage() {
                 </div>
               )}
             </div>
-            {results.savings != null && (
-              <div className={`rounded-2xl p-5 ${results.savings > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-emerald-50 border border-emerald-200'}`}>
-                {results.savings > 0 ? (
-                  <div className="flex items-center gap-3"><span className="text-3xl">💸</span><div><p className="font-black text-amber-700 text-lg">יכולת לחסוך ₪{results.savings.toFixed(2)}</p><p className="text-amber-600 text-sm mt-0.5">על ידי קנייה בחנויות הזולות יותר</p></div></div>
-                ) : (
-                  <div className="flex items-center gap-3"><span className="text-3xl">🎉</span><p className="font-black text-emerald-700 text-lg">קנית במחיר הטוב ביותר!</p></div>
-                )}
+
+            {results.savings != null && results.savings > 0 && (
+              <div className="rounded-2xl p-5 bg-amber-50 border border-amber-200">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">💸</span>
+                  <div>
+                    <p className="font-black text-amber-700 text-lg">יכולת לחסוך ₪{results.savings.toFixed(2)}</p>
+                    <p className="text-amber-600 text-sm mt-0.5">על ידי קנייה בחנויות הזולות יותר</p>
+                  </div>
+                </div>
               </div>
             )}
-{results.bestStores && results.bestStores.length > 0 && results.bestStores[0]?.total > 0 && (
+
+            {results.bestStores && results.bestStores.length > 0 && (
               <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-stone-100">
                   <h2 className="font-black text-stone-800">השוואת מחירים לסל זה 🏪</h2>
+                  <p className="text-xs text-stone-400 mt-1">עבור {results.debug_listItems?.length || 0} מוצרים שזוהו לפי ברקוד</p>
                 </div>
                 <div className="divide-y divide-stone-50">
                   {results.bestStores.map((store: any, i: number) => (
@@ -175,28 +180,17 @@ export default function ReceiptPage() {
                       </div>
                       <div className="text-left">
                         <div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{store.total.toFixed(2)}</div>
-                        {i === 0 && results.total && store.total < results.total && <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{(results.total - store.total).toFixed(2)}</div>}
+                        {i === 0 && store.total < Number(results.total) && <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{(Number(results.total) - store.total).toFixed(2)}</div>}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            >
-                      <div>
-                        <div className="font-bold text-stone-800">{i === 0 && "🏆 "}{store.subchainName || store.chainName}</div>
-                        <div className="text-xs text-stone-400">{store.storeName}{store.city && " · " + store.city}</div>
-                      </div>
-                      <div className="text-left">
-                        <div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{store.total.toFixed(2)}</div>
-                        {i === 0 && results.total && store.total < Number(results.total) && <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{(Number(results.total) - store.total).toFixed(2)}</div>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <button onClick={reset} className="w-full py-3 rounded-xl border border-stone-200 text-stone-500 text-sm font-bold hover:bg-stone-100 transition">סרוק קבלה נוספת</button>
+
+            <button onClick={reset} className="w-full py-3 rounded-xl border border-stone-200 text-stone-500 text-sm font-bold hover:bg-stone-100 transition">
+              סרוק קבלה נוספת
+            </button>
           </div>
         )}
       </div>
