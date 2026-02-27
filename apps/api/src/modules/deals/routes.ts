@@ -134,16 +134,17 @@ export async function dealsRoutes(app: any) {
         AND pr.discounted_price > 0
         ${locationFilter}
       GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng
-      HAVING MIN(sp.price) IS NOT NULL AND MIN(sp.price) > pr.discounted_price
-      ORDER BY (MIN(sp.price) - pr.discounted_price) / MIN(sp.price) DESC
+      ORDER BY RANDOM()
       LIMIT $1
     `, params);
     return {
       deals: result.rows.map((r: any) => ({
         ...r,
-        discountedPrice: +r.discountedPrice,
+        discountedPrice: r.discountedPrice ? +r.discountedPrice : null,
         regularPrice: r.regularPrice ? +r.regularPrice : null,
-        savingPct: r.regularPrice ? Math.round((+r.regularPrice - +r.discountedPrice) / +r.regularPrice * 100) : null,
+        savingPct: r.regularPrice && r.discountedPrice
+          ? Math.round((+r.regularPrice - +r.discountedPrice) / +r.regularPrice * 100)
+          : null,
       }))
     };
   });
