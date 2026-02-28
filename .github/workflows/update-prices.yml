@@ -20,13 +20,9 @@ jobs:
       - name: Install dependencies
         run: pip install psycopg2-binary kaggle
 
-      - name: Setup Kaggle
-        run: |
-          mkdir -p ~/.kaggle
-          echo '{"username":"yalon5","key":"KGAT_d282a16db37c209cdfe00eaf4674e0ef"}' > ~/.kaggle/kaggle.json
-          chmod 600 ~/.kaggle/kaggle.json
-
       - name: Run update
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          KAGGLE_USERNAME: yalon5
+          KAGGLE_KEY: KGAT_d282a16db37c209cdfe00eaf4674e0ef
         run: python scripts/update_prices.py
