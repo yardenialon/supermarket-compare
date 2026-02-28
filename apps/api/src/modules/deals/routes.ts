@@ -13,7 +13,7 @@ export async function dealsRoutes(app: any) {
     }
     if (lat && lng) {
       params.push(parseFloat(lat), parseFloat(lng));
-      conditions.push(`s.lat IS NOT NULL AND s.lng IS NOT NULL AND earth_distance(ll_to_earth(s.lat, s.lng), ll_to_earth($${params.length-1}, $${params.length})) < 3000`);
+      conditions.push(`s.lat IS NOT NULL AND s.lng IS NOT NULL AND (s.lat - $${params.length-1})*(s.lat - $${params.length-1})*12321 + (s.lng - $${params.length})*(s.lng - $${params.length})*9801 < 9`);
     }
 
     params.push(parseInt(limit), parseInt(offset));
