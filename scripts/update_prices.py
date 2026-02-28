@@ -123,6 +123,7 @@ def process_stores_file(cur, filepath, chain_name):
     return added
 
 def process_promos_batch(cur, conn, filepath, chain_name):
+    csv.field_size_limit(50 * 1024 * 1024)
     """Process promo files and update is_promo/promo_price in store_price."""
     cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
     row = cur.fetchone()
