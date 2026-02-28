@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Daily price update from Kaggle - v5 fixed column names."""
 import os, sys, csv, psycopg2, time, glob
+csv.field_size_limit(50 * 1024 * 1024)
 from pathlib import Path
 
 DB_URL = os.environ.get('DATABASE_URL')
