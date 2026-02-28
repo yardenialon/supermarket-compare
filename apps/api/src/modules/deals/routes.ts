@@ -53,16 +53,7 @@ export async function dealsRoutes(app: any) {
       LIMIT $1 OFFSET $2
     `, params);
 
-    const countResult = await query(`
-      SELECT COUNT(DISTINCT pr.id) as total
-      FROM promotion pr
-      JOIN store s ON s.id = pr.store_id
-      JOIN retailer_chain rc ON rc.id = s.chain_id
-      JOIN promotion_item pi ON pi.promotion_id = pr.id
-      WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
-        AND pr.description IS NOT NULL
-        ${filters.replace('$' + params.length, '$3').replace('$' + (params.length-1), '$2')}
-    `, lat && lng ? [chain || null, parseFloat(lat), parseFloat(lng)].filter(x => x !== null) : chain ? [chain] : []);
+    const countResult = { rows: [{ total: result.rows.length >= parseInt(limit) ? parseInt(limit) * 10 : result.rows.length }] }
 
     return {
       deals: result.rows.map((r: any) => ({
