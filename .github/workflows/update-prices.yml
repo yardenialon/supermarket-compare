@@ -1,0 +1,32 @@
+name: Update Prices
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # כל לילה ב-2:00 UTC
+  workflow_dispatch:  # הפעלה ידנית
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install psycopg2-binary kaggle
+
+      - name: Run update
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          mkdir -p ~/.kaggle
+          echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_KEY }}"}' > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+          python scripts/update_prices.py
