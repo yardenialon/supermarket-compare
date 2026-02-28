@@ -1,6 +1,57 @@
 #!/usr/bin/env python3
 """Daily price update from Kaggle - v5 fixed column names."""
 import os, sys, csv, psycopg2, time, glob
+from pathlib import Path
+
+DB_URL = os.environ.get("DATABASE_URL", "")
+KAGGLE_DATASET = "motib7/israeli-supermarket-prices"
+
+CHAIN_MAP = {
+    "shufersal": "Shufersal",
+    "rami_levy": "Rami Levy",
+    "rami-levy": "Rami Levy",
+    "victory": "Victory",
+    "mega": "Mega",
+    "osher_ad": "Osher Ad",
+    "osher-ad": "Osher Ad",
+    "tiv_taam": "Tiv Taam",
+    "tiv-taam": "Tiv Taam",
+    "yochananof": "Yochananof",
+    "hazi_hinam": "Hazi Hinam",
+    "hazi-hinam": "Hazi Hinam",
+    "bareket": "Bareket",
+    "mahsani_ashuk": "Mahsani Ashuk",
+    "mahsani-ashuk": "Mahsani Ashuk",
+    "city_market": "City Market",
+    "city-market": "City Market",
+    "dor_alon": "Dor Alon",
+    "dor-alon": "Dor Alon",
+    "het_cohen": "Het Cohen",
+    "het-cohen": "Het Cohen",
+    "good_pharm": "Good Pharm",
+    "good-pharm": "Good Pharm",
+    "keshet_taamim": "Keshet Taamim",
+    "keshet-taamim": "Keshet Taamim",
+    "freshmarket": "Freshmarket",
+    "king_store": "King Store",
+    "king-store": "King Store",
+    "maayan_2000": "Maayan 2000",
+    "maayan-2000": "Maayan 2000",
+    "netiv_hased": "Netiv Hased",
+    "netiv-hased": "Netiv Hased",
+    "shefa_barcart_ashem": "Shefa Barcart Ashem",
+    "shefa-barcart-ashem": "Shefa Barcart Ashem",
+    "stop_market": "Stop Market",
+    "stop-market": "Stop Market",
+    "polizer": "Polizer",
+    "salach_dabach": "Salach Dabach",
+    "salach-dabach": "Salach Dabach",
+    "super_sapir": "Super Sapir",
+    "super-sapir": "Super Sapir",
+    "shuk_ahir": "Shuk Ahir",
+    "shuk-ahir": "Shuk Ahir",
+}
+
 def process_promos_batch(cur, conn, filepath, chain_name):
     """Insert promotions from promo CSV into promotion + promotion_item tables."""
     import ast
