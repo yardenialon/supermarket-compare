@@ -1,126 +1,182 @@
 #!/usr/bin/env python3
 """Daily price update from Kaggle - v5 fixed column names."""
 import os, sys, csv, psycopg2, time, glob
+def process_promos_batch(cur, conn, filepath, chain_name):
+    csv.field_size_limit(50 * 1024 * 1024)
+    cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
 from pathlib import Path
 
-DB_URL = os.environ.get("DATABASE_URL", "")
-KAGGLE_DATASET = "motib7/israeli-supermarket-prices"
+DB_URL = os.environ.get('DATABASE_URL')
+if not DB_URL:
+    print("ERROR: DATABASE_URL not set"); sys.exit(1)
+
+KAGGLE_DATASET = "erlichsefi/israeli-supermarkets-2024"
 
 CHAIN_MAP = {
-    "shufersal": "Shufersal",
-    "rami_levy": "Rami Levy",
-    "rami-levy": "Rami Levy",
-    "victory": "Victory",
-    "mega": "Mega",
-    "osher_ad": "Osher Ad",
-    "osher-ad": "Osher Ad",
-    "tiv_taam": "Tiv Taam",
-    "tiv-taam": "Tiv Taam",
-    "yochananof": "Yochananof",
-    "hazi_hinam": "Hazi Hinam",
-    "hazi-hinam": "Hazi Hinam",
-    "bareket": "Bareket",
-    "mahsani_ashuk": "Mahsani Ashuk",
-    "mahsani-ashuk": "Mahsani Ashuk",
-    "city_market": "City Market",
-    "city-market": "City Market",
-    "dor_alon": "Dor Alon",
-    "dor-alon": "Dor Alon",
-    "het_cohen": "Het Cohen",
-    "het-cohen": "Het Cohen",
-    "good_pharm": "Good Pharm",
-    "good-pharm": "Good Pharm",
-    "keshet_taamim": "Keshet Taamim",
-    "keshet-taamim": "Keshet Taamim",
-    "freshmarket": "Freshmarket",
-    "king_store": "King Store",
-    "king-store": "King Store",
-    "maayan_2000": "Maayan 2000",
-    "maayan-2000": "Maayan 2000",
-    "netiv_hased": "Netiv Hased",
-    "netiv-hased": "Netiv Hased",
-    "shefa_barcart_ashem": "Shefa Barcart Ashem",
-    "shefa-barcart-ashem": "Shefa Barcart Ashem",
-    "stop_market": "Stop Market",
-    "stop-market": "Stop Market",
-    "polizer": "Polizer",
-    "salach_dabach": "Salach Dabach",
-    "salach-dabach": "Salach Dabach",
-    "super_sapir": "Super Sapir",
-    "super-sapir": "Super Sapir",
-    "shuk_ahir": "Shuk Ahir",
-    "shuk-ahir": "Shuk Ahir",
+    'shufersal': 'Shufersal', 'rami_levy': 'Rami Levy', 'yochananof': 'Yochananof',
+    'victory': 'Victory', 'osher_ad': 'Osher Ad', 'mega': 'Mega', 'tiv_taam': 'Tiv Taam',
+    'hazi_hinam': 'Hazi Hinam', 'keshet_taamim': 'Keshet Taamim', 'freshmarket': 'Freshmarket',
+    'bareket': 'Bareket', 'city_market': 'City Market', 'dor_alon': 'Dor Alon',
+    'good_pharm': 'Good Pharm', 'het_cohen': 'Het Cohen', 'king_store': 'King Store',
+    'maayan_2000': 'Maayan 2000', 'mahsani_ashuk': 'Mahsani Ashuk',
+    'meshmat_yosef': 'Meshmat Yosef', 'netiv_hased': 'Netiv Hased', 'polizer': 'Polizer',
+    'salach_dabach': 'Salach Dabach', 'shefa_barcart_ashem': 'Shefa Barcart Ashem',
+    'shuk_ahir': 'Shuk Ahir', 'stop_market': 'Stop Market', 'super_sapir': 'Super Sapir',
+    'super_yuda': 'Super Yuda', 'super_dosh': 'Super Dosh', 'wolt': 'Wolt',
+    'zol_vebegadol': 'Zol Vebegadol', 'yayno_bitan_and_carrefour': 'Carrefour',
+    'yellow': None,
 }
 
-def process_promos_batch(cur, conn, filepath, chain_name):
-    """Insert promotions from promo CSV into promotion + promotion_item tables."""
-    import ast
-    csv.field_size_limit(100 * 1024 * 1024)
+def get_row_fields(row):
+    """Extract barcode, name, price, storeid handling different column names."""
+    barcode = row.get('itemcode', '').strip()
+    name = row.get('itemname', '') or row.get('itemnm', '') or row.get('manufactureritemdescription', '') or ''
+    name = name.strip()
+    price_str = row.get('itemprice', '').strip()
+    storeid = row.get('storeid', '').strip()
+    return storeid, barcode, name, price_str
+
+def process_prices_batch(cur, conn, filepath, chain_name):
     cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
-    r = cur.fetchone()
-    if not r: return 0
-    chain_id = r[0]
+    row = cur.fetchone()
+    if not row:
+        print(f"    Chain '{chain_name}' not in DB", flush=True); return 0
+    chain_id = row[0]
+    cur.execute("SELECT id, store_code FROM store WHERE chain_id=%s", (chain_id,))
+    store_map = {code: sid for sid, code in cur.fetchall()}
+    if not store_map:
+        print(f"    No stores for '{chain_name}'", flush=True); return 0
+
+    rows = []
+    last_store = None
+    skipped_store = 0
+    skipped_barcode = 0
+
+    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    with open(filepath, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            sid, barcode, name, price_str = get_row_fields(row)
+            if sid: last_store = sid
+            else: sid = last_store
+            if not sid or not barcode or not price_str or not name: continue
+            # Skip non-barcode itemcodes (internal numbers < 100)
+            if len(barcode) < 5:
+                skipped_barcode += 1
+                continue
+            store_id = store_map.get(sid)
+            if not store_id and sid.isdigit():
+                store_id = store_map.get(str(int(sid)))
+            if not store_id:
+                skipped_store += 1
+                continue
+            try: price = float(price_str)
+            except: continue
+            if price <= 0: continue
+            rows.append((barcode, name, store_id, price))
+
+    if skipped_store > 0:
+        print(f"    Skipped {skipped_store} (unknown store), {skipped_barcode} (short barcode)", flush=True)
+    if not rows: return 0
+    # Global dedup: keep last price per (barcode, store_id)
+    seen = {}
+    for r in rows:
+        seen[(r[0], r[2])] = r
+    rows = list(seen.values())
+
+    cur.execute("DELETE FROM tmp_prices")
+    BATCH = 10000
+    total = len(rows)
+    for i in range(0, total, BATCH):
+        batch = rows[i:i+BATCH]
+        args = ','.join(cur.mogrify("(%s,%s,%s,%s)", r).decode() for r in batch)
+        cur.execute(f"INSERT INTO tmp_prices (barcode, name, store_id, price) VALUES {args}")
+        cur.execute("""INSERT INTO product (barcode, name)
+            SELECT DISTINCT t.barcode, t.name FROM tmp_prices t
+            WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.barcode = t.barcode)
+            ON CONFLICT (barcode) DO NOTHING""")
+        cur.execute("""INSERT INTO store_price (product_id, store_id, price)
+            SELECT p.id, t.store_id, t.price FROM tmp_prices t JOIN product p ON p.barcode = t.barcode
+            ON CONFLICT (product_id, store_id) DO UPDATE SET price = EXCLUDED.price, updated_at = NOW()""")
+        cur.execute("DELETE FROM tmp_prices")
+        conn.commit()
+        processed = min(i + BATCH, total)
+        if processed % 50000 == 0 or processed == total:
+            print(f"    {processed}/{total}", flush=True)
+    return total
+
+def process_stores_file(cur, filepath, chain_name):
+    cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
+    row = cur.fetchone()
+    if not row: return 0
+    chain_id = row[0]
+    cur.execute("SELECT store_code FROM store WHERE chain_id=%s", (chain_id,))
+    existing = {r[0] for r in cur.fetchall()}
+    added = 0
+    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    with open(filepath, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            sid = row.get('storeid', '').strip()
+            name = row.get('storename', '').strip()
+            if not sid or not name or sid in existing: continue
+            cur.execute("INSERT INTO store (chain_id, store_code, name, city, address) VALUES (%s,%s,%s,%s,%s)",
+                (chain_id, sid, name, row.get('city', '').strip(), row.get('address', '').strip()))
+            existing.add(sid); added += 1
+    return added
+
+def process_promos_batch(cur, conn, filepath, chain_name):
+    csv.field_size_limit(50 * 1024 * 1024)
+    """Process promo files and update is_promo/promo_price in store_price."""
+    cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
+    row = cur.fetchone()
+    if not row: return 0
+    chain_id = row[0]
     cur.execute("SELECT id, store_code FROM store WHERE chain_id=%s", (chain_id,))
     store_map = {code: sid for sid, code in cur.fetchall()}
     if not store_map: return 0
-    cur.execute("SELECT id, barcode FROM product WHERE barcode IS NOT NULL AND barcode != ''")
-    barcode_map = {b: pid for pid, b in cur.fetchall()}
-    count = 0
+
+    rows = []
     last_store = None
-    try:
-        with open(filepath, encoding="utf-8", errors="replace") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                try:
-                    promo_id = row.get('promotionid', '').strip()
-                    if not promo_id: continue
-                    sid = row.get('storeid', '').strip()
-                    if sid: last_store = sid
-                    else: sid = last_store
-                    if not sid: continue
-                    store_id = store_map.get(sid)
-                    if not store_id and sid.isdigit():
-                        store_id = store_map.get(str(int(sid)).zfill(3)) or store_map.get(str(int(sid)))
-                    if not store_id: continue
-                    desc = (row.get('promotiondescription','') or row.get('promotionname','')).strip()
-                    if not desc: continue
-                    end_date = row.get('promotionenddate','').strip() or None
-                    start_date = row.get('promotionstartdate','').strip() or None
-                    disc_price = row.get('discountedprice','').strip() or None
-                    min_qty = row.get('minqty','').strip() or row.get('minimumpurchasequantity','').strip() or None
-                    cur.execute("""
-                        INSERT INTO promotion (store_id,chain_promotion_id,description,start_date,end_date,
-                            discounted_price,min_qty,is_club_only,created_at,updated_at)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,NOW(),NOW())
-                        ON CONFLICT (store_id,chain_promotion_id) DO UPDATE SET
-                            description=EXCLUDED.description,
-                            discounted_price=EXCLUDED.discounted_price,
-                            end_date=EXCLUDED.end_date,
-                            updated_at=NOW()
-                        RETURNING id
-                    """, (store_id, promo_id, desc, start_date, end_date, disc_price, min_qty, False))
-                    promo_db_id = cur.fetchone()[0]
-                    items_raw = row.get('promotionitems','').strip()
-                    if items_raw:
-                        try:
-                            items_data = ast.literal_eval(items_raw)
-                            items_list = items_data.get('item',[]) if isinstance(items_data,dict) else []
-                            if isinstance(items_list,dict): items_list = [items_list]
-                            for item in items_list:
-                                bc = str(item.get('itemcode','')).strip()
-                                pid = barcode_map.get(bc)
-                                if pid:
-                                    cur.execute("INSERT INTO promotion_item (promotion_id,product_id) VALUES (%s,%s) ON CONFLICT DO NOTHING", (promo_db_id, pid))
-                        except: pass
-                    count += 1
-                    if count % 10000 == 0:
-                        conn.commit()
-                        print(f"    {count}...", flush=True)
-                except Exception: continue
-    except Exception as e:
-        print(f"    Error: {e}", flush=True)
-    conn.commit()
-    return count
+    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    with open(filepath, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        print(f"    DEBUG headers: {reader.fieldnames}", flush=True)
+        for row in reader:
+            sid = row.get('storeid', '').strip()
+            if sid: last_store = sid
+            else: sid = last_store
+            barcode = row.get('itemcode', '').strip()
+            if not sid or not barcode or len(barcode) < 5: continue
+            store_id = store_map.get(sid) or (store_map.get(str(int(sid))) if sid.isdigit() else None)
+            if not store_id: continue
+            promo_price_str = row.get('promoprice', row.get('itemprice', '')).strip()
+            try: promo_price = float(promo_price_str)
+            except: continue
+            if promo_price <= 0: continue
+            rows.append((barcode, store_id, promo_price))
+
+    if not rows: return 0
+    # Dedup
+    seen = {}
+    for r in rows: seen[(r[0], r[1])] = r
+    rows = list(seen.values())
+
+    print(f"    {len(rows)} promo items...", end=' ', flush=True)
+    BATCH = 5000
+    updated = 0
+    for i in range(0, len(rows), BATCH):
+        batch = rows[i:i+BATCH]
+        values = ','.join(cur.mogrify("(%s,%s,%s)", r).decode() for r in batch)
+        cur.execute(f"""
+            UPDATE store_price sp SET is_promo = true, promo_price = t.promo_price
+            FROM (VALUES {values}) AS t(barcode, store_id, promo_price)
+            JOIN product p ON p.barcode = t.barcode
+            WHERE sp.product_id = p.id AND sp.store_id = t.store_id::int
+        """)
+        updated += cur.rowcount
+        conn.commit()
+    return updated
+
 def main():
     start = time.time()
     print("Downloading dataset...", flush=True)
