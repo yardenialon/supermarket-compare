@@ -205,6 +205,7 @@ export default function Home() {
     try { localStorage.setItem('savy-images', JSON.stringify(productImages)); } catch {}
   }, [productImages]);
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
+  const [promoModal, setPromoModal] = useState<any>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
   const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
   const [radius, setRadius] = useState<number>(10);
