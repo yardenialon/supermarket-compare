@@ -76,6 +76,7 @@ export async function dealsRoutes(app: any) {
       })),
       total: +countResult.rows[0]?.total || 0,
     });
+  });
 
   app.get('/deals/chains', async () => {
     const result = await query(`
