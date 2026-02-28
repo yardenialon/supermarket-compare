@@ -4,56 +4,45 @@ export async function dealsRoutes(app: any) {
 
   app.get('/deals', async (req: any) => {
     const { chain, limit = 25, offset = 0, lat, lng } = req.query;
-    const params: any[] = [parseInt(limit), parseInt(offset)];
-    let filters = '';
+    const params: any[] = [];
+    const conditions: string[] = ["(pr.end_date IS NULL OR pr.end_date > NOW())", "pr.description IS NOT NULL"];
 
     if (chain) {
       params.push(chain);
-      filters += ` AND rc.name = $${params.length}`;
+      conditions.push(`rc.name = $${params.length}`);
     }
     if (lat && lng) {
       params.push(parseFloat(lat), parseFloat(lng));
-      filters += ` AND s.lat IS NOT NULL AND s.lng IS NOT NULL
-        AND earth_distance(ll_to_earth(s.lat, s.lng), ll_to_earth($${params.length-1}, $${params.length})) < 3000`;
+      conditions.push(`s.lat IS NOT NULL AND s.lng IS NOT NULL AND earth_distance(ll_to_earth(s.lat, s.lng), ll_to_earth($${params.length-1}, $${params.length})) < 3000`);
     }
 
-    const result = await query(`
-      SELECT
-        pr.id as "promotionId",
-        pr.description,
-        pr.discounted_price as "discountedPrice",
-        pr.discount_rate as "discountRate",
-        pr.min_qty as "minQty",
-        pr.end_date as "endDate",
-        pr.is_club_only as "isClubOnly",
-        rc.name as "chainName",
-        s.name as "storeName",
-        s.city as "city",
-        s.address as "address",
-        s.lat as "lat",
-        s.lng as "lng",
+    params.push(parseInt(limit), parseInt(offset));
+    const limitIdx = params.length - 1;
+    const offsetIdx = params.length;
+
+    const where = conditions.join(' AND ');
+
+    const result = await query(
+      `SELECT pr.id as "promotionId", pr.description, pr.discounted_price as "discountedPrice",
+        pr.discount_rate as "discountRate", pr.min_qty as "minQty", pr.end_date as "endDate",
+        pr.is_club_only as "isClubOnly", rc.name as "chainName", s.name as "storeName",
+        s.city as "city", s.address as "address", s.lat as "lat", s.lng as "lng",
         s.subchain_name as "subchainName",
-        MIN(p.id) as "productId",
-        MIN(p.name) as "productName",
-        MIN(p.barcode) as "barcode",
-        MIN(p.image_url) as "imageUrl",
-        MIN(sp.price) as "regularPrice",
-        COUNT(DISTINCT pi.product_id) as "itemCount"
+        MIN(p.id) as "productId", MIN(p.name) as "productName",
+        MIN(p.barcode) as "barcode", MIN(p.image_url) as "imageUrl",
+        MIN(sp.price) as "regularPrice", COUNT(DISTINCT pi.product_id) as "itemCount"
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
       JOIN retailer_chain rc ON rc.id = s.chain_id
       JOIN promotion_item pi ON pi.promotion_id = pr.id
       JOIN product p ON p.id = pi.product_id
       LEFT JOIN store_price sp ON sp.product_id = p.id AND sp.store_id = pr.store_id
-      WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
-        AND pr.description IS NOT NULL
-        ${filters}
+      WHERE ` + where + `
       GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, s.subchain_name
       ORDER BY pr.id DESC
-      LIMIT $1 OFFSET $2
-    `, params);
-
-    const countResult = { rows: [{ total: result.rows.length >= parseInt(limit) ? parseInt(limit) * 10 : result.rows.length }] }
+      LIMIT $` + limitIdx + ` OFFSET $` + offsetIdx,
+      params
+    );
 
     return {
       deals: result.rows.map((r: any) => ({
@@ -65,8 +54,8 @@ export async function dealsRoutes(app: any) {
           ? Math.round((+r.regularPrice - +r.discountedPrice) / +r.regularPrice * 100)
           : null,
       })),
-      total: +countResult.rows[0]?.total || 0,
-    });
+      total: result.rows.length === parseInt(limit) ? parseInt(limit) * 10 : result.rows.length + parseInt(offset),
+    };
   });
 
   app.get('/deals/chains', async () => {
