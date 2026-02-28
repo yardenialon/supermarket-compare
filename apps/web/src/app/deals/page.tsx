@@ -79,10 +79,10 @@ function DealCard({ deal, onClick }: { deal: any; onClick: () => void }) {
 function ChainFilterButton({ chain, count, selected, onClick }: { chain: string; count: number; selected: boolean; onClick: () => void }) {
   const chainHe = CHAINS[chain] || chain;
   return (
-    <button onClick={onClick} className={`shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[72px] ${selected ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
-      <ChainLogo name={chain} size={40} />
-      <span className={`text-[10px] font-bold leading-tight text-center ${selected ? 'text-emerald-700' : 'text-stone-600'}`}>{chainHe}</span>
-      <span className={`text-[9px] ${selected ? 'text-emerald-500' : 'text-stone-400'}`}>{count} מבצעים</span>
+    <button onClick={onClick} className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all min-w-[90px] ${selected ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100' : 'border-stone-100 bg-white hover:border-stone-300 hover:shadow-sm'}`}>
+      <ChainLogo name={chain} size={56} />
+      <span className={`text-[11px] font-bold leading-tight text-center ${selected ? 'text-emerald-700' : 'text-stone-600'}`}>{chainHe}</span>
+      <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${selected ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'}`}>{count}</span>
     </button>
   );
 }
@@ -199,14 +199,14 @@ export default function DealsPage() {
         </div>
 
         {/* פילטר רשתות */}
-        <div className="flex gap-2 overflow-x-auto pb-3 pt-1 px-4 scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto pb-4 pt-2 px-4 scrollbar-hide snap-x snap-mandatory">
           <button
             onClick={() => setSelectedChain(null)}
-            className={`shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[72px] ${!selectedChain ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-200'}`}
+            className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all min-w-[90px] ${!selectedChain ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100' : 'border-stone-100 bg-white hover:border-stone-300 hover:shadow-sm'}`}
           >
-            <div className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center text-xl">🏪</div>
-            <span className={`text-[10px] font-bold ${!selectedChain ? 'text-emerald-700' : 'text-stone-600'}`}>הכל</span>
-            <span className={`text-[9px] ${!selectedChain ? 'text-emerald-500' : 'text-stone-400'}`}>{total} מבצעים</span>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-2xl shadow-sm">🏪</div>
+            <span className={`text-[11px] font-bold ${!selectedChain ? 'text-emerald-700' : 'text-stone-600'}`}>הכל</span>
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${!selectedChain ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'}`}>{total}</span>
           </button>
           {chains.map((c: any) => (
             <ChainFilterButton
