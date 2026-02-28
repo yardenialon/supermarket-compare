@@ -550,7 +550,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5"><div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/deals?chain=${encodeURIComponent(p.chainName)}&limit=50`).then(r=>r.json()).then(data=>{ const deal = data.deals?.find((d:any) => d.storeName === p.storeName || d.chainName === p.chainName); if(deal) setPromoModal(deal); }); }} className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none hover:bg-red-600 transition-colors cursor-pointer">🔥 מבצע</button>}</div>
+                  <div className="flex items-center gap-1.5"><div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/deals?chain=${encodeURIComponent(p.chainName)}&limit=50`).then(r=>r.json()).then(data=>{ const deal = data.deals?.find((d:any) => d.storeName === p.storeName || d.chainName === p.chainName); if(deal) setPromoModal(deal); }); }} className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none hover:bg-red-600 transition-colors cursor-pointer">🔥 מבצע</button>}</div>
                 </div>
               ))}
             </div>
@@ -596,7 +596,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1"><div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/deals?chain=${encodeURIComponent(p.chainName)}&limit=50`).then(r=>r.json()).then(data=>{ const deal = data.deals?.find((d:any) => d.storeName === p.storeName || d.chainName === p.chainName); if(deal) setPromoModal(deal); }); }} className="text-[9px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full leading-none hover:bg-red-600 cursor-pointer">🔥</button>}</div>
+                  <div className="flex items-center gap-1"><div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/deals?chain=${encodeURIComponent(p.chainName)}&limit=50`).then(r=>r.json()).then(data=>{ const deal = data.deals?.find((d:any) => d.storeName === p.storeName || d.chainName === p.chainName); if(deal) setPromoModal(deal); }); }} className="text-[9px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full leading-none hover:bg-red-600 cursor-pointer">🔥</button>}</div>
                 </div>
               ))}
             </div>
