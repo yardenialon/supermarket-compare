@@ -1,69 +1,89 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { dealsApi } from '@/lib/api';
-import { DealModal, ChainLogo, daysLeft } from '@/components/DealModal';
+import { DealModal, ChainLogo } from '@/components/DealModal';
 import Link from 'next/link';
 
-const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
-  'Shufersal':    { he: 'שופרסל',      color: '#e11d48', logo: '/logos/shufersal.png' },
-  'Rami Levy':    { he: 'רמי לוי',     color: '#2563eb', logo: '/logos/rami-levy.png' },
-  'Victory':      { he: 'ויקטורי',     color: '#f59e0b', logo: '/logos/victory.png' },
-  'Mega':         { he: 'מגה',         color: '#16a34a', logo: '/logos/mega.png' },
-  'Osher Ad':     { he: 'אושר עד',     color: '#8b5cf6', logo: '/logos/osher-ad.png' },
-  'Tiv Taam':     { he: 'טיב טעם',     color: '#ec4899', logo: '/logos/tiv-taam.png' },
-  'Yochananof':   { he: 'יוחננוף',     color: '#0891b2', logo: '/logos/yochananof.png' },
-  'Hazi Hinam':   { he: 'חצי חינם',    color: '#ea580c', logo: '/logos/hazi-hinam.png' },
-  'Bareket':      { he: 'סופר ברקת',   color: '#a855f7', logo: '/logos/bareket.png' },
-  'Mahsani Ashuk':{ he: 'מחסני השוק',  color: '#f97316', logo: '/logos/mahsani-ashuk.png' },
-  'City Market':  { he: 'סיטי מרקט',   color: '#6b7280', logo: '/logos/city-market.png' },
-  'Dor Alon':     { he: 'דור אלון',    color: '#0d9488', logo: '/logos/alunit.png' },
-  'Het Cohen':    { he: 'חט כהן',      color: '#7c3aed', logo: '/logos/Het-Cohen.png' },
-  'Good Pharm':   { he: 'גוד פארם',    color: '#10b981', logo: '/logos/Good-Pharm.png' },
-  'Keshet Taamim':{ he: 'קשת טעמים',   color: '#059669', logo: '/logos/keshet-taamim.png' },
+const CHAINS: Record<string, string> = {
+  'Shufersal': 'שופרסל', 'Rami Levy': 'רמי לוי', 'Victory': 'ויקטורי',
+  'Mega': 'מגה', 'Osher Ad': 'אושר עד', 'Tiv Taam': 'טיב טעם',
+  'Yochananof': 'יוחננוף', 'Hazi Hinam': 'חצי חינם', 'Bareket': 'סופר ברקת',
+  'Mahsani Ashuk': 'מחסני השוק', 'City Market': 'סיטי מרקט', 'Dor Alon': 'דור אלון',
+  'Het Cohen': 'חט כהן', 'Good Pharm': 'גוד פארם', 'Keshet Taamim': 'קשת טעמים',
+  'Freshmarket': 'פרש מרקט', 'King Store': 'קינג סטור', 'Maayan 2000': 'מעיין 2000',
+  'Netiv Hased': 'נתיב חסד', 'Shefa Barcart Ashem': 'שפע',
 };
 
-
-
+function daysLeft(endDate: string | null) {
+  if (!endDate) return null;
+  return Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000);
+}
 
 function DealCard({ deal, onClick }: { deal: any; onClick: () => void }) {
-  const chainHe = CHAINS[deal.chainName]?.he || deal.chainName;
   const days = daysLeft(deal.endDate);
+  const chainHe = CHAINS[deal.chainName] || deal.chainName;
+
   return (
-    <button onClick={onClick} className="bg-white rounded-2xl shadow-sm border border-stone-100 p-4 flex flex-col gap-3 min-w-[200px] max-w-[220px] shrink-0 hover:shadow-md hover:-translate-y-0.5 transition-all text-right">
-      <div className="w-full h-28 bg-stone-50 rounded-xl flex items-center justify-center overflow-hidden">
-        {deal.imageUrl ? <img src={deal.imageUrl} alt={deal.productName} className="object-contain max-h-full max-w-full p-2" /> : <span className="text-4xl">🏷️</span>}
+    <button onClick={onClick} className="group bg-white rounded-2xl border border-stone-100 hover:border-emerald-200 hover:shadow-lg transition-all text-right flex flex-col overflow-hidden">
+      {/* תמונה */}
+      <div className="relative w-full aspect-square bg-stone-50 flex items-center justify-center overflow-hidden">
+        {deal.imageUrl
+          ? <img src={deal.imageUrl} alt={deal.productName} className="object-contain w-full h-full p-3 group-hover:scale-105 transition-transform" />
+          : <span className="text-4xl">🏷️</span>
+        }
+        {deal.savingPct && deal.savingPct > 0 && (
+          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-full shadow">
+            -{deal.savingPct}%
+          </div>
+        )}
+        {deal.isClubOnly && (
+          <div className="absolute top-2 left-2 bg-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            מועדון
+          </div>
+        )}
+        {days !== null && days <= 3 && days > 0 && (
+          <div className="absolute bottom-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            ⏰ {days} ימים
+          </div>
+        )}
       </div>
-      <p className="text-sm font-semibold text-stone-800 leading-tight line-clamp-2">{deal.productName}</p>
-      <div className="bg-red-50 rounded-lg px-2 py-1.5">
-        <p className="text-xs text-red-700 font-medium leading-tight line-clamp-2">{deal.description}</p>
-      </div>
-      {deal.discountedPrice && <p className="text-lg font-black text-emerald-600">₪{deal.discountedPrice}</p>}
-      {!deal.discountedPrice && deal.discountRate && <p className="text-lg font-black text-emerald-600">{deal.discountRate}% הנחה</p>}
-      <div className="flex items-center justify-between mt-auto">
-        <div className="flex items-center gap-1.5">
-          <ChainLogo name={deal.chainName} size={22} />
-          <span className="text-xs text-stone-400">{chainHe}</span>
+
+      {/* תוכן */}
+      <div className="p-3 flex flex-col gap-1.5 flex-1">
+        <p className="text-xs font-bold text-stone-800 leading-tight line-clamp-2">{deal.productName}</p>
+        <p className="text-[11px] text-red-600 font-medium leading-tight line-clamp-2 bg-red-50 rounded-lg px-2 py-1">{deal.description}</p>
+
+        <div className="flex items-center justify-between mt-auto pt-1">
+          {deal.discountedPrice
+            ? <span className="text-base font-black text-emerald-600">₪{deal.discountedPrice}</span>
+            : <span className="text-base font-black text-emerald-600">מבצע</span>
+          }
+          {deal.regularPrice && deal.discountedPrice && (
+            <span className="text-xs text-stone-400 line-through">₪{(+deal.regularPrice).toFixed(2)}</span>
+          )}
         </div>
-        {days !== null && days <= 3 && days > 0 && <span className="text-[10px] bg-red-100 text-red-600 rounded-full px-2 py-0.5 font-bold">⏰ {days}י׳</span>}
-        {deal.isClubOnly && <span className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">מועדון</span>}
+
+        {/* חנות */}
+        <div className="flex items-center gap-1.5 pt-1 border-t border-stone-50">
+          <ChainLogo name={deal.chainName} size={18} />
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-stone-600 truncate">{deal.storeName || chainHe}</p>
+            {deal.city && <p className="text-[10px] text-stone-400 truncate">{deal.city}</p>}
+          </div>
+        </div>
       </div>
     </button>
   );
 }
 
-function DealsSlider({ deals, title, onSelect }: { deals: any[]; title: string; onSelect: (d: any) => void }) {
-  if (!deals.length) return null;
+function ChainFilterButton({ chain, count, selected, onClick }: { chain: string; count: number; selected: boolean; onClick: () => void }) {
+  const chainHe = CHAINS[chain] || chain;
   return (
-    <div className="mb-8">
-      <h2 className="text-lg font-bold text-stone-800 text-right mb-3 px-4">{title}</h2>
-      <div className="flex gap-3 overflow-x-auto pb-3 px-4" style={{ scrollSnapType: 'x mandatory' }}>
-        {deals.map((d: any) => (
-          <div key={d.promotionId} style={{ scrollSnapAlign: 'start' }}>
-            <DealCard deal={d} onClick={() => onSelect(d)} />
-          </div>
-        ))}
-      </div>
-    </div>
+    <button onClick={onClick} className={`shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[72px] ${selected ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-200'}`}>
+      <ChainLogo name={chain} size={40} />
+      <span className={`text-[10px] font-bold leading-tight text-center ${selected ? 'text-emerald-700' : 'text-stone-600'}`}>{chainHe}</span>
+      <span className={`text-[9px] ${selected ? 'text-emerald-500' : 'text-stone-400'}`}>{count} מבצעים</span>
+    </button>
   );
 }
 
@@ -71,19 +91,53 @@ export default function DealsPage() {
   const [chains, setChains] = useState<any[]>([]);
   const [selectedChain, setSelectedChain] = useState<string | null>(null);
   const [deals, setDeals] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<any | null>(null);
   const [toast, setToast] = useState('');
-
-  useEffect(() => { dealsApi.chains().then((d: any) => setChains(d.chains || [])); }, []);
+  const [userLoc, setUserLoc] = useState<{lat: number; lng: number; city?: string} | null>(null);
+  const [locLoading, setLocLoading] = useState(false);
+  const offset = deals.length;
 
   useEffect(() => {
-    setLoading(true);
-    dealsApi.list(selectedChain || undefined, 100).then((d: any) => {
+    dealsApi.chains().then((d: any) => setChains(d.chains || []));
+    // נסה לקבל מיקום אוטומטית
+    if (navigator.geolocation) {
+      setLocLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setLocLoading(false);
+        },
+        () => setLocLoading(false),
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+      );
+    }
+  }, []);
+
+  const fetchDeals = useCallback(async (reset = true) => {
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
+    const currentOffset = reset ? 0 : offset;
+    const d = await dealsApi.list(
+      selectedChain || undefined,
+      25,
+      currentOffset,
+      userLoc?.lat,
+      userLoc?.lng
+    );
+    if (reset) {
       setDeals(d.deals || []);
-      setLoading(false);
-    });
-  }, [selectedChain]);
+    } else {
+      setDeals(prev => [...prev, ...(d.deals || [])]);
+    }
+    setTotal(d.total || 0);
+    setLoading(false);
+    setLoadingMore(false);
+  }, [selectedChain, userLoc, offset]);
+
+  useEffect(() => { fetchDeals(true); }, [selectedChain, userLoc]);
 
   const handleAddToList = (deal: any) => {
     try {
@@ -98,53 +152,122 @@ export default function DealsPage() {
     } catch {}
   };
 
-  const byChain: Record<string, any[]> = {};
-  for (const d of deals) {
-    if (!byChain[d.chainName]) byChain[d.chainName] = [];
-    byChain[d.chainName].push(d);
-  }
+  const hasMore = deals.length < total;
 
   return (
     <div className="min-h-screen bg-stone-50" dir="rtl">
       {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
           <div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>
             {toast} נוסף לרשימה
           </div>
         </div>
       )}
-      {selectedDeal && <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />}
-      <div className="bg-white border-b border-stone-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm">← חזרה</Link>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🏷️</span>
-            <h1 className="text-lg font-bold text-stone-800">מבצעים</h1>
+      {selectedDeal && (
+        <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />
+      )}
+
+      {/* Header */}
+      <div className="bg-white border-b border-stone-100 sticky top-0 z-20">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm flex items-center gap-1">
+            ← חזרה
+          </Link>
+          <div className="flex flex-col items-center">
+            <h1 className="text-lg font-black text-stone-800">🏷️ מבצעים</h1>
+            {userLoc && (
+              <p className="text-xs text-emerald-600 font-medium">📍 ברדיוס 3 ק"מ ממך</p>
+            )}
+            {locLoading && <p className="text-xs text-stone-400">מאתר מיקום...</p>}
           </div>
-          <div className="w-12" />
+          <button
+            onClick={() => {
+              if (userLoc) { setUserLoc(null); }
+              else {
+                setLocLoading(true);
+                navigator.geolocation?.getCurrentPosition(
+                  (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); },
+                  () => setLocLoading(false)
+                );
+              }
+            }}
+            className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${userLoc ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}
+          >
+            {userLoc ? '📍 קרוב אלי' : '📍 הכל'}
+          </button>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-3 px-4">
-          <button onClick={() => setSelectedChain(null)} className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${!selectedChain ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>הכל</button>
+
+        {/* פילטר רשתות */}
+        <div className="flex gap-2 overflow-x-auto pb-3 pt-1 px-4 scrollbar-hide">
+          <button
+            onClick={() => setSelectedChain(null)}
+            className={`shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[72px] ${!selectedChain ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-200'}`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center text-xl">🏪</div>
+            <span className={`text-[10px] font-bold ${!selectedChain ? 'text-emerald-700' : 'text-stone-600'}`}>הכל</span>
+            <span className={`text-[9px] ${!selectedChain ? 'text-emerald-500' : 'text-stone-400'}`}>{total} מבצעים</span>
+          </button>
           {chains.map((c: any) => (
-            <button key={c.chainName} onClick={() => setSelectedChain(c.chainName)} className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${selectedChain === c.chainName ? 'bg-stone-800 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>
-              <ChainLogo name={c.chainName} size={18} />
-              {CHAINS[c.chainName]?.he || c.chainName}
-            </button>
+            <ChainFilterButton
+              key={c.chainName}
+              chain={c.chainName}
+              count={c.dealCount}
+              selected={selectedChain === c.chainName}
+              onClick={() => setSelectedChain(selectedChain === c.chainName ? null : c.chainName)}
+            />
           ))}
         </div>
       </div>
-      <div className="py-4">
+
+      {/* Grid מבצעים */}
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {loading ? (
-          <div className="flex justify-center items-center h-60">
-            <div className="w-8 h-8 border-4 border-stone-200 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {Array.from({length: 10}).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-stone-100 overflow-hidden animate-pulse">
+                <div className="aspect-square bg-stone-100" />
+                <div className="p-3 flex flex-col gap-2">
+                  <div className="h-3 bg-stone-100 rounded w-3/4" />
+                  <div className="h-3 bg-stone-100 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
-        ) : selectedChain ? (
-          <DealsSlider deals={deals} title={CHAINS[selectedChain]?.he || selectedChain} onSelect={setSelectedDeal} />
+        ) : deals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-60 gap-3">
+            <span className="text-5xl">🔍</span>
+            <p className="text-stone-500 font-medium">לא נמצאו מבצעים באזור שלך</p>
+            {userLoc && (
+              <button onClick={() => setUserLoc(null)} className="text-emerald-600 text-sm font-medium underline">
+                הצג מבצעים מכל הארץ
+              </button>
+            )}
+          </div>
         ) : (
-          Object.entries(byChain).map(([chain, chainDeals]) => (
-            <DealsSlider key={chain} deals={chainDeals} title={CHAINS[chain]?.he || chain} onSelect={setSelectedDeal} />
-          ))
+          <>
+            <p className="text-xs text-stone-400 text-right mb-3">מציג {deals.length} מתוך {total} מבצעים</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {deals.map((deal: any) => (
+                <DealCard key={deal.promotionId} deal={deal} onClick={() => setSelectedDeal(deal)} />
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={() => fetchDeals(false)}
+                  disabled={loadingMore}
+                  className="bg-white border-2 border-emerald-400 text-emerald-600 font-bold px-8 py-3 rounded-2xl hover:bg-emerald-50 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loadingMore ? (
+                    <><div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> טוען...</>
+                  ) : (
+                    <>טען עוד מבצעים ({total - deals.length} נותרו)</>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
