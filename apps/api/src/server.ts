@@ -15,6 +15,7 @@ const app = Fastify({ logger: true });
 
 async function main() {
   await app.register(cors, { origin: process.env.CORS_ORIGIN || '*', credentials: true });
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => { try { done(null, JSON.parse(body as string)); } catch(e) { done(e as Error, undefined); } });
   await app.register(cookie);
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
   await app.register(searchRoutes, { prefix: '/api' });
