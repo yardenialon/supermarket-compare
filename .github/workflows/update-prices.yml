@@ -34,3 +34,12 @@ KAGGLE_EOF
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/update_prices.py
+
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+
+      - name: Run promotions update
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        continue-on-error: true
+        run: python scripts/update_promos.py
