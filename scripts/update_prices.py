@@ -2,7 +2,7 @@
 """Daily price update from Kaggle - v5 fixed column names."""
 import os, sys, csv, psycopg2, time, glob
 def process_promos_batch(cur, conn, filepath, chain_name):
-    csv.field_size_limit(50 * 1024 * 1024)
+    csv.field_size_limit(100 * 1024 * 1024)
     cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
 from pathlib import Path
 
@@ -52,7 +52,7 @@ def process_prices_batch(cur, conn, filepath, chain_name):
     skipped_store = 0
     skipped_barcode = 0
 
-    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    csv.field_size_limit(100 * 1024 * 1024)
     with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -113,7 +113,7 @@ def process_stores_file(cur, filepath, chain_name):
     cur.execute("SELECT store_code FROM store WHERE chain_id=%s", (chain_id,))
     existing = {r[0] for r in cur.fetchall()}
     added = 0
-    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    csv.field_size_limit(100 * 1024 * 1024)
     with open(filepath, encoding="utf-8") as f:
         for row in csv.DictReader(f):
             sid = row.get('storeid', '').strip()
@@ -125,7 +125,7 @@ def process_stores_file(cur, filepath, chain_name):
     return added
 
 def process_promos_batch(cur, conn, filepath, chain_name):
-    csv.field_size_limit(50 * 1024 * 1024)
+    csv.field_size_limit(100 * 1024 * 1024)
     """Process promo files and update is_promo/promo_price in store_price."""
     cur.execute("SELECT id FROM retailer_chain WHERE name=%s", (chain_name,))
     row = cur.fetchone()
@@ -137,7 +137,7 @@ def process_promos_batch(cur, conn, filepath, chain_name):
 
     rows = []
     last_store = None
-    csv.field_size_limit(10 * 1024 * 1024)  # 10MB
+    csv.field_size_limit(100 * 1024 * 1024)
     with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         print(f"    DEBUG headers: {reader.fieldnames}", flush=True)
