@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { api, dealsApi } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 import { DealModal, HotDealsSlider } from "@/components/DealModal";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
@@ -173,6 +174,7 @@ export default function Home() {
   const [prices, setPrices] = useState<Price[]>([]); const [loading, setLoading] = useState(false); const [pLoading, setPLoading] = useState(false);
   const [showCats, setShowCats] = useState(false); const [chainFilter, setChainFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price' | 'stores' | 'name'>('stores'); const db = useRef<any>(null);
+  const { user, syncCartToCloud, loadCartFromCloud } = useAuth();
   const [list, setList] = useState<ListItem[]>([]); const [listResults, setListResults] = useState<StoreResult[]>([]);
 
   // Load list from localStorage on mount
@@ -184,12 +186,27 @@ export default function Home() {
     // Warm up API + DB connection
     api.search('x').catch(() => {});
   }, []);
+  // Sync cart with cloud after auth
+  const cloudSynced = useRef(false);
+  useEffect(() => {
+    if (!user || cloudSynced.current) return;
+    cloudSynced.current = true;
+    loadCartFromCloud().then(cloudItems => {
+      if (cloudItems && cloudItems.length > 0) {
+        setList(cloudItems);
+        localStorage.setItem('savy-list', JSON.stringify(cloudItems));
+      } else if (list.length > 0) {
+        syncCartToCloud(list);
+      }
+    });
+  }, []);
 
   // Save list to localStorage on change
   const listLoaded = useRef(false);
   useEffect(() => {
     if (!listLoaded.current) { listLoaded.current = true; return; }
     try { localStorage.setItem('savy-list', JSON.stringify(list)); } catch {}
+    if (user) syncCartToCloud(list);
   }, [list]);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});

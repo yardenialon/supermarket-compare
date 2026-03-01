@@ -1,24 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAuth } from '@/lib/useAuth';
 import AuthModal from './AuthModal';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api';
 
 export default function Header() {
   const [showAuth, setShowAuth] = useState(false);
-  const [user, setUser] = useState<{ id: number; phone: string; name?: string } | null>(null);
-
-  useEffect(() => {
-    fetch(`${API}/auth/me`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => { if (d.user) setUser(d.user); })
-      .catch(() => {});
-  }, []);
-
-  async function logout() {
-    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
-    setUser(null);
-  }
+  const { user, setUser, logout } = useAuth();
 
   return (
     <>
