@@ -29,6 +29,8 @@ async function sendWhatsApp(to: string, code: string): Promise<boolean> {
       To: `whatsapp:${to}`,
       Body: `קוד האימות שלך ל-Savy הוא: *${code}*\nהקוד תקף ל-10 דקות.`,
     });
+    console.log("Twilio URL:", url);
+    console.log("Twilio FROM:", TWILIO_FROM);
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -37,6 +39,8 @@ async function sendWhatsApp(to: string, code: string): Promise<boolean> {
       },
       body,
     });
+    const text = await res.text();
+    console.log("Twilio response:", res.status, text);
     return res.ok;
   } catch {
     return false;
