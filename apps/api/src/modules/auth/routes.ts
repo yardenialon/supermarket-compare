@@ -16,9 +16,9 @@ function generateToken(): string {
 
 function normalizePhone(phone: string): string {
   const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('0')) return '+972' + digits.slice(1);
   if (digits.startsWith('972')) return '+' + digits;
-  return '+' + digits;
+  if (digits.startsWith('0')) return '+972' + digits.slice(1);
+  return '+972' + digits;
 }
 
 async function sendWhatsApp(to: string, code: string): Promise<boolean> {
