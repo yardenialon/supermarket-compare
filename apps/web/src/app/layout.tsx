@@ -1,5 +1,6 @@
 import './globals.css';
 import { ReactNode } from 'react';
+import Header from '@/components/Header';
 import Script from 'next/script';
 
 export const metadata = {
@@ -38,11 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         `}</Script>
       </head>
       <body className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
-        <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-xl shadow-sm">
-          <div className="max-w-5xl mx-auto px-4 py-2 flex items-center justify-center">
-            <a href="/"><img src="/icons/savy-logo.png" alt="Savy" className="h-10 object-contain" /></a>
-          </div>
-        </header>
+        <Header />
         <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
         <footer className="border-t bg-white/50 mt-12 py-8 text-center">
           <div className="text-xs text-stone-300">מחירים מתעדכנים יומית מנתוני שקיפות מחירים 🇮🇱</div>
