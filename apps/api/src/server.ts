@@ -14,7 +14,17 @@ import { authRoutes } from './modules/auth/routes.js';
 const app = Fastify({ logger: true });
 
 async function main() {
-  await app.register(cors, { origin: process.env.CORS_ORIGIN || '*', credentials: true });
+  const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',');
+  await app.register(cors, { 
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Not allowed by CORS'), false);
+      }
+    },
+    credentials: true 
+  });
   app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => { try { done(null, JSON.parse(body as string)); } catch(e) { done(e as Error, undefined); } });
   await app.register(cookie);
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
