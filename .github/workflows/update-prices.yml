@@ -17,9 +17,7 @@ jobs:
       - name: Setup Kaggle credentials
         run: |
           mkdir -p ~/.kaggle
-          cat > ~/.kaggle/kaggle.json << 'KAGGLE_EOF'
-{"username":"yalon5","key":"KGAT_d282a16db37c209cdfe00eaf4674e0ef"}
-KAGGLE_EOF
+          echo '{"username":"yalon5","key":"KGAT_d282a16db37c209cdfe00eaf4674e0ef"}' > ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
           kaggle datasets list --user yalon5 2>&1 | head -3 || true
       - name: Run update
