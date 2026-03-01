@@ -1,25 +1,19 @@
 name: Update Prices
-
 on:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
-
 jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 90
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: pip install psycopg2-binary kaggle
-
       - name: Setup Kaggle credentials
         run: |
           mkdir -p ~/.kaggle
@@ -27,17 +21,11 @@ jobs:
 {"username":"yalon5","key":"KGAT_d282a16db37c209cdfe00eaf4674e0ef"}
 KAGGLE_EOF
           chmod 600 ~/.kaggle/kaggle.json
-          # Test
           kaggle datasets list --user yalon5 2>&1 | head -3 || true
-
       - name: Run update
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scripts/update_prices.py
-
-      - name: Install psycopg2
-        run: pip install psycopg2-binary
-
       - name: Run promotions update
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
