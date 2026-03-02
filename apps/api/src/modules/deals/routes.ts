@@ -3,7 +3,11 @@ import { query } from '../../db.js';
 export async function dealsRoutes(app: any) {
 
   app.get('/deals', async (req: any) => {
-    const { chain, limit = 25, offset = 0, lat, lng } = req.query;
+    const { chain, limit = 25, offset = 0, lat, lng, category } = req.query;
+    if (category) {
+      params.push(category);
+      conditions.push(`p.category = $\${params.length}`);
+    }
     const params: any[] = [];
     const conditions: string[] = ["(pr.end_date IS NULL OR pr.end_date > NOW())", "pr.description IS NOT NULL"];
 
@@ -30,6 +34,7 @@ export async function dealsRoutes(app: any) {
         s.subchain_name as "subchainName",
         MIN(p.id) as "productId", MIN(p.name) as "productName",
         MIN(p.barcode) as "barcode", MIN(p.image_url) as "imageUrl",
+        MIN(p.category) as "category", MIN(p.subcategory) as "subcategory",
         MIN(sp.price) as "regularPrice", COUNT(DISTINCT pi.product_id) as "itemCount"
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
@@ -56,6 +61,21 @@ export async function dealsRoutes(app: any) {
       })),
       total: result.rows.length === parseInt(limit) ? parseInt(limit) * 10 : result.rows.length + parseInt(offset),
     };
+  });
+
+  app.get('/deals/categories', async () => {
+    const result = await query(`
+      SELECT p.category, COUNT(DISTINCT pr.id) as "dealCount"
+      FROM promotion pr
+      JOIN store s ON s.id = pr.store_id
+      JOIN promotion_item pi ON pi.promotion_id = pr.id
+      JOIN product p ON p.id = pi.product_id
+      WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
+        AND p.category IS NOT NULL AND p.category != ''
+      GROUP BY p.category
+      ORDER BY "dealCount" DESC
+    `, []);
+    return { categories: result.rows.map((r: any) => ({ ...r, dealCount: +r.dealCount })) };
   });
 
   app.get('/deals/chains', async () => {
