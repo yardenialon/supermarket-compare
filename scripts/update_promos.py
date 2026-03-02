@@ -22,7 +22,7 @@ CHAIN_MAP = {
     "hazi_hinam":"Hazi Hinam","tiv_taam":"Tiv Taam","yochananof":"Yochananof",
     "yohananof":"Yochananof","dor_alon":"Dor Alon","keshet":"Keshet Taamim",
     "stop_market":"Stop Market","polizer":"Polizer","salach_dabach":"Salach Dabach",
-    "super_sapir":"Super Sapir",
+    "super_sapir":"Super Sapir","meshmat_yosef":"Meshmat Yosef","shefa_barcart_ashem":"Shefa Barcart Ashem","shuk_ahir":"Shuk Ahir","super_yuda":"Super Yuda","yellow":"Yellow","zol_vebegadol":"Zol Vebegadol","wolt":"Wolt","carrefour":"Carrefour","yayno_bitan":"Yayno Bitan",
 }
 KAGGLE_DATA_DIR = Path("kaggle_data")
 KAGGLE_DATASET  = "motib7/israeli-supermarket-prices"
@@ -71,6 +71,12 @@ def parse_groups(raw):
     barcodes = []
     for g in groups:
         promo_items = g.get("promotionitems", {})
+        if isinstance(promo_items, str):
+            try: promo_items = ast.literal_eval(promo_items)
+            except:
+                try: promo_items = json.loads(promo_items)
+                except: continue
+        if not isinstance(promo_items, dict): continue
         items = promo_items.get("promotionitem", [])
         if isinstance(items, dict): items = [items]
         for item in items:
@@ -221,8 +227,21 @@ def main():
                 log.info(f"  ✅ {p:,} promos, {i:,} items")
                 tp += p; ti += i
             except Exception as e:
-                conn.rollback()
+                try: conn.rollback()
+                except: pass
                 log.error(f"  ❌ {f.name}: {e}", exc_info=True)
+                # reconnect if connection lost
+                try:
+                    conn.close()
+                except: pass
+                try:
+                    conn = psycopg2.connect(db_url)
+                    conn.autocommit = False
+                    cur = conn.cursor()
+                    log.info("  Reconnected to DB")
+                except Exception as re:
+                    log.error(f"  Failed to reconnect: {re}")
+                    break
         log.info(f"\n🎉 Total: {tp:,} promotions, {ti:,} items")
     finally:
         conn.close()
