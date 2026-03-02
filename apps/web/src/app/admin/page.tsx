@@ -25,7 +25,9 @@ export default function AdminPage() {
       const data = await res.json();
       setProducts(data.products || []);
       setTotal(data.total || 0);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, [offset, search]);
 
   useEffect(() => { load(); }, [load]);
@@ -48,10 +50,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-stone-50 p-6" dir="rtl">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-stone-800">🖼️ עדכון תמונות ידני</h1>
+          <h1 className="text-2xl font-bold text-stone-800">עדכון תמונות ידני</h1>
           <span className="text-sm text-stone-400">{total.toLocaleString()} מוצרים ללא תמונה</span>
         </div>
-
         <input
           type="text"
           placeholder="חיפוש לפי שם או ברקוד..."
@@ -59,23 +60,19 @@ export default function AdminPage() {
           onChange={e => { setSearch(e.target.value); setOffset(0); }}
           className="w-full border border-stone-200 rounded-xl px-4 py-3 mb-6 text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         />
-
         {loading ? (
           <div className="text-center py-20 text-stone-400">טוען...</div>
         ) : (
           <div className="space-y-3">
             {products.map(p => (
               <div key={p.id} className="bg-white rounded-xl border border-stone-100 p-4 flex items-center gap-4">
-                {/* תצוגה מקדימה */}
                 <div className="w-16 h-16 rounded-lg bg-stone-100 flex-shrink-0 overflow-hidden">
                   {imageUrls[p.id] ? (
-                    <img src={imageUrls[p.id]} alt="" className="w-full h-full object-contain" onError={() => {}} />
+                    <img src={imageUrls[p.id]} alt="" className="w-full h-full object-contain" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
                   )}
                 </div>
-
-                {/* פרטי מוצר */}
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-stone-800 truncate">{p.name}</div>
                   <div className="text-xs text-stone-400 mt-0.5">ברקוד: {p.barcode} · {p.store_count} חנויות</div>
@@ -88,19 +85,19 @@ export default function AdminPage() {
                       className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
                     />
                     
-                      href={`https://www.google.com/search?q=${encodeURIComponent(p.barcode + ' ' + p.name)}&tbm=isch`}
+                      href={`https://www.google.com/search?q=${encodeURIComponent((p.barcode || '') + ' ' + (p.name || ''))}&tbm=isch`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-1.5 bg-blue-50 text-blue-600 text-sm rounded-lg hover:bg-blue-100 transition whitespace-nowrap"
                     >
-                      🔍 גוגל
+                      גוגל
                     </a>
                     <button
                       onClick={() => saveImage(p.id)}
                       disabled={!imageUrls[p.id] || saved[p.id]}
                       className="px-3 py-1.5 bg-emerald-500 text-white text-sm rounded-lg hover:bg-emerald-600 disabled:opacity-40 transition whitespace-nowrap"
                     >
-                      {saved[p.id] ? '✓ נשמר' : 'שמור'}
+                      {saved[p.id] ? 'נשמר' : 'שמור'}
                     </button>
                   </div>
                 </div>
@@ -108,17 +105,23 @@ export default function AdminPage() {
             ))}
           </div>
         )}
-
-        {/* Pagination */}
         <div className="flex justify-center gap-3 mt-6">
-          <button onClick={() => setOffset(Math.max(0, offset - 20))} disabled={offset === 0}
-            className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm disabled:opacity-40">
-            ← הקודם
+          <button
+            onClick={() => setOffset(Math.max(0, offset - 20))}
+            disabled={offset === 0}
+            className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm disabled:opacity-40"
+          >
+            הקודם
           </button>
-          <span className="px-4 py-2 text-sm text-stone-500">{Math.floor(offset/20)+1} / {Math.ceil(total/20)}</span>
-          <button onClick={() => setOffset(offset + 20)} disabled={offset + 20 >= total}
-            className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm disabled:opacity-40">
-            הבא →
+          <span className="px-4 py-2 text-sm text-stone-500">
+            {Math.floor(offset / 20) + 1} / {Math.ceil(total / 20)}
+          </span>
+          <button
+            onClick={() => setOffset(offset + 20)}
+            disabled={offset + 20 >= total}
+            className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-sm disabled:opacity-40"
+          >
+            הבא
           </button>
         </div>
       </div>
