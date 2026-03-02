@@ -1,70 +1,101 @@
 #!/usr/bin/env python3
 """
-update_categories.py - Fetch product categories from Open Food Facts.
+update_categories.py - Classify products by Hebrew name keywords.
 """
-import os, time, json, logging, sys
-import urllib.request
+import os, logging, sys
 import psycopg2
+from psycopg2.extras import execute_values
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.StreamHandler(sys.stdout)])
 log = logging.getLogger(__name__)
 
-BATCH_SIZE = int(os.environ.get("CATEGORY_BATCH_SIZE", "1000"))
-DELAY = 0.2
+BATCH_SIZE = int(os.environ.get("CATEGORY_BATCH_SIZE", "5000"))
 
-CATEGORY_MAP = {
-    "dairies": "מוצרי חלב", "dairy": "מוצרי חלב", "milks": "חלב",
-    "yogurts": "יוגורט", "cheeses": "גבינות", "butter": "חמאה",
-    "breads": "לחם ומאפה", "bread": "לחם ומאפה", "pastries": "מאפים",
-    "meats": "בשר ועוף", "meat": "בשר ועוף", "chicken": "עוף", "beef": "בקר",
-    "fish": "דגים ופירות ים", "seafood": "דגים ופירות ים",
-    "fruits": "פירות וירקות", "vegetables": "פירות וירקות",
-    "beverages": "משקאות", "waters": "מים", "juices": "מיצים",
-    "sodas": "שתייה קלה", "soft-drinks": "שתייה קלה",
-    "snacks": "חטיפים", "chips": "חטיפים", "crackers": "קרקרים",
-    "chocolates": "שוקולד וממתקים", "candies": "שוקולד וממתקים", "sweets": "שוקולד וממתקים",
-    "cereals": "דגני בוקר", "breakfast-cereals": "דגני בוקר",
-    "pastas": "פסטה ואורז", "rice": "פסטה ואורז", "noodles": "פסטה ואורז",
-    "oils": "שמנים ורטבים", "sauces": "שמנים ורטבים", "condiments": "תבלינים",
-    "spices": "תבלינים", "seasonings": "תבלינים",
-    "frozen": "קפוא", "frozen-foods": "קפוא",
-    "canned": "שימורים", "canned-foods": "שימורים",
-    "coffee": "קפה ותה", "teas": "קפה ותה",
-    "baby-foods": "מוצרי תינוקות", "infant": "מוצרי תינוקות",
-    "cleaning": "ניקיון", "hygiene": "היגיינה ויופי",
-    "cosmetics": "היגיינה ויופי", "beauty": "היגיינה ויופי",
-    "pet-foods": "מזון לחיות", "pet": "מזון לחיות",
-}
+# (קטגוריה, תת-קטגוריה, [מילות מפתח])
+RULES = [
+    # חלב ומוצרי חלב
+    ("מוצרי חלב", "חלב", ["חלב ", "חלב1", "חלב3", "חלב5", "חלב9"]),
+    ("מוצרי חלב", "יוגורט", ["יוגורט", "יוגרט", "יוגו"]),
+    ("מוצרי חלב", "גבינה", ["גבינה", "גבינת", "קוטג", "ריקוטה", "מסקרפונה", "בולגרית", "צהובה", "לבנה "]),
+    ("מוצרי חלב", "חמאה ושמנת", ["חמאה", "שמנת", "שמנת חמוצה", "קרם פרש"]),
+    ("מוצרי חלב", "מוצרי חלב אחרים", ["לבן ", "שוקו", "מילקי", "פודינג חלב"]),
 
-def parse_categories(cats_str):
-    if not cats_str: return ("", "")
-    parts = [c.strip().lower() for c in cats_str.split(",")]
-    category = ""
-    subcategory = ""
-    for part in parts:
-        clean = part.replace("en:", "").replace("he:", "").strip()
-        for key, value in CATEGORY_MAP.items():
-            if key in clean:
-                if not category:
-                    category = value
-                elif not subcategory and value != category:
-                    subcategory = value
-                break
-    return (category, subcategory)
+    # בשר ועוף
+    ("בשר ועוף", "עוף", ["עוף", "חזה עוף", "שוק עוף", "כנף", "פרגית", "הודו", "שניצל עוף"]),
+    ("בשר ועוף", "בקר", ["בקר", "אנטריקוט", "פילה בקר", "סטייק", "צלי", "קציצות בקר", "המבורגר"]),
+    ("בשר ועוף", "כבש וטלה", ["כבש", "טלה", "צלעות כבש"]),
+    ("בשר ועוף", "נקניקיות ומעובד", ["נקניק", "נקניקיה", "נקניקיות", "סלמי", "פסטרמה", "קבב", "שאורמה"]),
 
-def fetch_categories(barcode):
-    try:
-        req = urllib.request.Request(
-            "https://world.openfoodfacts.org/api/v0/product/" + barcode + ".json?fields=categories",
-            headers={"User-Agent": "Savy-App/1.0"}
-        )
-        with urllib.request.urlopen(req, timeout=8) as r:
-            data = json.loads(r.read())
-        if data.get("status") != 1: return ("", "")
-        cats = data["product"].get("categories", "")
-        return parse_categories(cats)
-    except:
-        return ("", "")
+    # דגים ופירות ים
+    ("דגים ופירות ים", "דגים טריים", ["דג ", "דגים", "סלמון", "טונה", "בורי", "קרפיון", "מוסר", "לוקוס", "דניס"]),
+    ("דגים ופירות ים", "דגים מעובדים", ["פילה דג", "דג מעושן", "דג מלוח", "גפילטע"]),
+    ("דגים ופירות ים", "פירות ים", ["שרימפס", "קלמרי", "תמנון", "צדפות"]),
+
+    # לחם ומאפה
+    ("לחם ומאפה", "לחם", ["לחם", "חלה", "פיתה", "לחמניה", "באגט", "לחם אחיד", "לחם שיפון"]),
+    ("לחם ומאפה", "מאפים", ["קרואסון", "מאפה", "בורקס", "קיש", "פשטידה", "רוגלך"]),
+    ("לחם ומאפה", "עוגות ועוגיות", ["עוגה", "עוגיה", "עוגיות", "ביסקוויט", "וופל", "בראוניז"]),
+
+    # ירקות ופירות
+    ("ירקות ופירות", "ירקות", ["עגבניה", "מלפפון", "גזר", "בצל", "תפוח אדמה", "חסה", "כרוב", "פלפל", "חציל", "קישוא", "שום", "ירקות"]),
+    ("ירקות ופירות", "פירות", ["תפוח", "בננה", "תפוז", "לימון", "ענבים", "אבטיח", "מלון", "אפרסק", "שזיף", "פירות"]),
+    ("ירקות ופירות", "עשבי תיבול", ["פטרוזיליה", "כוסברה", "נענע", "בזיליקום", "שמיר", "עשבי"]),
+
+    # משקאות
+    ("משקאות", "מים", ["מים מינרלים", "מים תוצרת", "מים מועשרים"]),
+    ("משקאות", "שתייה קלה", ["קולה", "ספרייט", "פנטה", "סודה", "שתייה קלה", "לימונדה", "אייס טי"]),
+    ("משקאות", "מיצים", ["מיץ", "מיצים", "נקטר"]),
+    ("משקאות", "משקאות אנרגיה", ["רד בול", "מונסטר", "אנרגי"]),
+    ("משקאות", "קפה ותה", ["קפה", "תה ", "נס קפה", "אספרסו", "קפסולות"]),
+    ("משקאות", "משקאות אלכוהוליים", ["בירה", "יין", "וודקה", "וויסקי", "קוניאק", "שמפניה", "אלכוהול"]),
+
+    # חטיפים וממתקים
+    ("חטיפים וממתקים", "חטיפים מלוחים", ["חטיף", "חטיפים", "במבה", "ביסלי", "פרינגלס", "דורטוס", "פופקורן"]),
+    ("חטיפים וממתקים", "שוקולד", ["שוקולד", "פרה", "קיטקט", "סניקרס", "טוויקס", "קינדר"]),
+    ("חטיפים וממתקים", "סוכריות וממתקים", ["סוכריה", "סוכריות", "מסטיק", "ארטיק", "גלידה"]),
+    ("חטיפים וממתקים", "גלידה", ["גלידה", "ארטיק", "סורבה"]),
+
+    # דגני בוקר ודגנים
+    ("דגנים וקטניות", "דגני בוקר", ["קורנפלקס", "גרנולה", "שיבולת שועל", "מוזלי", "דגני בוקר"]),
+    ("דגנים וקטניות", "פסטה ואורז", ["פסטה", "ספגטי", "אורז", "קוסקוס", "בולגור", "פנה", "פוזילי"]),
+    ("דגנים וקטניות", "קטניות", ["עדשים", "חומוס", "שעועית", "אפונה", "פול"]),
+    ("דגנים וקטניות", "קמח וסולת", ["קמח", "סולת", "שיפון"]),
+
+    # שימורים ומוצרים יבשים
+    ("שימורים ומזון יבש", "שימורים", ["שימורי", "שימורים", "טונה קופסה", "סרדינים", "תירס קופסה"]),
+    ("שימורים ומזון יבש", "רטבים ומרקים", ["רוטב", "מרק", "ציר", "פסטו", "קטשופ", "מיונז", "חרדל"]),
+    ("שימורים ומזון יבש", "תבלינים", ["תבלין", "תבלינים", "פפריקה", "כמון", "קינמון", "כורכום"]),
+
+    # מוצרים קפואים
+    ("מוצרים קפואים", "ירקות קפואים", ["ירקות קפואים", "תירס קפוא", "אפונה קפואה"]),
+    ("מוצרים קפואים", "מזון קפוא מוכן", ["פיצה קפואה", "שניצל קפוא", "קפוא מוכן", "לזניה קפואה"]),
+
+    # מוצרי ניקיון ובית
+    ("ניקיון ובית", "כלי בית", ["נייר טואלט", "מגבת נייר", "שקיות", "ניילון נצמד", "כוסות חד פעמי"]),
+    ("ניקיון ובית", "חומרי ניקוי", ["אקונומיקה", "ניקוי", "סבון כלים", "אבקת כביסה", "מרכך", "פיירי"]),
+
+    # היגיינה ויופי
+    ("היגיינה ויופי", "טיפוח גוף", ["שמפו", "מרכך שיער", "סבון גוף", "קרם גוף", "דאודורנט"]),
+    ("היגיינה ויופי", "טיפוח פנים", ["קרם פנים", "מסכה", "סרום", "תחליב"]),
+    ("היגיינה ויופי", "היגיינה", ["משחת שיניים", "מברשת שיניים", "חוט דנטלי", "מגן פה"]),
+
+    # תינוקות
+    ("מוצרי תינוקות", "מזון לתינוקות", ["פורמולה", "מחית", "דייסה לתינוק", "מזון לתינוק"]),
+    ("מוצרי תינוקות", "טיפוח תינוקות", ["חיתול", "מגבוני תינוק", "שמן תינוק", "קרם תינוק"]),
+
+    # מזון לחיות
+    ("מזון לחיות מחמד", "מזון לכלבים", ["מזון לכלב", "כלב"]),
+    ("מזון לחיות מחמד", "מזון לחתולים", ["מזון לחתול", "חתול", "פוריה"]),
+]
+
+def classify(name: str):
+    if not name: return ("", "")
+    name_lower = name.lower()
+    for category, subcategory, keywords in RULES:
+        for kw in keywords:
+            if kw.lower() in name_lower:
+                return (category, subcategory)
+    return ("", "")
 
 def main():
     db_url = os.environ.get("DATABASE_URL")
@@ -75,11 +106,10 @@ def main():
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT p.id, p.barcode
+        SELECT p.id, p.name
         FROM product p
-        WHERE (p.category IS NULL OR p.category = \'\')
-          AND p.barcode IS NOT NULL
-          AND length(p.barcode) >= 8
+        WHERE (p.category IS NULL OR p.category = \'\'  )
+          AND p.name IS NOT NULL
           AND EXISTS (SELECT 1 FROM store_price sp WHERE sp.product_id = p.id)
         ORDER BY p.store_count DESC NULLS LAST
         LIMIT %s
@@ -88,23 +118,21 @@ def main():
     products = cur.fetchall()
     log.info("Found %d products missing categories", len(products))
 
-    updated = not_found = 0
+    updates = []
+    no_match = 0
 
-    for i, (pid, barcode) in enumerate(products):
-        category, subcategory = fetch_categories(barcode)
+    for pid, name in products:
+        category, subcategory = classify(name)
         if category:
-            cur.execute("UPDATE product SET category=%s, subcategory=%s WHERE id=%s", (category, subcategory, pid))
-            updated += 1
+            updates.append((category, subcategory, pid))
         else:
-            not_found += 1
+            no_match += 1
 
-        if (i + 1) % 100 == 0:
-            conn.commit()
-            log.info("  %d/%d - %d updated, %d not found", i+1, len(products), updated, not_found)
-        time.sleep(DELAY)
+    if updates:
+        execute_values(cur, "UPDATE product SET category=data.cat, subcategory=data.sub FROM (VALUES %s) AS data(cat, sub, id) WHERE product.id=data.id", updates)
+        conn.commit()
 
-    conn.commit()
-    log.info("Done - %d/%d categories updated", updated, len(products))
+    log.info("Done - %d/%d classified, %d no match", len(updates), len(products), no_match)
     conn.close()
 
 if __name__ == "__main__":
