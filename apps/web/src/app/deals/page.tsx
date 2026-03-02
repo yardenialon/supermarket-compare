@@ -14,6 +14,23 @@ const CHAINS: Record<string, string> = {
   'Netiv Hased': 'נתיב חסד', 'Shefa Barcart Ashem': 'שפע',
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  'מוצרי חלב': 'bg-blue-50 text-blue-700 border-blue-200',
+  'בשר ועוף': 'bg-red-50 text-red-700 border-red-200',
+  'דגים ופירות ים': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  'לחם ומאפה': 'bg-amber-50 text-amber-700 border-amber-200',
+  'ירקות ופירות': 'bg-green-50 text-green-700 border-green-200',
+  'משקאות': 'bg-sky-50 text-sky-700 border-sky-200',
+  'חטיפים וממתקים': 'bg-pink-50 text-pink-700 border-pink-200',
+  'דגנים וקטניות': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  'שימורים ומזון יבש': 'bg-orange-50 text-orange-700 border-orange-200',
+  'מוצרים קפואים': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  'ניקיון ובית': 'bg-teal-50 text-teal-700 border-teal-200',
+  'היגיינה ויופי': 'bg-purple-50 text-purple-700 border-purple-200',
+  'מוצרי תינוקות': 'bg-rose-50 text-rose-700 border-rose-200',
+  'מזון לחיות מחמד': 'bg-lime-50 text-lime-700 border-lime-200',
+};
+
 function daysLeft(endDate: string | null) {
   if (!endDate) return null;
   return Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000);
@@ -22,14 +39,12 @@ function daysLeft(endDate: string | null) {
 function DealCard({ deal, onClick }: { deal: any; onClick: () => void }) {
   const days = daysLeft(deal.endDate);
   const chainHe = CHAINS[deal.chainName] || deal.chainName;
-
   return (
     <button onClick={onClick} className="group bg-white rounded-2xl border border-stone-100 hover:border-emerald-200 hover:shadow-lg transition-all text-right flex flex-col overflow-hidden">
-      {/* תמונה */}
       <div className="relative w-full aspect-square bg-stone-50 flex items-center justify-center overflow-hidden">
         {deal.imageUrl
           ? <img src={deal.imageUrl} alt={deal.productName} className="object-contain w-full h-full p-3 group-hover:scale-105 transition-transform" />
-          : <span className="text-4xl">🏷️</span>
+          : <div className="w-16 h-16 rounded-2xl bg-stone-100" />
         }
         {deal.savingPct && deal.savingPct > 0 && (
           <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-black px-2 py-1 rounded-full shadow">
@@ -43,27 +58,22 @@ function DealCard({ deal, onClick }: { deal: any; onClick: () => void }) {
         )}
         {days !== null && days <= 3 && days > 0 && (
           <div className="absolute bottom-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-            ⏰ {days} ימים
+            {days} ימים
           </div>
         )}
       </div>
-
-      {/* תוכן */}
       <div className="p-3 flex flex-col gap-1.5 flex-1">
         <p className="text-xs font-bold text-stone-800 leading-tight line-clamp-2">{deal.productName}</p>
         <p className="text-[11px] text-red-600 font-medium leading-tight line-clamp-2 bg-red-50 rounded-lg px-2 py-1">{deal.description}</p>
-
         <div className="flex items-center justify-between mt-auto pt-1">
           {deal.discountedPrice
-            ? <span className="text-base font-black text-emerald-600">₪{deal.discountedPrice}</span>
+            ? <span className="text-base font-black text-emerald-600">&#8362;{deal.discountedPrice}</span>
             : <span className="text-base font-black text-emerald-600">מבצע</span>
           }
           {deal.regularPrice && deal.discountedPrice && (
-            <span className="text-xs text-stone-400 line-through">₪{(+deal.regularPrice).toFixed(2)}</span>
+            <span className="text-xs text-stone-400 line-through">&#8362;{(+deal.regularPrice).toFixed(2)}</span>
           )}
         </div>
-
-        {/* חנות */}
         <div className="flex items-center gap-1.5 pt-1 border-t border-stone-50">
           <ChainLogo name={deal.chainName} size={18} />
           <div className="min-w-0">
@@ -76,40 +86,29 @@ function DealCard({ deal, onClick }: { deal: any; onClick: () => void }) {
   );
 }
 
-function ChainFilterButton({ chain, count, selected, onClick }: { chain: string; count: number; selected: boolean; onClick: () => void }) {
-  const chainHe = CHAINS[chain] || chain;
-  return (
-    <button onClick={onClick} className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all min-w-[90px] ${selected ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100' : 'border-stone-100 bg-white hover:border-stone-300 hover:shadow-sm'}`}>
-      <ChainLogo name={chain} size={56} />
-      <span className={`text-[11px] font-bold leading-tight text-center ${selected ? 'text-emerald-700' : 'text-stone-600'}`}>{chainHe}</span>
-      <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${selected ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'}`}>{count}</span>
-    </button>
-  );
-}
-
 export default function DealsPage() {
   const [chains, setChains] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedChain, setSelectedChain] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [deals, setDeals] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<any | null>(null);
   const [toast, setToast] = useState('');
-  const [userLoc, setUserLoc] = useState<{lat: number; lng: number; city?: string} | null>(null);
+  const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const [locLoading, setLocLoading] = useState(false);
+  const [filterMode, setFilterMode] = useState<'chains' | 'categories'>('categories');
   const offset = deals.length;
 
   useEffect(() => {
     dealsApi.chains().then((d: any) => setChains(d.chains || []));
-    // נסה לקבל מיקום אוטומטית
+    (dealsApi as any).categories().then((d: any) => setCategories(d.categories || []));
     if (navigator.geolocation) {
       setLocLoading(true);
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          setLocLoading(false);
-        },
+        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); },
         () => setLocLoading(false),
         { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
       );
@@ -117,27 +116,20 @@ export default function DealsPage() {
   }, []);
 
   const fetchDeals = useCallback(async (reset = true) => {
-    if (reset) setLoading(true);
-    else setLoadingMore(true);
+    if (reset) setLoading(true); else setLoadingMore(true);
     const currentOffset = reset ? 0 : offset;
     const d = await dealsApi.list(
-      selectedChain || undefined,
-      25,
-      currentOffset,
-      userLoc?.lat,
-      userLoc?.lng
+      selectedChain || undefined, 25, currentOffset,
+      userLoc?.lat, userLoc?.lng, selectedCategory || undefined
     );
-    if (reset) {
-      setDeals(d.deals || []);
-    } else {
-      setDeals(prev => [...prev, ...(d.deals || [])]);
-    }
+    if (reset) setDeals(d.deals || []);
+    else setDeals(prev => [...prev, ...(d.deals || [])]);
     setTotal(d.total || 0);
     setLoading(false);
     setLoadingMore(false);
-  }, [selectedChain, userLoc, offset]);
+  }, [selectedChain, selectedCategory, userLoc, offset]);
 
-  useEffect(() => { fetchDeals(true); }, [selectedChain, userLoc]);
+  useEffect(() => { fetchDeals(true); }, [selectedChain, selectedCategory, userLoc]);
 
   const handleAddToList = (deal: any) => {
     try {
@@ -152,75 +144,101 @@ export default function DealsPage() {
     } catch {}
   };
 
-  const hasMore = deals.length < total;
-
   return (
     <div className="min-h-screen bg-stone-50" dir="rtl">
       {toast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
           <div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>
+            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">&#10003;</span>
             {toast} נוסף לרשימה
           </div>
         </div>
       )}
-      {selectedDeal && (
-        <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />
-      )}
+      {selectedDeal && <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />}
 
-      {/* Header */}
       <div className="bg-white border-b border-stone-100 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm flex items-center gap-1">
-            ← חזרה
-          </Link>
+          <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm">&#8592; חזרה</Link>
           <div className="flex flex-col items-center">
-            <h1 className="text-lg font-black text-stone-800">🏷️ מבצעים</h1>
-            {userLoc && (
-              <p className="text-xs text-emerald-600 font-medium">📍 ברדיוס 3 ק"מ ממך</p>
-            )}
-            {locLoading && <p className="text-xs text-stone-400">מאתר מיקום...</p>}
+            <h1 className="text-lg font-black text-stone-800">מבצעים</h1>
+            {userLoc && <p className="text-xs text-emerald-600 font-medium">ברדיוס 3 ק"מ</p>}
           </div>
           <button
-            onClick={() => {
-              if (userLoc) { setUserLoc(null); }
-              else {
-                setLocLoading(true);
-                navigator.geolocation?.getCurrentPosition(
-                  (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); },
-                  () => setLocLoading(false)
-                );
-              }
-            }}
-            className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${userLoc ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}
+            onClick={() => { if (userLoc) setUserLoc(null); else { setLocLoading(true); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); }, () => setLocLoading(false)); } }}
+            className={"text-xs px-3 py-1.5 rounded-full font-medium transition-all " + (userLoc ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500')}
           >
-            {userLoc ? '📍 קרוב אלי' : '📍 הכל'}
+            {locLoading ? '...' : userLoc ? 'קרוב אלי' : 'הכל'}
           </button>
         </div>
 
-        {/* פילטר רשתות */}
-        <div className="flex gap-3 overflow-x-auto pb-4 pt-2 px-4 scrollbar-hide snap-x snap-mandatory">
+        {/* Toggle chains/categories */}
+        <div className="max-w-3xl mx-auto px-4 pb-2 flex gap-2">
           <button
-            onClick={() => setSelectedChain(null)}
-            className={`shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all min-w-[90px] ${!selectedChain ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100' : 'border-stone-100 bg-white hover:border-stone-300 hover:shadow-sm'}`}
+            onClick={() => setFilterMode('categories')}
+            className={"px-4 py-1.5 rounded-full text-sm font-bold transition-all " + (filterMode === 'categories' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-500')}
           >
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-2xl shadow-sm">🏪</div>
-            <span className={`text-[11px] font-bold ${!selectedChain ? 'text-emerald-700' : 'text-stone-600'}`}>הכל</span>
-            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${!selectedChain ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'}`}>{total}</span>
+            קטגוריות
           </button>
-          {chains.map((c: any) => (
-            <ChainFilterButton
-              key={c.chainName}
-              chain={c.chainName}
-              count={c.dealCount}
-              selected={selectedChain === c.chainName}
-              onClick={() => setSelectedChain(selectedChain === c.chainName ? null : c.chainName)}
-            />
-          ))}
+          <button
+            onClick={() => setFilterMode('chains')}
+            className={"px-4 py-1.5 rounded-full text-sm font-bold transition-all " + (filterMode === 'chains' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-500')}
+          >
+            רשתות
+          </button>
         </div>
+
+        {/* Categories filter */}
+        {filterMode === 'categories' && (
+          <div className="flex gap-2 overflow-x-auto pb-3 px-4 scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={"shrink-0 px-4 py-2 rounded-full border text-sm font-bold transition-all " + (!selectedCategory ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400')}
+            >
+              הכל
+            </button>
+            {categories.map((c: any) => {
+              const colorClass = CATEGORY_COLORS[c.category] || 'bg-stone-50 text-stone-600 border-stone-200';
+              const isSelected = selectedCategory === c.category;
+              return (
+                <button
+                  key={c.category}
+                  onClick={() => setSelectedCategory(isSelected ? null : c.category)}
+                  className={"shrink-0 px-4 py-2 rounded-full border text-sm font-bold transition-all whitespace-nowrap " + (isSelected ? 'bg-stone-900 text-white border-stone-900' : colorClass + ' hover:opacity-80')}
+                >
+                  {c.category}
+                  <span className="mr-1.5 text-xs opacity-60">{c.dealCount}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Chains filter */}
+        {filterMode === 'chains' && (
+          <div className="flex gap-3 overflow-x-auto pb-4 pt-1 px-4 scrollbar-hide">
+            <button
+              onClick={() => setSelectedChain(null)}
+              className={"shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[75px] " + (!selectedChain ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white')}
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-black text-lg">כל</div>
+              <span className={"text-[10px] font-bold " + (!selectedChain ? 'text-emerald-700' : 'text-stone-600')}>הכל</span>
+            </button>
+            {chains.map((c: any) => (
+              <button
+                key={c.chainName}
+                onClick={() => setSelectedChain(selectedChain === c.chainName ? null : c.chainName)}
+                className={"shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[75px] " + (selectedChain === c.chainName ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-300')}
+              >
+                <ChainLogo name={c.chainName} size={48} />
+                <span className={"text-[10px] font-bold truncate w-full text-center " + (selectedChain === c.chainName ? 'text-emerald-700' : 'text-stone-600')}>
+                  {CHAINS[c.chainName] || c.chainName}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Grid מבצעים */}
       <div className="max-w-3xl mx-auto px-4 py-4">
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -236,34 +254,31 @@ export default function DealsPage() {
           </div>
         ) : deals.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-60 gap-3">
-            <span className="text-5xl">🔍</span>
-            <p className="text-stone-500 font-medium">לא נמצאו מבצעים באזור שלך</p>
-            {userLoc && (
-              <button onClick={() => setUserLoc(null)} className="text-emerald-600 text-sm font-medium underline">
-                הצג מבצעים מכל הארץ
+            <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-3xl">&#128269;</div>
+            <p className="text-stone-500 font-medium">לא נמצאו מבצעים</p>
+            {(userLoc || selectedCategory || selectedChain) && (
+              <button onClick={() => { setUserLoc(null); setSelectedCategory(null); setSelectedChain(null); }} className="text-emerald-600 text-sm font-medium underline">
+                נקה סינונים
               </button>
             )}
           </div>
         ) : (
           <>
-            <p className="text-xs text-stone-400 text-right mb-3">מציג {deals.length} מתוך {total} מבצעים</p>
+            <p className="text-xs text-stone-400 mb-3">{total.toLocaleString()} מבצעים{selectedCategory ? ' ב' + selectedCategory : ''}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {deals.map((deal: any) => (
                 <DealCard key={deal.promotionId} deal={deal} onClick={() => setSelectedDeal(deal)} />
               ))}
             </div>
-            {hasMore && (
+            {deals.length < total && (
               <div className="flex justify-center mt-6">
                 <button
                   onClick={() => fetchDeals(false)}
                   disabled={loadingMore}
-                  className="bg-white border-2 border-emerald-400 text-emerald-600 font-bold px-8 py-3 rounded-2xl hover:bg-emerald-50 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="bg-white border-2 border-stone-200 text-stone-600 font-bold px-8 py-3 rounded-2xl hover:border-emerald-400 hover:text-emerald-600 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
-                  {loadingMore ? (
-                    <><div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> טוען...</>
-                  ) : (
-                    <>טען עוד מבצעים ({total - deals.length} נותרו)</>
-                  )}
+                  {loadingMore ? <div className="w-4 h-4 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" /> : null}
+                  {loadingMore ? 'טוען...' : 'טען עוד (' + (total - deals.length) + ')'}
                 </button>
               </div>
             )}
