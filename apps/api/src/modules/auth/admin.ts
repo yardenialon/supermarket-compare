@@ -34,7 +34,11 @@ export async function adminRoutes(app: any) {
     if (req.headers['x-admin-key'] !== ADMIN_PASSWORD) return reply.code(401).send({ error: 'Unauthorized' });
     const { productId, imageUrl } = req.body as any;
     if (!productId || !imageUrl) return reply.code(400).send({ error: 'Missing fields' });
-    await query('UPDATE product SET image_url=$1 WHERE id=$2', [imageUrl, productId]);
+    // נקה _ipx wrappers (Next.js image optimization)
+    let cleanUrl = imageUrl;
+    const ipxMatch = cleanUrl.match(/_ipx\/[^/]+\/(https?:\/\/.+)/);
+    if (ipxMatch) cleanUrl = ipxMatch[1];
+    await query('UPDATE product SET image_url=$1 WHERE id=$2', [cleanUrl, productId]);
     return { success: true };
   });
 }
