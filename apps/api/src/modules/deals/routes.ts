@@ -4,10 +4,6 @@ export async function dealsRoutes(app: any) {
 
   app.get('/deals', async (req: any) => {
     const { chain, limit = 25, offset = 0, lat, lng, category } = req.query;
-    if (category) {
-      params.push(category);
-      conditions.push(`p.category = $\${params.length}`);
-    }
     const params: any[] = [];
     const conditions: string[] = ["(pr.end_date IS NULL OR pr.end_date > NOW())", "pr.description IS NOT NULL"];
 
