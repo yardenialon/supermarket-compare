@@ -84,7 +84,7 @@ export default function AdminPage() {
                       onChange={(e) => setImageUrls((prev) => ({ ...prev, [p.id]: e.target.value }))}
                       className="flex-1 border border-stone-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
                     />
-                    
+                    <a
                       href={`https://www.google.com/search?q=${encodeURIComponent(p.barcode + ' ' + p.name)}&tbm=isch`}
                       target="_blank"
                       rel="noopener noreferrer"
