@@ -108,10 +108,11 @@ def main():
     cur.execute("""
         SELECT p.id, p.name
         FROM product p
-        WHERE (p.category IS NULL OR p.category = \'\'  )
+        WHERE (p.category IS NULL OR p.category = \'\')
           AND p.name IS NOT NULL
-          AND EXISTS (SELECT 1 FROM store_price sp WHERE sp.product_id = p.id)
-        ORDER BY p.store_count DESC NULLS LAST
+        ORDER BY
+          CASE WHEN EXISTS (SELECT 1 FROM promotion_item pi WHERE pi.product_id = p.id) THEN 0 ELSE 1 END,
+          p.store_count DESC NULLS LAST
         LIMIT %s
     """, (BATCH_SIZE,))
 
