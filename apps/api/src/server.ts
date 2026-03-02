@@ -10,6 +10,7 @@ import { statusRoutes } from './modules/status/routes.js';
 import { receiptRoutes } from './modules/receipt/routes.js';
 import { dealsRoutes } from './modules/deals/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
+import { adminRoutes } from './modules/auth/admin.js';
 
 const app = Fastify({ logger: true });
 
@@ -38,6 +39,7 @@ async function main() {
   await app.register(receiptRoutes, { prefix: '/api' });
   await app.register(dealsRoutes, { prefix: '/api' });
   await app.register(authRoutes, { prefix: '/api' });
+  await app.register(adminRoutes, { prefix: '/api' });
   const port = parseInt(process.env.API_PORT || '3001');
   await app.listen({ port, host: '0.0.0.0' });
 }
