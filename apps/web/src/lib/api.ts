@@ -42,8 +42,8 @@ export const api = {
 export const dealsApi = {
   chains: () => f('/deals/chains'),
   categories: () => f('/deals/categories'),
-  list: (chain?: string, limit = 25, offset = 0, lat?: number, lng?: number, category?: string) =>
-    f('/deals?' + new URLSearchParams({ ...(chain ? { chain } : {}), ...(category ? { category } : {}), limit: String(limit), offset: String(offset), ...(lat && lng ? { lat: String(lat), lng: String(lng) } : {}) }).toString()),
+  list: (chain?: string, limit = 25, offset = 0, lat?: number, lng?: number, category?: string, radius = 3) =>
+    f('/deals?' + new URLSearchParams({ ...(chain ? { chain } : {}), ...(category ? { category } : {}), limit: String(limit), offset: String(offset), ...(lat && lng ? { lat: String(lat), lng: String(lng), radius: String(radius) } : {}) }).toString()),
   items: (promotionId: number) =>
     f('/deals/' + promotionId + '/items'),
   top: (limit = 20, lat?: number, lng?: number) =>

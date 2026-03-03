@@ -128,7 +128,7 @@ export default function DealsPage() {
     setTotal(d.total || 0);
     setLoading(false);
     setLoadingMore(false);
-  }, [selectedChain, selectedCategory, userLoc, offset, radius]);
+  }, [selectedChain, selectedCategory, userLoc, radius]);
 
   useEffect(() => { fetchDeals(true); }, [selectedChain, selectedCategory, userLoc, radius]);
 
@@ -162,7 +162,7 @@ export default function DealsPage() {
           <Link href="/" className="text-stone-400 hover:text-stone-600 text-sm">&#8592; חזרה</Link>
           <div className="flex flex-col items-center">
             <h1 className="text-lg font-black text-stone-800">מבצעים</h1>
-            {userLoc && <p className="text-xs text-emerald-600 font-medium">ברדיוס 3 ק"מ</p>}
+            {userLoc && <p className="text-xs text-emerald-600 font-medium">ברדיוס {radius} ק"מ</p>}
           </div>
           <button
             onClick={() => { if (userLoc) setUserLoc(null); else { setLocLoading(true); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); }, () => setLocLoading(false)); } }}
@@ -215,7 +215,7 @@ export default function DealsPage() {
               return (
                 <button
                   key={c.category}
-                  onClick={() => setSelectedCategory(isSelected ? null : c.category)}
+                  onClick={() => { setSelectedChain(null); setSelectedCategory(isSelected ? null : c.category); }}
                   className={"shrink-0 px-4 py-2 rounded-full border text-sm font-bold transition-all whitespace-nowrap " + (isSelected ? 'bg-stone-900 text-white border-stone-900' : colorClass + ' hover:opacity-80')}
                 >
                   {c.category}
@@ -239,7 +239,7 @@ export default function DealsPage() {
             {chains.map((c: any) => (
               <button
                 key={c.chainName}
-                onClick={() => setSelectedChain(selectedChain === c.chainName ? null : c.chainName)}
+                onClick={() => { setSelectedCategory(null); setSelectedChain(selectedChain === c.chainName ? null : c.chainName); }}
                 className={"shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[75px] " + (selectedChain === c.chainName ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-300')}
               >
                 <ChainLogo name={c.chainName} size={48} />
