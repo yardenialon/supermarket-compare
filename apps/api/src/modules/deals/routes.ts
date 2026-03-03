@@ -6,6 +6,10 @@ export async function dealsRoutes(app: any) {
     const { chain, limit = 25, offset = 0, lat, lng, category } = req.query;
     const params: any[] = [];
     const conditions: string[] = ["(pr.end_date IS NULL OR pr.end_date > NOW())", "pr.description IS NOT NULL"];
+    if (category) {
+      params.push(category);
+      conditions.push(`EXISTS (SELECT 1 FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id AND p2.category = $${params.length})`);
+    }
 
     if (chain) {
       params.push(chain);
