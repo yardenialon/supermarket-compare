@@ -266,14 +266,26 @@ export default function DealsPage() {
             ))}
           </div>
         ) : deals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-60 gap-3">
-            <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-3xl">&#128269;</div>
-            <p className="text-stone-500 font-medium">לא נמצאו מבצעים</p>
-            {(userLoc || selectedCategory || selectedChain) && (
-              <button onClick={() => { setUserLoc(null); setSelectedCategory(null); setSelectedChain(null); }} className="text-emerald-600 text-sm font-medium underline">
-                נקה סינונים
-              </button>
-            )}
+          <div className="flex flex-col items-center justify-center h-60 gap-4">
+            <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-3xl">🔍</div>
+            <div className="text-center">
+              <p className="text-stone-700 font-bold mb-1">לא נמצאו מבצעים</p>
+              <p className="text-stone-400 text-sm">
+                {userLoc ? `לא נמצאו מבצעים ברדיוס ${radius} ק"מ ממך` : selectedChain ? `אין מבצעים פעילים ל${CHAINS[selectedChain] || selectedChain}` : 'נסה לשנות את הסינון'}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 w-full max-w-xs">
+              {userLoc && (
+                <button onClick={() => setRadius(Math.min(radius + 10, 50))} className="w-full py-2.5 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 transition">
+                  הרחב רדיוס ל-{Math.min(radius + 10, 50)} ק"מ
+                </button>
+              )}
+              {(userLoc || selectedCategory || selectedChain) && (
+                <button onClick={() => { setUserLoc(null); setSelectedCategory(null); setSelectedChain(null); setRadius(3); }} className="w-full py-2.5 bg-stone-100 text-stone-600 text-sm font-bold rounded-xl hover:bg-stone-200 transition">
+                  הצג את כל המבצעים
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <>
