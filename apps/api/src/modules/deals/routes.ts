@@ -58,17 +58,14 @@ export async function dealsRoutes(app: any) {
           AND pr2.item_count > 0 AND pr2.item_count <= 100
       ))
     `;
-        // Count
+        // Count - use NOT EXISTS (faster than DISTINCT subquery)
     const countResult = await query(
       `SELECT COUNT(*) as total
-       FROM (
-         SELECT DISTINCT COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text) as key
-         FROM promotion pr
-         JOIN store s ON s.id = pr.store_id
-         JOIN retailer_chain rc ON rc.id = s.chain_id
-         JOIN promotion_item pi ON pi.promotion_id = pr.id
-         WHERE ${where}
-       ) sub`,
+       FROM promotion pr
+       JOIN store s ON s.id = pr.store_id
+       JOIN retailer_chain rc ON rc.id = s.chain_id
+       JOIN promotion_item pi ON pi.promotion_id = pr.id
+       WHERE ${where} ${dedupeClause}`,
       [...params]
     );
     const total = parseInt(countResult.rows[0]?.total ?? '0');
