@@ -79,55 +79,51 @@ export async function dealsRoutes(app: any) {
       : `0`;
 
     const result = await query(
-      `SELECT
-        pr.id as "promotionId",
-        pr.chain_promotion_id as "chainPromotionId",
-        pr.description,
-        pr.discounted_price as "discountedPrice",
-        pr.discount_rate as "discountRate",
-        pr.min_qty as "minQty",
-        pr.end_date as "endDate",
-        pr.is_club_only as "isClubOnly",
-        rc.name as "chainName",
-        s.name as "storeName",
-        s.city as "city",
-        s.address as "address",
-        s.lat as "lat",
-        s.lng as "lng",
-        s.subchain_name as "subchainName",
-        (SELECT p2.id FROM promotion_item pi2
-          JOIN product p2 ON p2.id = pi2.product_id
-          WHERE pi2.promotion_id = pr.id
-          ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "productId",
-        (SELECT p2.name FROM promotion_item pi2
-          JOIN product p2 ON p2.id = pi2.product_id
-          WHERE pi2.promotion_id = pr.id
-          ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "productName",
-        (SELECT p2.barcode FROM promotion_item pi2
-          JOIN product p2 ON p2.id = pi2.product_id
-          WHERE pi2.promotion_id = pr.id
-          ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "barcode",
-        (SELECT p2.image_url FROM promotion_item pi2
-          JOIN product p2 ON p2.id = pi2.product_id
-          WHERE pi2.promotion_id = pr.id
-          ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "imageUrl",
-        pr.category as "category",
-        pr.subcategory as "subcategory",
-        pr.item_count as "itemCount",
-        MIN(sp.price) as "regularPrice",
-        ${distExpr} as dist_sq
-      FROM promotion pr
-      JOIN store s ON s.id = pr.store_id
-      JOIN retailer_chain rc ON rc.id = s.chain_id
-      JOIN promotion_item pi ON pi.promotion_id = pr.id
-      JOIN product p ON p.id = pi.product_id
-      LEFT JOIN store_price sp ON sp.product_id = p.id AND sp.store_id = pr.store_id
-      WHERE ${where} ${dedupeClause}
-      GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, s.subchain_name
-      ORDER BY ${orderBy}
-      LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      `WITH filtered AS (
+        SELECT pr.id as promo_id, pr.store_id, s.name as store_name, s.city,
+          s.address, s.lat, s.lng, s.subchain_name,
+          rc.name as chain_name, pr.chain_promotion_id,
+          pr.description, pr.discounted_price, pr.discount_rate,
+          pr.min_qty, pr.end_date, pr.is_club_only,
+          pr.category, pr.subcategory, pr.item_count,
+          ${distExpr} as dist_sq
+        FROM promotion pr
+        JOIN store s ON s.id = pr.store_id
+        JOIN retailer_chain rc ON rc.id = s.chain_id
+        WHERE ${where} ${dedupeClause}
+        ORDER BY ${orderBy}
+        LIMIT $${limitIdx} OFFSET $${offsetIdx}
+      ),
+      best_product AS (
+        SELECT DISTINCT ON (pi.promotion_id)
+          pi.promotion_id, p.id as product_id, p.name as product_name,
+          p.barcode, p.image_url
+        FROM filtered f
+        JOIN promotion_item pi ON pi.promotion_id = f.promo_id
+        JOIN product p ON p.id = pi.product_id
+        ORDER BY pi.promotion_id, p.store_count DESC NULLS LAST
+      )
+      SELECT
+        f.promo_id as "promotionId", f.chain_promotion_id as "chainPromotionId",
+        f.description, f.discounted_price as "discountedPrice",
+        f.discount_rate as "discountRate", f.min_qty as "minQty",
+        f.end_date as "endDate", f.is_club_only as "isClubOnly",
+        f.chain_name as "chainName", f.store_name as "storeName",
+        f.city, f.address, f.lat, f.lng, f.subchain_name as "subchainName",
+        bp.product_id as "productId", bp.product_name as "productName",
+        bp.barcode, bp.image_url as "imageUrl",
+        f.category, f.subcategory, f.item_count as "itemCount",
+        MIN(sp.price) as "regularPrice", f.dist_sq
+      FROM filtered f
+      LEFT JOIN best_product bp ON bp.promotion_id = f.promo_id
+      LEFT JOIN store_price sp ON sp.product_id = bp.product_id AND sp.store_id = f.store_id
+      GROUP BY f.promo_id, f.chain_promotion_id, f.description, f.discounted_price,
+        f.discount_rate, f.min_qty, f.end_date, f.is_club_only, f.chain_name,
+        f.store_name, f.city, f.address, f.lat, f.lng, f.subchain_name,
+        bp.product_id, bp.product_name, bp.barcode, bp.image_url,
+        f.category, f.subcategory, f.item_count, f.dist_sq
+      ORDER BY ${orderBy}`,
       params
-    );
 
     return {
       deals: result.rows.map((r: any) => {
