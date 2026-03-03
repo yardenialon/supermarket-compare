@@ -3,7 +3,8 @@ import { query } from '../../db.js';
 export async function dealsRoutes(app: any) {
 
   app.get('/deals', async (req: any) => {
-    const { chain, limit = 25, offset = 0, lat, lng, category } = req.query;
+    const { chain, limit = 25, offset = 0, lat, lng, category, radius = '3' } = req.query;
+    let latIdx = -1, lngIdx = -1;
     const params: any[] = [];
     const conditions: string[] = ["(pr.end_date IS NULL OR pr.end_date > NOW())", "pr.description IS NOT NULL"];
     if (category) {
@@ -17,7 +18,10 @@ export async function dealsRoutes(app: any) {
     }
     if (lat && lng) {
       params.push(parseFloat(lat), parseFloat(lng));
-      conditions.push(`s.lat IS NOT NULL AND s.lng IS NOT NULL AND (s.lat - $${params.length-1})*(s.lat - $${params.length-1})*12321 + (s.lng - $${params.length})*(s.lng - $${params.length})*9801 < 9`);
+      latIdx = params.length - 1;
+      lngIdx = params.length;
+      const r2 = parseFloat(radius as string) ** 2;
+      conditions.push(`s.lat IS NOT NULL AND s.lng IS NOT NULL AND (s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801 < ${r2}`);
     }
 
     params.push(parseInt(limit), parseInt(offset));
