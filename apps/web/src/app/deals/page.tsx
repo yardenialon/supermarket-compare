@@ -100,6 +100,7 @@ export default function DealsPage() {
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [filterMode, setFilterMode] = useState<'chains' | 'categories'>('categories');
+  const [radius, setRadius] = useState(3);
   const offset = deals.length;
 
   useEffect(() => {
@@ -120,16 +121,16 @@ export default function DealsPage() {
     const currentOffset = reset ? 0 : offset;
     const d = await dealsApi.list(
       selectedChain || undefined, 25, currentOffset,
-      userLoc?.lat, userLoc?.lng, selectedCategory || undefined
+      userLoc?.lat, userLoc?.lng, selectedCategory || undefined, radius
     );
     if (reset) setDeals(d.deals || []);
     else setDeals(prev => [...prev, ...(d.deals || [])]);
     setTotal(d.total || 0);
     setLoading(false);
     setLoadingMore(false);
-  }, [selectedChain, selectedCategory, userLoc, offset]);
+  }, [selectedChain, selectedCategory, userLoc, offset, radius]);
 
-  useEffect(() => { fetchDeals(true); }, [selectedChain, selectedCategory, userLoc]);
+  useEffect(() => { fetchDeals(true); }, [selectedChain, selectedCategory, userLoc, radius]);
 
   const handleAddToList = (deal: any) => {
     try {
@@ -167,9 +168,21 @@ export default function DealsPage() {
             onClick={() => { if (userLoc) setUserLoc(null); else { setLocLoading(true); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); }, () => setLocLoading(false)); } }}
             className={"text-xs px-3 py-1.5 rounded-full font-medium transition-all " + (userLoc ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500')}
           >
-            {locLoading ? '...' : userLoc ? 'קרוב אלי' : 'הכל'}
+            {locLoading ? '...' : userLoc ? `${radius} ק"מ` : 'הכל'}
           </button>
         </div>
+        {userLoc && (
+          <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center gap-3">
+            <span className="text-xs text-stone-400 whitespace-nowrap">1 ק"מ</span>
+            <input
+              type="range" min={1} max={50} step={1} value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="flex-1 h-1.5 rounded-full accent-emerald-500 cursor-pointer"
+            />
+            <span className="text-xs text-stone-400 whitespace-nowrap">50 ק"מ</span>
+            <span className="text-xs font-bold text-emerald-600 whitespace-nowrap min-w-[45px] text-left">{radius} ק"מ</span>
+          </div>
+        )}
 
         {/* Toggle chains/categories */}
         <div className="max-w-3xl mx-auto px-4 pb-2 flex gap-2">
