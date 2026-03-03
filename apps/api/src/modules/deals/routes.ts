@@ -46,7 +46,21 @@ export async function dealsRoutes(app: any) {
     const distExprInner = hasLocation
       ? `(s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801`
       : `0`;
-    const dedupeClause = `
+    const dedupeClause = hasLocation ? `
+      AND (pr.chain_promotion_id IS NULL OR NOT EXISTS (
+        SELECT 1 FROM promotion pr2
+        JOIN store s2 ON s2.id = pr2.store_id
+        JOIN retailer_chain rc2 ON rc2.id = s2.chain_id
+        WHERE pr2.chain_promotion_id = pr.chain_promotion_id
+          AND rc2.name = rc.name
+          AND pr2.id != pr.id
+          AND (pr2.end_date IS NULL OR pr2.end_date > NOW())
+          AND pr2.item_count > 0 AND pr2.item_count <= 100
+          AND s2.lat IS NOT NULL
+          AND (s2.lat - $${latIdx})*(s2.lat - $${latIdx})*12321 + (s2.lng - $${lngIdx})*(s2.lng - $${lngIdx})*9801
+            < (s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801
+      ))
+    ` : `
       AND (pr.chain_promotion_id IS NULL OR NOT EXISTS (
         SELECT 1 FROM promotion pr2
         JOIN store s2 ON s2.id = pr2.store_id
@@ -56,9 +70,9 @@ export async function dealsRoutes(app: any) {
           AND pr2.id > pr.id
           AND (pr2.end_date IS NULL OR pr2.end_date > NOW())
           AND pr2.item_count > 0 AND pr2.item_count <= 100
-      ))`
-
-    // Count
+      ))
+    `;
+        // Count
     const countResult = await query(
       `SELECT COUNT(*) as total
        FROM (
