@@ -9,7 +9,7 @@ export async function dealsRoutes(app: any) {
     const conditions: string[] = ["(pr.end_date IS NULL OR pr.end_date > NOW())", "pr.description IS NOT NULL"];
     if (category) {
       params.push(category);
-      conditions.push(`EXISTS (SELECT 1 FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id AND p2.category = $${params.length})`);
+      conditions.push(`pr.category = $${params.length}`);
     }
 
     if (chain) {
@@ -38,8 +38,7 @@ export async function dealsRoutes(app: any) {
         s.subchain_name as "subchainName",
         MIN(p.id) as "productId", MIN(p.name) as "productName",
         MIN(p.barcode) as "barcode", MIN(p.image_url) as "imageUrl",
-        (SELECT p2.category FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id AND p2.category IS NOT NULL AND p2.category != '' ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "category",
-        (SELECT p2.subcategory FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id AND p2.subcategory IS NOT NULL AND p2.subcategory != '' ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "subcategory",
+        pr.category as "category", pr.subcategory as "subcategory",
         MIN(sp.price) as "regularPrice", COUNT(DISTINCT pi.product_id) as "itemCount"
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
@@ -70,14 +69,13 @@ export async function dealsRoutes(app: any) {
 
   app.get('/deals/categories', async () => {
     const result = await query(`
-      SELECT p.category, COUNT(DISTINCT pr.id) as "dealCount"
+      SELECT pr.category, COUNT(*) as "dealCount"
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
-      JOIN promotion_item pi ON pi.promotion_id = pr.id
-      JOIN product p ON p.id = pi.product_id
+      JOIN retailer_chain rc ON rc.id = s.chain_id
       WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
-        AND p.category IS NOT NULL AND p.category != ''
-      GROUP BY p.category
+        AND pr.category IS NOT NULL AND pr.category != ''
+      GROUP BY pr.category
       ORDER BY "dealCount" DESC
     `, []);
     return { categories: result.rows.map((r: any) => ({ ...r, dealCount: +r.dealCount })) };
