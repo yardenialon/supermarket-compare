@@ -4,6 +4,7 @@ export async function dealsRoutes(app: any) {
 
   app.get('/deals', async (req: any) => {
     const { chain, limit = 25, offset = 0, lat, lng, category, radius = '3' } = req.query;
+    const hasLocation = !!(lat && lng);
     let latIdx = -1, lngIdx = -1;
     const params: any[] = [];
     const conditions: string[] = [
@@ -22,13 +23,10 @@ export async function dealsRoutes(app: any) {
       conditions.push(`rc.name = $${params.length}`);
     }
 
-    if (lat && lng) {
+    if (hasLocation) {
       params.push(parseFloat(lat as string), parseFloat(lng as string));
-      latIdx = params.length - 1; // $N (1-based = params.length - 1 + 1 = params.length)
-      lngIdx = params.length;     // but we just pushed 2 items, so lat=$latIdx+1, lng=$lngIdx+1
-      // Fix: latIdx should be the $N index (1-based)
-      latIdx = params.length - 1; // lat is at params[params.length-2], so $N = params.length-1
-      lngIdx = params.length;     // lng is at params[params.length-1], so $N = params.length
+      latIdx = params.length - 1;
+      lngIdx = params.length;
       const r2 = parseFloat(radius as string) ** 2;
       conditions.push(
         `s.lat IS NOT NULL AND s.lng IS NOT NULL AND ` +
@@ -37,32 +35,49 @@ export async function dealsRoutes(app: any) {
     }
 
     const where = conditions.join(' AND ');
-    const orderBy = latIdx > 0
-      ? `(s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801 ASC, pr.id DESC`
-      : `pr.id DESC`;
+    const orderBy = hasLocation ? `dist_sq ASC, pr.id DESC` : `pr.id DESC`;
 
-    // Count query for real total
-    const countParams = [...params];
+    // בלי מיקום: הסר כפילויות - השאר רק את ה-id הגבוה ביותר לכל chain_promotion_id+רשת
+    const dedupeClause = hasLocation ? `` : `
+      AND (pr.chain_promotion_id IS NULL OR NOT EXISTS (
+        SELECT 1 FROM promotion pr2
+        JOIN store s2 ON s2.id = pr2.store_id
+        JOIN retailer_chain rc2 ON rc2.id = s2.chain_id
+        WHERE pr2.chain_promotion_id = pr.chain_promotion_id
+          AND rc2.name = rc.name
+          AND pr2.id > pr.id
+          AND (pr2.end_date IS NULL OR pr2.end_date > NOW())
+          AND pr2.item_count > 0 AND pr2.item_count <= 100
+      ))
+    `;
+
+    // Count
     const countResult = await query(
-      `SELECT COUNT(DISTINCT pr.id) as total
-       FROM promotion pr
-       JOIN store s ON s.id = pr.store_id
-       JOIN retailer_chain rc ON rc.id = s.chain_id
-       JOIN promotion_item pi ON pi.promotion_id = pr.id
-       JOIN product p ON p.id = pi.product_id
-       WHERE ${where}`,
-      countParams
+      `SELECT COUNT(*) as total
+       FROM (
+         SELECT DISTINCT COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text) as key
+         FROM promotion pr
+         JOIN store s ON s.id = pr.store_id
+         JOIN retailer_chain rc ON rc.id = s.chain_id
+         JOIN promotion_item pi ON pi.promotion_id = pr.id
+         WHERE ${where}
+       ) sub`,
+      [...params]
     );
     const total = parseInt(countResult.rows[0]?.total ?? '0');
 
-    // Data query
     params.push(parseInt(limit as string), parseInt(offset as string));
     const limitIdx = params.length - 1;
     const offsetIdx = params.length;
 
+    const distExpr = hasLocation
+      ? `(s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801`
+      : `0`;
+
     const result = await query(
       `SELECT
         pr.id as "promotionId",
+        pr.chain_promotion_id as "chainPromotionId",
         pr.description,
         pr.discounted_price as "discountedPrice",
         pr.discount_rate as "discountRate",
@@ -95,14 +110,15 @@ export async function dealsRoutes(app: any) {
         pr.category as "category",
         pr.subcategory as "subcategory",
         pr.item_count as "itemCount",
-        MIN(sp.price) as "regularPrice"
+        MIN(sp.price) as "regularPrice",
+        ${distExpr} as dist_sq
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
       JOIN retailer_chain rc ON rc.id = s.chain_id
       JOIN promotion_item pi ON pi.promotion_id = pr.id
       JOIN product p ON p.id = pi.product_id
       LEFT JOIN store_price sp ON sp.product_id = p.id AND sp.store_id = pr.store_id
-      WHERE ${where}
+      WHERE ${where} ${dedupeClause}
       GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, s.subchain_name
       ORDER BY ${orderBy}
       LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
@@ -114,9 +130,6 @@ export async function dealsRoutes(app: any) {
         const discounted = r.discountedPrice ? +r.discountedPrice : null;
         const regular = r.regularPrice ? +r.regularPrice : null;
         const minQty = r.minQty ? parseFloat(r.minQty) : 1;
-
-        // savingPct: compare total deal price vs regular * qty
-        // e.g. "2ב125" means discounted=125 for qty=2, regular=69.9 each → 2*69.9=139.8, save=(139.8-125)/139.8=10%
         let savingPct: number | null = null;
         if (discounted !== null && regular !== null && regular > 0 && minQty >= 1) {
           const totalRegular = regular * minQty;
@@ -124,15 +137,8 @@ export async function dealsRoutes(app: any) {
             savingPct = Math.round((totalRegular - discounted) / totalRegular * 100);
           }
         }
-
-        return {
-          ...r,
-          discountedPrice: discounted,
-          regularPrice: regular,
-          itemCount: +r.itemCount,
-          minQty: r.minQty,
-          savingPct,
-        };
+        const { dist_sq, ...rest } = r;
+        return { ...rest, discountedPrice: discounted, regularPrice: regular, itemCount: +r.itemCount, savingPct };
       }),
       total,
     };
@@ -140,7 +146,7 @@ export async function dealsRoutes(app: any) {
 
   app.get('/deals/categories', async () => {
     const result = await query(`
-      SELECT pr.category, COUNT(DISTINCT pr.id) as "dealCount"
+      SELECT pr.category, COUNT(DISTINCT COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text)) as "dealCount"
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
       JOIN retailer_chain rc ON rc.id = s.chain_id
@@ -171,12 +177,9 @@ export async function dealsRoutes(app: any) {
     const { promotionId } = req.params;
     const result = await query(`
       SELECT
-        p.id,
-        p.name,
-        p.barcode,
+        p.id, p.name, p.barcode,
         p.image_url as "imageUrl",
-        p.category,
-        p.subcategory,
+        p.category, p.subcategory,
         sp.price as "regularPrice",
         pr.discounted_price as "discountedPrice",
         pr.description as "promoDescription"
@@ -197,16 +200,14 @@ export async function dealsRoutes(app: any) {
     };
   });
 
-  // GET /api/deals/top - מבצעים הכי משתלמים לדף הבית
   app.get('/deals/top', async (req: any) => {
     const { limit = 20, lat, lng } = req.query;
-    const hasLocation = lat && lng;
+    const hasLocation = !!(lat && lng);
     const params: any[] = [parseInt(limit as string)];
     let locationFilter = '';
 
     if (hasLocation) {
       params.push(parseFloat(lat as string), parseFloat(lng as string));
-      // ~4.5km radius using degree approximation
       locationFilter = `AND s.lat IS NOT NULL AND s.lng IS NOT NULL
         AND (s.lat - $2)*(s.lat - $2)*12321 + (s.lng - $3)*(s.lng - $3)*9801 < 20.25`;
     }
@@ -223,9 +224,6 @@ export async function dealsRoutes(app: any) {
         rc.name as "chainName",
         s.name as "storeName",
         s.city as "city",
-        s.address as "address",
-        s.lat as "lat",
-        s.lng as "lng",
         pr.category as "category",
         pr.subcategory as "subcategory",
         pr.item_count as "itemCount",
@@ -271,13 +269,7 @@ export async function dealsRoutes(app: any) {
             savingPct = Math.round((totalRegular - discounted) / totalRegular * 100);
           }
         }
-        return {
-          ...r,
-          discountedPrice: discounted,
-          regularPrice: regular,
-          itemCount: +r.itemCount,
-          savingPct,
-        };
+        return { ...r, discountedPrice: discounted, regularPrice: regular, itemCount: +r.itemCount, savingPct };
       })
     };
   });
