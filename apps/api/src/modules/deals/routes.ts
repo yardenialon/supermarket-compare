@@ -58,17 +58,20 @@ export async function dealsRoutes(app: any) {
           AND pr2.item_count > 0 AND pr2.item_count <= 100
       ))
     `;
-        // Count - use NOT EXISTS (faster than DISTINCT subquery)
-    const countResult = await query(
-      `SELECT COUNT(*) as total
-       FROM promotion pr
-       JOIN store s ON s.id = pr.store_id
-       JOIN retailer_chain rc ON rc.id = s.chain_id
-       JOIN promotion_item pi ON pi.promotion_id = pr.id
-       WHERE ${where} ${dedupeClause}`,
-      [...params]
-    );
-    const total = parseInt(countResult.rows[0]?.total ?? '0');
+        // Count - skip expensive COUNT for location queries, use fast estimate
+    let total = 0;
+    if (!hasLocation) {
+      const countResult = await query(
+        `SELECT COUNT(*) as total
+         FROM promotion pr
+         JOIN store s ON s.id = pr.store_id
+         JOIN retailer_chain rc ON rc.id = s.chain_id
+         JOIN promotion_item pi ON pi.promotion_id = pr.id
+         WHERE ${where} ${dedupeClause}`,
+        [...params]
+      );
+      total = parseInt(countResult.rows[0]?.total ?? '0');
+    }
 
     params.push(parseInt(limit as string), parseInt(offset as string));
     const limitIdx = params.length - 1;
