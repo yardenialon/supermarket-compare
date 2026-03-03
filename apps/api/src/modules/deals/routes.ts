@@ -45,7 +45,7 @@ export async function dealsRoutes(app: any) {
       LEFT JOIN store_price sp ON sp.product_id = p.id AND sp.store_id = pr.store_id
       WHERE ` + where + `
       GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, s.subchain_name
-      ORDER BY pr.id DESC
+      ORDER BY ` + (latIdx > 0 ? `(s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801 ASC,` : ``) + `pr.id DESC
       LIMIT $` + limitIdx + ` OFFSET $` + offsetIdx,
       params
     );
