@@ -37,17 +37,31 @@ export async function dealsRoutes(app: any) {
     const where = conditions.join(' AND ');
     const orderBy = hasLocation ? `dist_sq ASC, pr.id DESC` : `pr.id DESC`;
 
-    // בלי מיקום: הסר כפילויות - השאר רק את ה-id הגבוה ביותר לכל chain_promotion_id+רשת
-    const dedupeClause = hasLocation ? `` : `
+    // תמיד הסר כפילויות לפי chain_promotion_id + רשת
+    // עם מיקום: השאר את החנות הקרובה ביותר (dist_sq קטן ביותר = id גבוה בתוך אותו מרחק)
+    // בלי מיקום: השאר את ה-id הגבוה ביותר
+    const dedupeClause = `
       AND (pr.chain_promotion_id IS NULL OR NOT EXISTS (
         SELECT 1 FROM promotion pr2
         JOIN store s2 ON s2.id = pr2.store_id
         JOIN retailer_chain rc2 ON rc2.id = s2.chain_id
         WHERE pr2.chain_promotion_id = pr.chain_promotion_id
           AND rc2.name = rc.name
-          AND pr2.id > pr.id
+          AND pr2.id != pr.id
           AND (pr2.end_date IS NULL OR pr2.end_date > NOW())
           AND pr2.item_count > 0 AND pr2.item_count <= 100
+          AND (
+            ${hasLocation
+              ? `(s2.lat - $${latIdx})*(s2.lat - $${latIdx})*12321 + (s2.lng - $${lngIdx})*(s2.lng - $${lngIdx})*9801
+                 < (s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801
+                 OR (
+                   (s2.lat - $${latIdx})*(s2.lat - $${latIdx})*12321 + (s2.lng - $${lngIdx})*(s2.lng - $${lngIdx})*9801
+                   = (s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801
+                   AND pr2.id > pr.id
+                 )`
+              : `pr2.id > pr.id`
+            }
+          )
       ))
     `;
 
