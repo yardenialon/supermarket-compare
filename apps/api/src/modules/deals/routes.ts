@@ -36,8 +36,10 @@ export async function dealsRoutes(app: any) {
         pr.is_club_only as "isClubOnly", rc.name as "chainName", s.name as "storeName",
         s.city as "city", s.address as "address", s.lat as "lat", s.lng as "lng",
         s.subchain_name as "subchainName",
-        MIN(p.id) as "productId", MIN(p.name) as "productName",
-        MIN(p.barcode) as "barcode", MIN(p.image_url) as "imageUrl",
+        (SELECT p2.id FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "productId",
+        (SELECT p2.name FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "productName",
+        (SELECT p2.barcode FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "barcode",
+        (SELECT p2.image_url FROM promotion_item pi2 JOIN product p2 ON p2.id = pi2.product_id WHERE pi2.promotion_id = pr.id ORDER BY p2.store_count DESC NULLS LAST LIMIT 1) as "imageUrl",
         pr.category as "category", pr.subcategory as "subcategory",
         MIN(sp.price) as "regularPrice", COUNT(DISTINCT pi.product_id) as "itemCount"
       FROM promotion pr
