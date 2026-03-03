@@ -100,6 +100,7 @@ export default function DealsPage() {
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [filterMode, setFilterMode] = useState<'chains' | 'categories'>('categories');
+  const [showAllChain, setShowAllChain] = useState(false);
   const [radius, setRadius] = useState(3);
   const offset = deals.length;
 
@@ -119,18 +120,22 @@ export default function DealsPage() {
   const fetchDeals = useCallback(async (reset = true) => {
     if (reset) setLoading(true); else setLoadingMore(true);
     const currentOffset = reset ? 0 : offset;
+    const useLocation = userLoc && (!selectedChain || showAllChain === false);
     const d = await dealsApi.list(
       selectedChain || undefined, 25, currentOffset,
-      userLoc?.lat, userLoc?.lng, selectedCategory || undefined, radius
+      useLocation ? userLoc?.lat : undefined,
+      useLocation ? userLoc?.lng : undefined,
+      selectedCategory || undefined,
+      useLocation ? radius : undefined
     );
     if (reset) setDeals(d.deals || []);
     else setDeals(prev => [...prev, ...(d.deals || [])]);
     setTotal(d.total || 0);
     setLoading(false);
     setLoadingMore(false);
-  }, [selectedChain, selectedCategory, userLoc, radius]);
+  }, [selectedChain, selectedCategory, userLoc, radius, showAllChain]);
 
-  useEffect(() => { fetchDeals(true); }, [selectedChain, selectedCategory, userLoc, radius]);
+  useEffect(() => { fetchDeals(true); }, [selectedChain, selectedCategory, userLoc, radius, showAllChain]);
 
   const handleAddToList = (deal: any) => {
     try {
@@ -239,7 +244,7 @@ export default function DealsPage() {
             {chains.map((c: any) => (
               <button
                 key={c.chainName}
-                onClick={() => { setSelectedCategory(null); setSelectedChain(selectedChain === c.chainName ? null : c.chainName); }}
+                onClick={() => { setSelectedCategory(null); setShowAllChain(false); setSelectedChain(selectedChain === c.chainName ? null : c.chainName); }}
                 className={"shrink-0 flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border-2 transition-all min-w-[75px] " + (selectedChain === c.chainName ? 'border-emerald-500 bg-emerald-50' : 'border-stone-100 bg-white hover:border-stone-300')}
               >
                 <ChainLogo name={c.chainName} size={48} />
@@ -289,7 +294,18 @@ export default function DealsPage() {
           </div>
         ) : (
           <>
-            <p className="text-xs text-stone-400 mb-3">{total.toLocaleString()} מבצעים{selectedCategory ? ' ב' + selectedCategory : ''}</p>
+            {selectedChain && userLoc && !showAllChain && (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 mb-3">
+              <p className="text-xs text-amber-700 font-medium">מציג מבצעים מהסניף הקרוב אליך</p>
+              <button
+                onClick={() => setShowAllChain(true)}
+                className="text-xs font-bold text-amber-700 underline whitespace-nowrap mr-2"
+              >
+                הצג את כל מבצעי הרשת
+              </button>
+            </div>
+          )}
+          <p className="text-xs text-stone-400 mb-3">{total.toLocaleString()} מבצעים{selectedCategory ? ' ב' + selectedCategory : ''}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {deals.map((deal: any) => (
                 <DealCard key={deal.promotionId} deal={deal} onClick={() => setSelectedDeal(deal)} />
