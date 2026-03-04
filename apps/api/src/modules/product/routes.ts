@@ -44,9 +44,16 @@ export async function productRoutes(app: any) {
   });
 
 
-  // Sitemap endpoint
-  app.get('/products/sitemap', async () => {
-    const result = await query('SELECT id FROM product ORDER BY id LIMIT 50000');
+  // Sitemap endpoints
+  app.get('/products/sitemap/count', async () => {
+    const result = await query('SELECT COUNT(*) as count FROM product');
+    return { count: parseInt(result.rows[0].count) };
+  });
+  app.get('/products/sitemap', async (req: any) => {
+    const page = parseInt(req.query.page || '0');
+    const limit = parseInt(req.query.limit || '45000');
+    const offset = page * limit;
+    const result = await query('SELECT id FROM product ORDER BY id LIMIT $1 OFFSET $2', [limit, offset]);
     return result.rows.map((r: any) => r.id);
   });
   app.get('/product/:id/prices', async (req: any) => {
