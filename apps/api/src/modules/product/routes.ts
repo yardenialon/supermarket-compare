@@ -44,6 +44,33 @@ export async function productRoutes(app: any) {
   });
 
 
+
+  // Categories
+  app.get('/categories', async () => {
+    const result = await query(`
+      SELECT category, COUNT(*) as count 
+      FROM product 
+      WHERE category IS NOT NULL AND category != ''
+      GROUP BY category 
+      ORDER BY count DESC
+    `);
+    return result.rows;
+  });
+
+  app.get('/category/:name/products', async (req: any) => {
+    const { name } = req.params;
+    const page = parseInt(req.query.page || '0');
+    const limit = 48;
+    const offset = page * limit;
+    const result = await query(`
+      SELECT id, name, brand, image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount"
+      FROM product 
+      WHERE category = $1
+      ORDER BY store_count DESC NULLS LAST
+      LIMIT $2 OFFSET $3
+    `, [decodeURIComponent(name), limit, offset]);
+    return { products: result.rows, page, limit };
+  });
   // Sitemap endpoints
   app.get('/products/sitemap/count', async () => {
     const result = await query('SELECT COUNT(*) as count FROM product');
