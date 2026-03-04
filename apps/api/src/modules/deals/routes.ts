@@ -47,7 +47,9 @@ export async function dealsRoutes(app: any) {
     const distExprInner = hasLocation
       ? `(s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801`
       : `0`;
-    const dedupeClause = `
+    // עם מיקום: אל תעשה dedupe - הצג את כל המבצעים הקרובים (ממוינים לפי מרחק)
+    // בלי מיקום: dedupe לפי MIN id - מבצע אחד לכל רשת
+    const dedupeClause = hasLocation ? `` : `
       AND (pr.chain_promotion_id IS NULL OR NOT EXISTS (
         SELECT 1 FROM promotion pr2
         JOIN store s2 ON s2.id = pr2.store_id
