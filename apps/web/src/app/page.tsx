@@ -153,6 +153,19 @@ function LogoMarquee() {
         ))}
       </div>
       <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+
+      {/* SEO Categories */}
+      <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
+        <h2 className="font-bold text-stone-600 text-sm mb-3">קטגוריות</h2>
+        <div className="flex flex-wrap gap-2">
+          {["מוצרי חלב","לחם ומאפים","בשר ועוף","פירות וירקות","משקאות","חטיפים וממתקים","שימורים","ניקיון","טיפוח","קפואים","דגנים וקטניות","שמנים ורטבים"].map(cat => (
+            <a key={cat} href={`/category/${encodeURIComponent(cat)}`}
+              className="px-3 py-1.5 bg-white border border-stone-200 rounded-full text-xs text-stone-600 hover:border-emerald-400 hover:text-emerald-600 transition">
+              {cat}
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -831,6 +844,19 @@ export default function Home() {
           </div>
         )}
       </div>)}
+
+      {/* SEO Categories */}
+      <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
+        <h2 className="font-bold text-stone-600 text-sm mb-3">קטגוריות</h2>
+        <div className="flex flex-wrap gap-2">
+          {["מוצרי חלב","לחם ומאפים","בשר ועוף","פירות וירקות","משקאות","חטיפים וממתקים","שימורים","ניקיון","טיפוח","קפואים","דגנים וקטניות","שמנים ורטבים"].map(cat => (
+            <a key={cat} href={`/category/${encodeURIComponent(cat)}`}
+              className="px-3 py-1.5 bg-white border border-stone-200 rounded-full text-xs text-stone-600 hover:border-emerald-400 hover:text-emerald-600 transition">
+              {cat}
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
