@@ -1,8 +1,23 @@
-"use client";
+import type { Metadata } from "next";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
+
+export async function generateMetadata({ params }: { params: { name: string } }) {
+  const name = decodeURIComponent(params.name);
+  return {
+    title: `${name} | השוואת מחירים | Savy`,
+    description: `השווה מחירי ${name} ב-25+ רשתות סופרמרקט בישראל. מצא את המחיר הזול ביותר על מוצרי ${name} — עדכון יומי.`,
+    alternates: { canonical: `/category/${encodeURIComponent(name)}` },
+    openGraph: {
+      title: `${name} | השוואת מחירים | Savy`,
+      description: `השווה מחירי ${name} ב-25+ רשתות סופרמרקט בישראל.`,
+      url: `https://savy.co.il/category/${encodeURIComponent(name)}`,
+      siteName: 'Savy', locale: 'he_IL', type: 'website',
+    },
+  };
+}
 
 export default function CategoryPage({ params }: { params: { name: string } }) {
   const name = decodeURIComponent(params.name);
