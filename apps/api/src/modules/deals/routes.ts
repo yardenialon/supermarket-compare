@@ -252,7 +252,7 @@ export async function dealsRoutes(app: any) {
         AND pr.discounted_price IS NOT NULL
         AND pr.discounted_price > 0
         ${locationFilter}
-      GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng
+      GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, p.id, p.name, p.image_url
       ORDER BY pr.id DESC
       LIMIT $1
     `, params);
