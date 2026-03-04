@@ -95,7 +95,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   return (
     <>
       <ProductJsonLd product={product} prices={prices} id={params.id} />
-      <ProductPageClient product={product} initialPrices={pric      <ProductPageClient product={product} initialPrices={prices} id={params.id} />
+      <ProductPageClient product={product} initialPrices={prices} id={params.id} />
     </>
   );
 }
