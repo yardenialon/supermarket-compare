@@ -128,7 +128,7 @@ export async function dealsRoutes(app: any) {
         f.store_name, f.city, f.address, f.lat, f.lng, f.subchain_name,
         bp.product_id, bp.product_name, bp.barcode, bp.image_url,
         f.category, f.subcategory, f.item_count, f.dist_sq
-      ORDER BY ${orderBy}`,
+      ORDER BY f.dist_sq ASC, f.promo_id DESC`,
       params
     );
 
