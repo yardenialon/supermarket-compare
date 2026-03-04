@@ -27,9 +27,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="he" dir="rtl">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300..900&family=Heebo:wght@300..800&display=swap" rel="stylesheet" />
+
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-67LW5LMRZF" strategy="afterInteractive" />
         <Script id="gtag-init" strategy="afterInteractive">{`
           window.dataLayer = window.dataLayer || [];
