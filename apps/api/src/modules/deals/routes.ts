@@ -36,7 +36,8 @@ export async function dealsRoutes(app: any) {
     }
 
     const where = conditions.join(' AND ');
-    const orderBy = hasLocation ? `rc.name, dist_sq ASC, pr.id DESC` : `rc.name, pr.discount_rate DESC NULLS LAST, pr.id DESC`;
+    const distinctKey = chain ? 'pr.id::text' : 'rc.name';
+    const orderBy = hasLocation ? `${distinctKey}, dist_sq ASC, pr.id DESC` : `${distinctKey}, pr.discount_rate DESC NULLS LAST, pr.id DESC`;
 
     // תמיד הסר כפילויות לפי chain_promotion_id + רשת
     // עם מיקום: השאר את החנות הקרובה ביותר (dist_sq קטן ביותר = id גבוה בתוך אותו מרחק)
@@ -88,7 +89,7 @@ export async function dealsRoutes(app: any) {
 
     const result = await query(
       `WITH filtered AS (
-        SELECT DISTINCT ON (rc.name) pr.id as promo_id, pr.store_id, s.name as store_name, s.city,
+        SELECT DISTINCT ON (\${chain ? 'pr.id::text' : 'rc.name'}) pr.id as promo_id, pr.store_id, s.name as store_name, s.city,
           s.address, s.lat, s.lng, s.subchain_name,
           rc.name as chain_name, pr.chain_promotion_id,
           pr.description, pr.discounted_price, pr.discount_rate,
