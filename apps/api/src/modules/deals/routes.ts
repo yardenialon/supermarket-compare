@@ -52,12 +52,15 @@ export async function dealsRoutes(app: any) {
     let total = 0;
     if (!hasLocation) {
       const countResult = await query(
-        `SELECT COUNT(*) as total
-         FROM promotion pr
-         JOIN store s ON s.id = pr.store_id
-         JOIN retailer_chain rc ON rc.id = s.chain_id
-         JOIN promotion_item pi ON pi.promotion_id = pr.id
-         WHERE ${where} ${dedupeClause}`,
+        `SELECT COUNT(*) as total FROM (
+           SELECT DISTINCT ON (${dedupeExpr}) pr.id
+           FROM promotion pr
+           JOIN store s ON s.id = pr.store_id
+           JOIN retailer_chain rc ON rc.id = s.chain_id
+           JOIN promotion_item pi ON pi.promotion_id = pr.id
+           WHERE ${where}
+           ORDER BY ${dedupeExpr}
+         ) sub`,
         [...params]
       );
       total = parseInt(countResult.rows[0]?.total ?? '0');
