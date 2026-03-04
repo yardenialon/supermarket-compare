@@ -223,7 +223,12 @@ export default function Home() {
   useEffect(() => {
     try { localStorage.setItem('savy-images', JSON.stringify(productImages)); } catch {}
   }, [productImages]);
-  const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
+  const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(() => {
+    try {
+      const saved = localStorage.getItem('savy-loc');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
   const [promoModal, setPromoModal] = useState<any>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
   const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
@@ -239,7 +244,7 @@ export default function Home() {
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); },
+        (pos) => { const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }; setUserLoc(loc); setLocStatus('granted'); try { localStorage.setItem('savy-loc', JSON.stringify(loc)); } catch {} },
         () => { setLocStatus('idle'); },
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
       );
