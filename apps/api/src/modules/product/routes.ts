@@ -27,6 +27,7 @@ async function fetchProductImage(barcode: string, name: string) {
 export async function productRoutes(app: any) {
 
   // ── NEW: GET /product/:id — product details for SEO page ──────────
+  // NEW: GET /product/:id
   app.get('/product/:id', async (req: any) => {
     const { id } = req.params;
     const result = await query(
@@ -42,6 +43,9 @@ export async function productRoutes(app: any) {
     return result.rows[0];
   });
   // ─────────────────────────────────────────────────────────────────
+    if (!result.rows[0]) throw { statusCode: 404, message: 'Product not found' };
+    return result.rows[0];
+  });
 
   app.get('/product/:id/prices', async (req: any) => {
     const { id } = req.params;
@@ -52,32 +56,26 @@ export async function productRoutes(app: any) {
       const uLat = parseFloat(lat as string);
       const uLng = parseFloat(lng as string);
       prices = await query(`
-        SELECT
-          sp.price, sp.is_promo as "isPromo",
+        SELECT sp.price, sp.is_promo as "isPromo",
           s.id as "storeId", s.name as "storeName", s.city,
-          rc.name as "chainName",
-          s.subchain_name as "subchainName",
+          rc.name as "chainName", s.subchain_name as "subchainName",
           ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
         JOIN retailer_chain rc ON rc.id = s.chain_id
         WHERE sp.product_id = $1 AND s.lat IS NOT NULL
-        ORDER BY dist ASC
-        LIMIT 50
+        ORDER BY dist ASC LIMIT 50
       `, [id, uLat, uLng]);
     } else {
       prices = await query(`
-        SELECT
-          sp.price, sp.is_promo as "isPromo",
+        SELECT sp.price, sp.is_promo as "isPromo",
           s.id as "storeId", s.name as "storeName", s.city,
-          rc.name as "chainName",
-          s.subchain_name as "subchainName"
+          rc.name as "chainName", s.subchain_name as "subchainName"
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
         JOIN retailer_chain rc ON rc.id = s.chain_id
         WHERE sp.product_id = $1
-        ORDER BY sp.price ASC
-        LIMIT 50
+        ORDER BY sp.price ASC LIMIT 50
       `, [id]);
     }
     return {
@@ -94,9 +92,7 @@ export async function productRoutes(app: any) {
     const { barcode, name, image_url } = prod.rows[0];
     if (image_url) return { imageUrl: image_url };
     const img = await fetchProductImage(barcode, name);
-    if (img) {
-      await query('UPDATE product SET image_url=$1 WHERE id=$2', [img, id]);
-    }
+    if (img) { await query('UPDATE product SET image_url=$1 WHERE id=$2', [img, id]); }
     return { imageUrl: img };
   });
 }
