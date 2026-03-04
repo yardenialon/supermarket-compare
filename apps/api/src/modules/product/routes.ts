@@ -132,3 +132,5 @@ export async function productRoutes(app: any) {
     return { imageUrl: img };
   });
 }
+// index hint - run once in DB:
+// CREATE INDEX IF NOT EXISTS idx_product_id ON product(id);
