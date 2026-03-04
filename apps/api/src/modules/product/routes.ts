@@ -42,10 +42,6 @@ export async function productRoutes(app: any) {
     }
     return result.rows[0];
   });
-  // ─────────────────────────────────────────────────────────────────
-    if (!result.rows[0]) throw { statusCode: 404, message: 'Product not found' };
-    return result.rows[0];
-  });
 
   app.get('/product/:id/prices', async (req: any) => {
     const { id } = req.params;
