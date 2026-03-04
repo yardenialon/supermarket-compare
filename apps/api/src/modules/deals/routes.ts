@@ -3,6 +3,7 @@ import { query } from '../../db.js';
 export async function dealsRoutes(app: any) {
 
   app.get('/deals', async (req: any) => {
+    console.log('[deals] query params:', JSON.stringify(req.query));
     const { chain, limit = 25, offset = 0, lat, lng, category, radius = '3' } = req.query;
     const hasLocation = !!(lat && lng);
     let latIdx = -1, lngIdx = -1;
