@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemaps}
 </sitemapindex>`;
-      return new NextResponse(xml, { headers: { "Content-Type": "application/xml" } });
+      return new NextResponse(xml, { headers: { "Content-Type": "application/xml", "Cache-Control": "public, max-age=86400, s-maxage=86400" } });
     }
 
     // Return page of products
@@ -46,7 +46,7 @@ ${sitemaps}
   </url>${urls}
 </urlset>`;
 
-    return new NextResponse(xml, { headers: { "Content-Type": "application/xml" } });
+    return new NextResponse(xml, { headers: { "Content-Type": "application/xml", "Cache-Control": "public, max-age=86400, s-maxage=86400" } });
   } catch {
     return new NextResponse("Error", { status: 500 });
   }
