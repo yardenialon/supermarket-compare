@@ -58,7 +58,7 @@ export async function dealsRoutes(app: any) {
           AND pr2.item_count > 0 AND pr2.item_count <= 100
       ))
     `;
-        // Count - skip expensive COUNT for location queries, use fast estimate
+    // Count - skip expensive COUNT for location queries, use fast estimate
     let total = 0;
     if (!hasLocation) {
       const countResult = await query(
@@ -72,7 +72,7 @@ export async function dealsRoutes(app: any) {
          ) sub`,
         [...params]
       );
-      total = parseInt(countResult.rows[0]?.total ?? '0');
+      total = parseInt((countResult.rows[0] as any)?.total ?? '0');
     }
 
     params.push(parseInt(limit as string), parseInt(offset as string));
@@ -129,6 +129,7 @@ export async function dealsRoutes(app: any) {
         f.category, f.subcategory, f.item_count, f.dist_sq
       ORDER BY ${orderBy}`,
       params
+    );
 
     return {
       deals: result.rows.map((r: any) => {
