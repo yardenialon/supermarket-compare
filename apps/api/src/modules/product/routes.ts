@@ -25,6 +25,24 @@ async function fetchProductImage(barcode: string, name: string) {
   } catch { return null; }
 }
 export async function productRoutes(app: any) {
+
+  // ── NEW: GET /product/:id — product details for SEO page ──────────
+  app.get('/product/:id', async (req: any) => {
+    const { id } = req.params;
+    const result = await query(
+      `SELECT id, barcode, name, brand, unit_qty as "unitQty", unit_measure as "unitMeasure",
+              image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount",
+              category, subcategory
+       FROM product WHERE id = $1`,
+      [id]
+    );
+    if (!result.rows[0]) {
+      throw { statusCode: 404, message: 'Product not found' };
+    }
+    return result.rows[0];
+  });
+  // ─────────────────────────────────────────────────────────────────
+
   app.get('/product/:id/prices', async (req: any) => {
     const { id } = req.params;
     const { lat, lng } = req.query;
@@ -68,6 +86,7 @@ export async function productRoutes(app: any) {
       prices: prices.rows.map((r: any) => ({ ...r, price: +r.price })).sort((a: any, b: any) => a.price - b.price)
     };
   });
+
   app.get('/product/:id/image', async (req: any) => {
     const { id } = req.params;
     const prod = await query('SELECT barcode, name, image_url FROM product WHERE id=$1', [id]);
