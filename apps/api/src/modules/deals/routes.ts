@@ -36,7 +36,7 @@ export async function dealsRoutes(app: any) {
     }
 
     const where = conditions.join(' AND ');
-    const orderBy = hasLocation ? `dist_sq ASC, pr.id DESC` : `pr.discount_rate DESC NULLS LAST, pr.discounted_price ASC NULLS LAST, pr.id DESC`;
+    const orderBy = hasLocation ? `rc.name, dist_sq ASC, pr.id DESC` : `rc.name, pr.discount_rate DESC NULLS LAST, pr.id DESC`;
 
     // תמיד הסר כפילויות לפי chain_promotion_id + רשת
     // עם מיקום: השאר את החנות הקרובה ביותר (dist_sq קטן ביותר = id גבוה בתוך אותו מרחק)
