@@ -43,6 +43,12 @@ export async function productRoutes(app: any) {
     return result.rows[0];
   });
 
+
+  // Sitemap endpoint
+  app.get('/products/sitemap', async () => {
+    const result = await query('SELECT id FROM product ORDER BY id LIMIT 50000');
+    return result.rows.map((r: any) => r.id);
+  });
   app.get('/product/:id/prices', async (req: any) => {
     const { id } = req.params;
     const { lat, lng } = req.query;
