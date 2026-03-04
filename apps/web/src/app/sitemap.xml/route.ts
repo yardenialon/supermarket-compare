@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
-const PAGE_SIZE = 45000;
+const PAGE_SIZE = 10000;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -27,7 +27,7 @@ ${sitemaps}
     }
 
     // Return page of products
-    const res = await fetch(`${API}/products/sitemap?page=${page}&limit=${PAGE_SIZE}`, { next: { revalidate: 86400 } });
+    const res = await fetch(`${API}/products/sitemap?page=${page}&limit=${PAGE_SIZE}`, { next: { revalidate: 86400 }, signal: AbortSignal.timeout(25000) });
     const ids = await res.json();
 
     const urls = ids.map((id: number) => `
