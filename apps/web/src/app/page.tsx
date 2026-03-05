@@ -58,6 +58,9 @@ const SUBCHAINS: Record<string, { he: string; logo: string }> = {
   'יש Good':       { he: 'יש Good',        logo: '/logos/subchains/yesh-good.png' },
   'שערי רווחה':    { he: 'שערי רווחה',     logo: '/logos/subchains/shaarei-revaha.png' },
   'Cash&Carry':    { he: 'Cash & Carry',   logo: '/logos/subchains/cash-carry.png' },
+  'AM-PM':         { he: 'AM-PM',           logo: '/logos/ampm.png' },
+  'אלונית':        { he: 'אלונית',          logo: '/logos/alunit.png' },
+  'דוכן':          { he: 'דוכן',            logo: '/logos/dohan.png' },
 };
 const chainHe = (n: string) => CHAINS[n]?.he || n;
 

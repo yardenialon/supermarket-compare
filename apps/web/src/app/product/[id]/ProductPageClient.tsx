@@ -32,6 +32,9 @@ const SUBCHAINS: Record<string, { he: string; logo: string }> = {
   "שופרסל דיל":    { he: "שופרסל דיל",    logo: "/logos/subchains/shufersal-deal.png" },
   "שופרסל אקספרס": { he: "שופרסל אקספרס", logo: "/logos/subchains/shufersal-express.png" },
   Be:              { he: "BE",             logo: "/logos/subchains/be.png" },
+  "AM-PM":         { he: "AM-PM",           logo: "/logos/ampm.png" },
+  "אלונית":        { he: "אלונית",          logo: "/logos/alunit.png" },
+  "דוכן":          { he: "דוכן",            logo: "/logos/dohan.png" },
 };
 
 const chainHe = (n: string) => CHAINS[n]?.he || n;
