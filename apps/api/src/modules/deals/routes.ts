@@ -89,7 +89,7 @@ export async function dealsRoutes(app: any) {
 
     const result = await query(
       `WITH filtered AS (
-        SELECT DISTINCT ON (\${chain ? 'pr.id::text' : 'rc.name'}) pr.id as promo_id, pr.store_id, s.name as store_name, s.city,
+        SELECT DISTINCT ON (${chain ? 'pr.id::text' : 'rc.name'}) pr.id as promo_id, pr.store_id, s.name as store_name, s.city,
           s.address, s.lat, s.lng, s.subchain_name,
           rc.name as chain_name, pr.chain_promotion_id,
           pr.description, pr.discounted_price, pr.discount_rate,
