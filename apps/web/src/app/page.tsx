@@ -231,7 +231,9 @@ export default function Home() {
   });
   const [promoModal, setPromoModal] = useState<any>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
-  const [locMode, setLocMode] = useState<'nearby'|'cheapest'>('cheapest');
+  const [locMode, setLocMode] = useState<'nearby'|'cheapest'|'bychain'>('cheapest');
+  const [chainResults, setChainResults] = useState<any[]>([]);
+  const [chainLoading, setChainLoading] = useState(false);
   const [radius, setRadius] = useState<number>(10);
   const [toast, setToast] = useState(""); const [sharing, setSharing] = useState(false); const [listLoading, setListLoading] = useState(false); const [expandedStore, setExpandedStore] = useState<number | null>(null); const [menuOpen, setMenuOpen] = useState(false); const [menuPage, setMenuPage] = useState<"about"|"privacy"|"contact"|null>(null);
 
@@ -312,6 +314,17 @@ export default function Home() {
     } catch { setToast('שגיאה בשיתוף'); setTimeout(() => setToast(''), 2000); }
     setSharing(false);
   };
+
+  useEffect(() => {
+    if (locMode !== 'bychain') return;
+    if (!list.length) { setChainResults([]); return; }
+    setChainLoading(true);
+    fetch((process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api') + '/list/by-chain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: list.map(i => ({ productId: i.product.id, qty: i.qty })) })
+    }).then(r => r.json()).then(d => setChainResults(d.chains || [])).catch(() => {}).finally(() => setChainLoading(false));
+  }, [list, locMode]);
 
   useEffect(() => { if (!list.length) { setListResults([]); return; } setListLoading(true); const useLoc = locMode === 'nearby' && userLoc; api.list(list.map(i => ({ productId: i.product.id, qty: i.qty })), useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined, locMode === 'nearby' ? radius : undefined).then((d: any) => setListResults(d.bestStoreCandidates || [])).catch(() => {}).finally(() => setListLoading(false)); }, [list, locMode, radius, userLoc]);
 
@@ -469,7 +482,31 @@ export default function Home() {
               {locStatus === 'loading' ? '📍 מאתר...' : '📍 הכי זול ליד'}
             </button>
           </div>
-          {locMode === 'nearby' && (
+          <button onClick={() => setLocMode('bychain')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'bychain' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>🏪 לפי רשת</button>
+          </div>
+          {locMode === 'bychain' && list.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {chainLoading ? (
+                <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-stone-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+              ) : chainResults.length === 0 ? (
+                <div className="text-center text-stone-400 text-sm py-6">לא נמצאו תוצאות</div>
+              ) : chainResults.map((c: any, i: number) => (
+                <div key={c.chainName} className={"bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 " + (i === 0 ? "border-emerald-300 bg-emerald-50/40" : "border-stone-100")}>
+                  <div className="shrink-0">{(() => { const logo = CHAINS[c.chainName]?.logo; return logo ? <img src={logo} alt={c.chainName} className="w-10 h-10 object-contain" onError={e => (e.currentTarget.style.display='none')} /> : <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{backgroundColor: CHAINS[c.chainName]?.color || '#6b7280'}}>{(CHAINS[c.chainName]?.he || c.chainName).charAt(0)}</span>; })()}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-stone-800 text-sm">{CHAINS[c.chainName]?.he || c.chainName}</div>
+                    <div className="text-xs text-stone-400">{c.storeName} · {c.city}</div>
+                    {c.missingCount > 0 && <div className="text-xs text-red-400">חסרים {c.missingCount} מוצרים</div>}
+                  </div>
+                  <div className="shrink-0 text-left">
+                    <div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{c.total.toFixed(2)}</div>
+                    {i === 0 && chainResults[1] && <div className="text-xs text-emerald-600">חיסכון ₪{(chainResults[1].total - c.total).toFixed(2)}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {locMode !== 'bychain' && locMode === 'nearby' && (
             <div className="mt-3 mx-auto max-w-sm">
               <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
                 <div className="flex items-center justify-between mb-3">
