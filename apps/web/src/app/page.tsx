@@ -728,6 +728,7 @@ export default function Home() {
                       );
                     }} className="px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border border-emerald-400 bg-white text-emerald-600 hover:bg-emerald-50">📍 קרוב אליי</button>
                   ) : null}
+                  <button onClick={() => setLocMode('bychain')} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (locMode === 'bychain' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>🏪 לפי רשת</button>
                 </div>
               </div>
               {locMode === 'nearby' && locStatus === 'granted' && (
@@ -753,6 +754,27 @@ export default function Home() {
                 </div>
               )}
               {listLoading ? <div className="text-center py-16"><div className="inline-block w-7 h-7 border-[3px] border-stone-200 border-t-stone-800 rounded-full animate-spin"></div></div> :
+              locMode === 'bychain' ? (
+                chainLoading ? <div className="text-center py-16"><div className="inline-block w-7 h-7 border-[3px] border-stone-200 border-t-stone-800 rounded-full animate-spin"></div></div> :
+                !chainResults.length ? <div className="text-center py-16 text-stone-300 text-sm">לא נמצאו תוצאות</div> :
+                <div className="space-y-2">
+                  {chainResults.map((c: any, i: number) => (
+                    <div key={c.chainName} className={"bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 " + (i === 0 ? "border-emerald-300 bg-emerald-50/40" : "border-stone-100")}>
+                      <div className="shrink-0">{(() => { const logo = CHAINS[c.chainName]?.logo; return logo ? <img src={logo} alt={c.chainName} className="w-10 h-10 object-contain" onError={e => (e.currentTarget.style.display='none')} /> : <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{backgroundColor: CHAINS[c.chainName]?.color || '#6b7280'}}>{(CHAINS[c.chainName]?.he || c.chainName).charAt(0)}</span>; })()}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-stone-800 text-sm">{CHAINS[c.chainName]?.he || c.chainName}</div>
+                        <div className="text-xs text-stone-400">{c.storeName} · {c.city}</div>
+                        {c.missingCount > 0 && <div className="text-xs text-red-400">חסרים {c.missingCount} מוצרים</div>}
+                      </div>
+                      <div className="shrink-0 text-left">
+                        <div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{c.total.toFixed(2)}</div>
+                        {i === 0 && chainResults[1] && <div className="text-xs text-emerald-600">חיסכון ₪{(chainResults[1].total - c.total).toFixed(2)}</div>}
+                        {i > 0 && <div className="text-xs text-stone-400">+₪{(c.total - chainResults[0].total).toFixed(2)}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) :
               !listResults.length ? <div className="text-center py-16 text-stone-300 text-sm">לא נמצאו חנויות</div> :
               <div className="space-y-3">
                 {listResults.map((store: StoreResult, i: number) => {
