@@ -481,8 +481,7 @@ export default function Home() {
             <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }); } }} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'nearby' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : locStatus === 'loading' ? "bg-amber-50 border border-amber-300 text-amber-600 animate-pulse" : "bg-white border-2 border-emerald-400 text-emerald-600 hover:bg-emerald-50 shadow-sm")}>
               {locStatus === 'loading' ? '📍 מאתר...' : '📍 הכי זול ליד'}
             </button>
-          </div>
-          <button onClick={() => setLocMode('bychain')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'bychain' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>🏪 לפי רשת</button>
+            <button onClick={() => setLocMode('bychain')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'bychain' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>🏪 לפי רשת</button>
           </div>
           {locMode === 'bychain' && list.length > 0 && (
             <div className="mt-4 space-y-2">
