@@ -5,9 +5,15 @@ import { ReactNode } from 'react';
 import Header from '@/components/Header';
 import Script from 'next/script';
 
+// Facebook domain verification added to head via metadata
 export const metadata = {
   title: 'Savy | השוואת מחירי סופרמרקט בישראל | 25+ רשתות',
   description: 'השווה מחירי מוצרים ב-25+ רשתות סופרמרקט — שופרסל, רמי לוי, ויקטורי ועוד. 7.5 מיליון מחירים, עדכון יומי. מצא את המחיר הזול ביותר ליד הבית.',
+  verification: {
+    other: {
+      'facebook-domain-verification': 'i7he4816sezg5iu67dxslrlowfyu1y',
+    },
+  },
   openGraph: {
     title: 'Savy | השוואת מחירי סופרמרקט בישראל | 25+ רשתות',
     description: 'השווה מחירי מוצרים ב-25+ רשתות סופרמרקט — שופרסל, רמי לוי, ויקטורי ועוד. 7.5 מיליון מחירים, עדכון יומי. מצא את המחיר הזול ביותר ליד הבית.',
