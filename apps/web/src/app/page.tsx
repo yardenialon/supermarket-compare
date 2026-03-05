@@ -910,15 +910,7 @@ export default function Home() {
       </div>)}
 
 
-      {/* Footer */}
-      <div className="max-w-3xl mx-auto px-4 py-6 border-t border-stone-100 mt-8">
-        <div className="flex flex-wrap justify-center gap-4 text-xs text-stone-400">
-          <a href="/terms" className="hover:text-emerald-600 transition">תנאי שימוש</a>
-          <a href="/accessibility" className="hover:text-emerald-600 transition">הצהרת נגישות</a>
-          <a href="mailto:info@savy.co.il" className="hover:text-emerald-600 transition">info@savy.co.il</a>
-          <span>© {new Date().getFullYear()} Savy</span>
-        </div>
-      </div>
+
 
       {/* SEO Categories */}
       <div className="max-w-3xl mx-auto px-4 pt-8 pb-4">
