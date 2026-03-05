@@ -62,9 +62,9 @@ export async function dealsRoutes(app: any) {
           AND pr2.item_count > 0 AND pr2.item_count <= 100
       ))
     `;
-    // Count - skip expensive COUNT for location queries, use fast estimate
+    // Count
     let total = 0;
-    if (!hasLocation) {
+    if (true) {
       const countResult = await query(
         `SELECT COUNT(*) as total FROM (
            SELECT DISTINCT COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text)
