@@ -50,6 +50,15 @@ export default function Layout({ children }: { children: ReactNode }) {
         <footer className="border-t bg-white/50 mt-12 py-8 text-center">
           <div className="text-xs text-stone-300">מחירים מתעדכנים יומית מנתוני שקיפות מחירים 🇮🇱</div>
           <div className="text-[10px] text-stone-200 mt-1">Savy — כי מגיע לכם לדעת</div>
+          <div className="flex items-center justify-center gap-4 mt-3 text-[11px] text-stone-300">
+            <a href="/terms" className="hover:text-stone-500 transition-colors">תנאי שימוש</a>
+            <span>·</span>
+            <a href="/accessibility" className="hover:text-stone-500 transition-colors">הצהרת נגישות</a>
+            <span>·</span>
+            <a href="mailto:info@savy.co.il" className="hover:text-stone-500 transition-colors">info@savy.co.il</a>
+            <span>·</span>
+            <span>© 2026 Savy</span>
+          </div>
         </footer>
         <AccessibilityWidget />
       </body>
