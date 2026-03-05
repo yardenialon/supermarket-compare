@@ -1,4 +1,6 @@
 import './globals.css';
+import dynamic from 'next/dynamic';
+const AccessibilityWidget = dynamic(() => import('@/components/AccessibilityWidget'), { ssr: false });
 import { ReactNode } from 'react';
 import Header from '@/components/Header';
 import Script from 'next/script';
