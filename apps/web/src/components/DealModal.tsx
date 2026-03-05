@@ -30,6 +30,13 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Carrefour':         { he: 'קארפור',       color: '#1d4ed8', logo: '/logos/Carrefour.png' },
   'Zol Vebegadol':     { he: 'זול ובגדול',   color: '#b91c1c', logo: '/logos/zol-vebegadol.png' },
   'Wolt':              { he: 'וולט',         color: '#00c2e0', logo: '/logos/wolt.png' },
+  'Polizer':           { he: 'פוליצר',       color: '#7c3aed', logo: '/logos/polizer.png' },
+  'Super Sapir':       { he: 'סופר ספיר',    color: '#16a34a', logo: '/logos/Super-Sapir.png' },
+  'Super Yuda':        { he: 'סופר יהודה',   color: '#ea580c', logo: '/logos/super-yuda.png' },
+  'Shuk Ahir':         { he: 'שוק העיר',     color: '#0891b2', logo: '/logos/shuk-haeir.png' },
+  'Salach Dabach':     { he: 'סלאח דבאח',    color: '#b45309', logo: '/logos/salach-dabach.png' },
+  'Meshmat Yosef':     { he: 'משמת יוסף',    color: '#6b7280', logo: '' },
+  'Super Dosh':        { he: 'סופר דוש',     color: '#0d9488', logo: '' },
 };
 
 export function ChainLogo({ name, size = 40 }: { name: string; size?: number }) {
