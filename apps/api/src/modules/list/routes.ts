@@ -53,6 +53,68 @@ export async function listRoutes(app) {
 // --- Shared Lists ---
 import crypto from 'crypto';
 export async function sharedListRoutes(app: any) {
+
+  // NEW: השוואת סל לפי רשת - סניף אחד לכל רשת
+  app.post('/list/by-chain', async (req: any) => {
+    const { items } = req.body;
+    if (!items || !items.length) return { chains: [] };
+    const pids = items.map((i: any) => i.productId);
+
+    const { rows } = await query(`
+      SELECT sp.store_id, sp.product_id, sp.price,
+             s.name as store_name, s.city, rc.name as chain_name,
+             s.subchain_name
+      FROM store_price sp
+      JOIN store s ON s.id = sp.store_id
+      JOIN retailer_chain rc ON rc.id = s.chain_id
+      WHERE sp.product_id = ANY($1)
+        AND s.lat IS NOT NULL
+        AND s.city NOT ILIKE '%אילת%'
+        AND s.city NOT ILIKE '%אינטרנט%'
+        AND s.name NOT ILIKE '%אונליין%'
+        AND s.name NOT ILIKE '%online%'
+        AND s.name NOT ILIKE '%אינטרנט%'
+    `, [pids]);
+
+    // Group by chain -> store -> products
+    const chainMap = new Map<string, Map<number, any>>();
+    for (const r of rows) {
+      if (!chainMap.has(r.chain_name)) chainMap.set(r.chain_name, new Map());
+      const storeMap = chainMap.get(r.chain_name)!;
+      if (!storeMap.has(r.store_id)) storeMap.set(r.store_id, { 
+        storeId: r.store_id, storeName: r.store_name, city: r.city,
+        subchainName: r.subchain_name || null, prices: new Map() 
+      });
+      const cur = storeMap.get(r.store_id)!.prices.get(r.product_id);
+      if (!cur || +r.price < cur) storeMap.get(r.store_id)!.prices.set(r.product_id, +r.price);
+    }
+
+    // For each chain, find the best store (most products, then cheapest)
+    const results = [];
+    for (const [chainName, storeMap] of chainMap) {
+      let bestStore: any = null;
+      let bestTotal = Infinity;
+      let bestAvailable = 0;
+
+      for (const [, store] of storeMap) {
+        let total = 0; let available = 0; const bd = [];
+        for (const it of items) {
+          const p = store.prices.get(it.productId);
+          if (p !== undefined) { total += p * it.qty; available++; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) }); }
+        }
+        if (available > bestAvailable || (available === bestAvailable && total < bestTotal)) {
+          bestAvailable = available;
+          bestTotal = total;
+          bestStore = { ...store, total: +total.toFixed(2), availableCount: available, missingCount: items.length - available, breakdown: bd };
+        }
+      }
+      if (bestStore) results.push({ chainName, ...bestStore });
+    }
+
+    results.sort((a: any, b: any) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
+    return { chains: results };
+  });
+
   app.post('/shared-list', async (req: any) => {
     const { items } = req.body;
     if (!items || !Array.isArray(items)) return { error: 'items required' };
