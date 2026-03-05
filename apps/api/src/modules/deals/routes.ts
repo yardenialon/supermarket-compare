@@ -223,38 +223,46 @@ export async function dealsRoutes(app: any) {
     }
 
     const result = await query(`
-      SELECT
-        pr.id as "promotionId",
-        pr.description,
-        pr.discounted_price as "discountedPrice",
-        pr.discount_rate as "discountRate",
-        pr.min_qty as "minQty",
-        pr.end_date as "endDate",
-        pr.is_club_only as "isClubOnly",
-        rc.name as "chainName",
-        s.name as "storeName",
-        s.city as "city",
-        pr.category as "category",
-        pr.subcategory as "subcategory",
-        pr.item_count as "itemCount",
-        p.id as "productId",
-        p.name as "productName",
-        p.image_url as "imageUrl",
-        MIN(sp.price) as "regularPrice"
-      FROM promotion pr
-      JOIN store s ON s.id = pr.store_id
-      JOIN retailer_chain rc ON rc.id = s.chain_id
-      JOIN promotion_item pi ON pi.promotion_id = pr.id
-      JOIN product p ON p.id = pi.product_id
-      LEFT JOIN store_price sp ON sp.product_id = p.id AND sp.store_id = pr.store_id
-      WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
-        AND pr.description IS NOT NULL
-        AND pr.item_count > 0
-        AND pr.discounted_price IS NOT NULL
-        AND pr.discounted_price > 0
-        ${locationFilter}
-      GROUP BY pr.id, rc.name, s.name, s.city, s.address, s.lat, s.lng, p.id, p.name, p.image_url
-      ORDER BY pr.id DESC
+      WITH base AS (
+        SELECT DISTINCT ON (rc.name)
+          pr.id as "promotionId",
+          pr.description,
+          pr.discounted_price as "discountedPrice",
+          pr.discount_rate as "discountRate",
+          pr.min_qty as "minQty",
+          pr.end_date as "endDate",
+          pr.is_club_only as "isClubOnly",
+          rc.name as "chainName",
+          s.name as "storeName",
+          s.city as "city",
+          pr.category as "category",
+          pr.subcategory as "subcategory",
+          pr.item_count as "itemCount",
+          p.id as "productId",
+          p.name as "productName",
+          p.image_url as "imageUrl"
+        FROM promotion pr
+        JOIN store s ON s.id = pr.store_id
+        JOIN retailer_chain rc ON rc.id = s.chain_id
+        JOIN promotion_item pi ON pi.promotion_id = pr.id
+        JOIN product p ON p.id = pi.product_id
+        WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
+          AND pr.description IS NOT NULL
+          AND pr.item_count > 0 AND pr.item_count <= 50
+          AND pr.discounted_price IS NOT NULL
+          AND pr.discounted_price > 0
+          AND pr.discounted_price < 500
+          ${locationFilter}
+        ORDER BY rc.name, pr.discount_rate DESC NULLS LAST, pr.id DESC
+      )
+      SELECT b.*, MIN(sp.price) as "regularPrice"
+      FROM base b
+      LEFT JOIN store_price sp ON sp.product_id = b."productId" AND sp.store_id = (
+        SELECT pr2.store_id FROM promotion pr2 WHERE pr2.id = b."promotionId" LIMIT 1
+      )
+      GROUP BY b."promotionId", b.description, b."discountedPrice", b."discountRate",
+        b."minQty", b."endDate", b."isClubOnly", b."chainName", b."storeName",
+        b.city, b.category, b.subcategory, b."itemCount", b."productId", b."productName", b."imageUrl"
       LIMIT $1
     `, params);
 
