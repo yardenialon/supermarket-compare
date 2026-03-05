@@ -43,6 +43,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="text-xs text-stone-300">מחירים מתעדכנים יומית מנתוני שקיפות מחירים 🇮🇱</div>
           <div className="text-[10px] text-stone-200 mt-1">Savy — כי מגיע לכם לדעת</div>
         </footer>
+        <AccessibilityWidget />
       </body>
     </html>
   );
