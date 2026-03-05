@@ -12,6 +12,10 @@ const CHAINS: Record<string, string> = {
   'Het Cohen': 'חט כהן', 'Good Pharm': 'גוד פארם', 'Keshet Taamim': 'קשת טעמים',
   'Freshmarket': 'פרש מרקט', 'King Store': 'קינג סטור', 'Maayan 2000': 'מעיין 2000',
   'Netiv Hased': 'נתיב חסד', 'Shefa Barcart Ashem': 'שפע',
+  'Stop Market': 'סטופ מרקט', 'Carrefour': 'קארפור', 'Zol Vebegadol': 'זול ובגדול',
+  'Wolt': 'וולט', 'Polizer': 'פוליצר', 'Super Sapir': 'סופר ספיר',
+  'Super Yuda': 'סופר יהודה', 'Shuk Ahir': 'שוק העיר', 'Salach Dabach': 'סלאח דבאח',
+  'Meshmat Yosef': 'משמת יוסף', 'Super Dosh': 'סופר דוש',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
