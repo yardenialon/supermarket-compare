@@ -8,7 +8,7 @@ const CHAINS: Record<string, string> = {
   'Shufersal': 'שופרסל', 'Rami Levy': 'רמי לוי', 'Victory': 'ויקטורי',
   'Mega': 'מגה', 'Osher Ad': 'אושר עד', 'Tiv Taam': 'טיב טעם',
   'Yochananof': 'יוחננוף', 'Hazi Hinam': 'חצי חינם', 'Bareket': 'סופר ברקת',
-  'Mahsani Ashuk': 'מחסני השוק', 'City Market': 'סיטי מרקט', 'Dor Alon': 'דור אלון',
+  'Mahsani Ashuk': 'מחסני השוק', 'City Market': 'סיטי מרקט', 'Dor Alon': 'דור אלון', 'AM-PM': 'AM-PM', 'אלונית': 'אלונית', 'דוכן': 'דוכן',
   'Het Cohen': 'חט כהן', 'Good Pharm': 'גוד פארם', 'Keshet Taamim': 'קשת טעמים',
   'Freshmarket': 'פרש מרקט', 'King Store': 'קינג סטור', 'Maayan 2000': 'מעיין 2000',
   'Netiv Hased': 'נתיב חסד', 'Shefa Barcart Ashem': 'שפע',
