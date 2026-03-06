@@ -17,7 +17,6 @@ export async function receiptRoutes(app: FastifyInstance) {
     console.log('Docupipe upload:', uploadRes.status, uploadText.substring(0, 200));
     if (!uploadRes.ok) return reply.code(500).send({ error: 'שגיאה: ' + uploadText });
     const uploadData = JSON.parse(uploadText) as any;
-
     const { jobId, documentId } = uploadData;
 
     // 2. poll עד שהעבודה מסתיימת
@@ -42,6 +41,7 @@ export async function receiptRoutes(app: FastifyInstance) {
     });
     const docData = await docRes.json() as any;
     const text = docData?.pages?.[0]?.text || docData?.text || '';
+    console.log('Docupipe text:', text.substring(0, 300));
 
     // 4. חלץ מוצרים ומחירים מהטקסט
     const lines = text.split('\n').filter((l: string) => l.trim());
@@ -57,21 +57,24 @@ export async function receiptRoutes(app: FastifyInstance) {
     }
 
     // 5. חפש כל מוצר ב-DB
-    let totalPaid = items.reduce((s, i) => s + i.price, 0);
+    const totalPaid = items.reduce((s, i) => s + i.price, 0);
     let totalCheapest = 0;
     let cheapestStore = '';
 
     for (const item of items) {
       const { rows } = await pool.query(
-        `SELECT sp.price, c.name as chain_name 
-         FROM store_price sp JOIN store s ON sp.store_id = s.id JOIN chain c ON s.chain_id = c.id
-         JOIN product p ON sp.barcode = p.barcode
-         WHERE p.name ILIKE $1 ORDER BY sp.price ASC LIMIT 1`,
+        `SELECT sp.price, rc.name as chain_name
+         FROM store_price sp
+         JOIN store s ON sp.store_id = s.id
+         JOIN retailer_chain rc ON s.chain_id = rc.id
+         JOIN product p ON sp.product_id = p.id
+         WHERE p.name ILIKE $1
+         ORDER BY sp.price ASC LIMIT 1`,
         [`%${item.name.substring(0, 15)}%`]
       );
       if (rows.length > 0) {
         totalCheapest += rows[0].price;
-        cheapestStore = rows[0].chain_name;
+        if (!cheapestStore) cheapestStore = rows[0].chain_name;
       } else {
         totalCheapest += item.price;
       }

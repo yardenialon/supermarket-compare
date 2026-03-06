@@ -12,7 +12,7 @@ import { dealsRoutes } from './modules/deals/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { adminRoutes } from './modules/auth/admin.js';
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: 10 * 1024 * 1024 });
 
 async function main() {
   const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',');
