@@ -65,9 +65,13 @@ export async function POST(req: NextRequest) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items: listItems, lat, lng }),
         });
-        const listData = await listRes.json();
-        bestStores = (listData.bestStoreCandidates || []).slice(0, 3);
-      } catch {}
+        if (listRes.ok) {
+          const listData = await listRes.json();
+          bestStores = (listData.bestStoreCandidates || []).slice(0, 3);
+        } else {
+          console.error('List API error:', listRes.status, await listRes.text());
+        }
+      } catch (listErr: any) { console.error('List fetch error:', listErr.message); }
     }
 
     return NextResponse.json({
