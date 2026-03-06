@@ -74,6 +74,11 @@ export async function POST(req: NextRequest) {
       } catch (listErr: any) { console.error('List fetch error:', listErr.message); }
     }
 
+    // סכום המוצרים שנמצאו ב-DB בקבלה המקורית — לחישוב חיסכון אמיתי
+    const foundTotal = itemsWithSavings
+      .filter(i => i.productId)
+      .reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+
     return NextResponse.json({
       store: parsed.store,
       branch: parsed.branch,
@@ -83,7 +88,9 @@ export async function POST(req: NextRequest) {
       items: itemsWithSavings,
       savings: +totalSavings.toFixed(2),
       bestStores,
-      debug_listItems: listItems,
+      foundTotal: +foundTotal.toFixed(2),
+      coveredItems: listItems.length,
+      totalItems: (parsed.items || []).length,
     });
 
   } catch (e: any) {

@@ -168,6 +168,9 @@ export default function ReceiptPage() {
               <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-stone-100">
                   <h2 className="font-black text-stone-800">כך עולה הסל בחנויות אחרות 🏪</h2>
+                  {results.coveredItems < results.totalItems && (
+                    <p className="text-xs text-stone-400 mt-1">השוואה על {results.coveredItems} מתוך {results.totalItems} מוצרים שנמצאו במאגר</p>
+                  )}
                 </div>
                 <div className="divide-y divide-stone-50">
                   {results.bestStores.map((store: any, i: number) => (
@@ -178,7 +181,7 @@ export default function ReceiptPage() {
                       </div>
                       <div className="text-left">
                         <div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{store.total.toFixed(2)}</div>
-                        {i === 0 && store.total < Number(results.total) && <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{(Number(results.total) - store.total).toFixed(2)}</div>}
+                        {i === 0 && results.foundTotal > 0 && store.total < results.foundTotal && <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{(results.foundTotal - store.total).toFixed(2)}</div>}
                       </div>
                     </div>
                   ))}
