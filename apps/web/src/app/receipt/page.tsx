@@ -39,7 +39,7 @@ export default function ReceiptPage() {
     setError(null);
     setResults(null);
     try {
-      const res = await fetch('/api/receipt', {
+      const res = await fetch('/internal/receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ parts: parts.map(p => p.base64), lat: userLoc?.lat, lng: userLoc?.lng }),

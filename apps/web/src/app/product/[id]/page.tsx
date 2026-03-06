@@ -99,3 +99,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     </>
   );
 }
+const fastify = Fastify({
+  bodyLimit: 10 * 1024 * 1024, // 10MB במקום 1MB ברירת מחדל
+  logger: true,
+});
