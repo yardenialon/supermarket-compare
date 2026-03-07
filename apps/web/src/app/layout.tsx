@@ -29,6 +29,13 @@ export const metadata = {
     description: 'השווה מחירי מוצרים ב-25+ רשתות סופרמרקט — שופרסל, רמי לוי, ויקטורי ועוד. 7.5 מיליון מחירים, עדכון יומי. מצא את המחיר הזול ביותר ליד הבית.',
     images: ['/og-image.png'],
   },
+  icons: {
+    icon: [
+      { url: '/icons/favicon.png', type: 'image/png' },
+    ],
+    apple: '/icons/favicon.png',
+    shortcut: '/icons/favicon.png',
+  },
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
