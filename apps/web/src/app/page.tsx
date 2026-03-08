@@ -418,6 +418,7 @@ export default function Home() {
                     <span className="font-bold text-[#25D366]">שתף את Savy לחברים</span>
                   </button>
 
+                  <PushToggle />
                   {/* Social Media Links */}
                   <div className="border-t border-stone-100 mt-3 pt-4">
                     <p className="text-xs text-stone-400 text-center mb-3">עקבו אחרינו</p>
