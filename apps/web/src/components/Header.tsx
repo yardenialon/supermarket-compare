@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import AuthModal from './AuthModal';
+import dynamic from 'next/dynamic';
+const HamburgerMenu = dynamic(() => import('./HamburgerMenu'), { ssr: false });
 
 export default function Header() {
   const [showAuth, setShowAuth] = useState(false);
@@ -39,6 +41,7 @@ export default function Header() {
           onSuccess={(u) => { setUser(u); setShowAuth(false); }}
         />
       )}
+      <HamburgerMenu />
     </>
   );
 }
