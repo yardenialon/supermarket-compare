@@ -238,7 +238,7 @@ export default function Home() {
   });
   const [promoModal, setPromoModal] = useState<any>(null);
   const [locStatus, setLocStatus] = useState<'idle'|'loading'|'granted'|'denied'>('idle');
-  const [locMode, setLocMode] = useState<'nearby'|'cheapest'|'bychain'>('cheapest');
+  const [locMode, setLocMode] = useState<'nearby'|'cheapest'|'bychain'>('nearby');
   const [chainResults, setChainResults] = useState<any[]>([]);
   const [chainLoading, setChainLoading] = useState(false);
   const [radius, setRadius] = useState<number>(10);
