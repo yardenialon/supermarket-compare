@@ -1,4 +1,10 @@
 module.exports = {
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
+    ],
+  },
   output: 'standalone',
   typescript: {
     ignoreBuildErrors: true,
