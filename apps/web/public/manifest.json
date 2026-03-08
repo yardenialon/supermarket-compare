@@ -1,0 +1,41 @@
+{
+  "name": "Savy - השוואת מחירי סופרמרקט",
+  "short_name": "Savy",
+  "description": "השווה מחירים ב-25+ רשתות סופרמרקט בישראל",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/icons/favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "השוואת מחירים",
+      "url": "/",
+      "description": "חפש מוצרים והשווה מחירים"
+    },
+    {
+      "name": "סריקת קבלה",
+      "url": "/receipt",
+      "description": "סרוק קבלה וגלה כמה חסכת"
+    },
+    {
+      "name": "מבצעים",
+      "url": "/deals",
+      "description": "מבצעים עכשיו בכל הרשתות"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

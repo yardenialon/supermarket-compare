@@ -1,4 +1,5 @@
 import './globals.css';
+import PWAInstall from '../components/PWAInstall';
 import dynamic from 'next/dynamic';
 const AccessibilityWidget = dynamic(() => import('@/components/AccessibilityWidget'), { ssr: false });
 import { ReactNode } from 'react';
@@ -36,6 +37,13 @@ export const metadata = {
     apple: '/icons/favicon.png',
     shortcut: '/icons/favicon.png',
   },
+  manifest: '/manifest.json',
+  themeColor: '#10b981',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Savy',
+  },
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -54,6 +62,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <body className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
         <Header />
         <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
+        <PWAInstall />
         <footer className="border-t bg-white/50 mt-12 py-8 text-center">
           <div className="text-xs text-stone-300">מחירים מתעדכנים יומית מנתוני שקיפות מחירים 🇮🇱</div>
           <div className="text-[10px] text-stone-200 mt-1">Savy — כי מגיע לכם לדעת</div>
