@@ -57,11 +57,14 @@ export default function PushToggle() {
   useEffect(() => {
     if (!('PushManager' in window)) { setStatus('unsupported'); return; }
     if (Notification.permission === 'denied') { setStatus('denied'); return; }
+    const timeout = setTimeout(() => setStatus('unsubscribed'), 3000);
     navigator.serviceWorker.ready.then(reg =>
-      reg.pushManager.getSubscription().then(sub =>
-        setStatus(sub ? 'subscribed' : 'unsubscribed')
-      )
-    );
+      reg.pushManager.getSubscription().then(sub => {
+        clearTimeout(timeout);
+        setStatus(sub ? 'subscribed' : 'unsubscribed');
+      })
+    ).catch(() => { clearTimeout(timeout); setStatus('unsubscribed'); });
+    return () => clearTimeout(timeout);
   }, []);
 
   async function toggle() {
