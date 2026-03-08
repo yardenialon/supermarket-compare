@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
+const PushToggle = dynamic(() => import("../components/PushNotifications"), { ssr: false });
 import { api, dealsApi } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { DealModal, HotDealsSlider } from "@/components/DealModal";
