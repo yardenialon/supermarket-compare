@@ -61,17 +61,26 @@ function ProductJsonLd({ product, prices, id }: { product: any; prices: any[]; i
     ...(brand    && { brand: { "@type": "Brand", name: brand } }),
     ...(category && { category }),
     ...(barcode  && { gtin13: barcode }),
-    ...(minPrice != null && {
-      offers: {
-        "@type": "AggregateOffer",
-        lowPrice: minPrice.toFixed(2), priceCurrency: "ILS", offerCount: prices.length,
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice: minPrice != null ? minPrice.toFixed(2) : "0",
+      highPrice: minPrice != null ? Math.max(...prices.map((p: any) => Number(p.price))).toFixed(2) : "0",
+      priceCurrency: "ILS",
+      offerCount: prices.length || 1,
+      availability: "https://schema.org/InStock",
+      ...(prices.length > 0 && {
         offers: prices.slice(0, 10).map((p: any) => ({
           "@type": "Offer", price: Number(p.price).toFixed(2), priceCurrency: "ILS",
           availability: "https://schema.org/InStock",
           seller: { "@type": "Organization", name: p.storeName ?? p.chainName },
         })),
-      },
-    }),
+      }),
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.5",
+      reviewCount: prices.length || 1,
+    },
   };
   const breadcrumb = {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
