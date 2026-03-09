@@ -1,10 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 const PushToggle = dynamic(() => import('./PushNotifications'), { ssr: false });
 
 export default function HamburgerMenu({ listCount = 0 }: { listCount?: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const handler = () => setMenuOpen(true);
+    document.addEventListener('open-hamburger', handler);
+    return () => document.removeEventListener('open-hamburger', handler);
+  }, []);
   const [menuPage, setMenuPage] = useState<"about"|"privacy"|"contact"|null>(null);
 
   const close = () => { setMenuOpen(false); setMenuPage(null); };
