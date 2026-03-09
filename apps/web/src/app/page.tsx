@@ -692,32 +692,34 @@ export default function Home() {
                     <div key={store.storeId} className={"rounded-xl border transition-all " + (isWinner ? "border-emerald-200 bg-gradient-to-l from-emerald-50/80 to-white shadow-md" : "border-stone-100 bg-white hover:shadow-sm")}>
                       {/* Header - always visible */}
                       <button onClick={() => setExpandedStore(isOpen ? null : i)} className="w-full p-4 text-right">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="relative shrink-0">
-                              <CLogo name={store.chainName} subchain={store.subchainName} size={48} />
-                              {isWinner && <span className="absolute -top-1.5 -right-1.5 text-sm">🏆</span>}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-black text-base text-stone-800">{store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}</div>
-                              <div className="text-xs sm:text-[11px] text-stone-400 mt-0.5 truncate">
-                                {store.storeName}
-                                {store.city && store.city !== '0' && !store.city.match(/^\d+$/) && ` · ${store.city}`}
-                                {store.dist !== undefined && store.dist !== null && <span className="text-blue-400"> · {distToKm(store.dist).toFixed(1)} ק״מ</span>}
-                              </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-1 sm:py-0.5 rounded bg-emerald-100 text-emerald-700 font-semibold">{store.availableCount} נמצאו</span>
-                                {store.missingCount > 0 && <span className="text-xs sm:text-[10px] px-2 sm:px-1.5 py-1 sm:py-0.5 rounded bg-red-50 text-red-500 font-semibold">{store.missingCount} חסרים</span>}
-                              </div>
-                            </div>
+                        <div className="flex items-start gap-3">
+                          {/* לוגו */}
+                          <div className="relative shrink-0 mt-0.5">
+                            <CLogo name={store.chainName} subchain={store.subchainName} size={44} />
+                            {isWinner && <span className="absolute -top-1.5 -right-1.5 text-sm">🏆</span>}
                           </div>
-                          <div className="text-left flex items-center gap-2 sm:gap-3 shrink-0">
-                            <div>
-                              <div className={"font-mono font-black text-xl " + (isWinner ? "text-emerald-600" : "text-stone-700")}>₪{store.total.toFixed(2)}</div>
-                              {sav > 0 && <div className="text-xs sm:text-[11px] text-red-400 font-semibold">+₪{sav.toFixed(2)}</div>}
-                              {isWinner && listResults.length > 1 && <div className="text-xs sm:text-[10px] text-emerald-600 font-bold">הכי זול ✓</div>}
+                          {/* מידע */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="font-black text-base text-stone-800 leading-tight">{store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}</div>
+                              <div className="shrink-0 text-right">
+                                <div className={"font-mono font-black text-xl leading-tight " + (isWinner ? "text-emerald-600" : "text-stone-700")}>₪{store.total.toFixed(2)}</div>
+                                {sav > 0 && <div className="text-xs text-red-400 font-semibold">+₪{sav.toFixed(2)}</div>}
+                                {isWinner && listResults.length > 1 && <div className="text-xs text-emerald-600 font-bold">הכי זול ✓</div>}
+                              </div>
                             </div>
-                            <span className={"text-stone-300 transition-transform text-lg " + (isOpen ? "rotate-90" : "")} style={{ display: 'inline-block' }}>‹</span>
+                            <div className="text-xs text-stone-400 mt-0.5 line-clamp-1">
+                              {store.storeName}
+                              {store.city && store.city !== '0' && !store.city.match(/^\d+$/) && ` · ${store.city}`}
+                              {store.dist !== undefined && store.dist !== null && <span className="text-blue-400"> · {distToKm(store.dist).toFixed(1)} ק״מ</span>}
+                            </div>
+                            <div className="flex items-center justify-between mt-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">{store.availableCount} נמצאו</span>
+                                {store.missingCount > 0 && <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-50 text-red-500 font-semibold">{store.missingCount} חסרים</span>}
+                              </div>
+                              <span className={"text-stone-300 transition-transform text-lg " + (isOpen ? "rotate-90" : "")} style={{ display: 'inline-block' }}>‹</span>
+                            </div>
                           </div>
                         </div>
                       </button>
