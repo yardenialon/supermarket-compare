@@ -109,7 +109,7 @@ export default function ReceiptPage() {
                 <span className="text-3xl">🖼️</span><span>בחר מגלריה</span>
               </button>
             </div>
-            <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ''; }} />
+            <input ref={cameraRef} type="file" accept="image/*;capture=camera" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ''; }} />
             <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { Array.from(e.target.files || []).forEach(f => addFile(f)); e.target.value = ''; }} />
 
             {parts.length > 0 && (

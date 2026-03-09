@@ -306,6 +306,8 @@ export default function Home() {
   const shareList = async () => {
     if (!list.length) return;
     setSharing(true);
+    // פתח חלון מיד (לפני async) כדי לעבוד ב-iOS Safari
+    const win = window.open('', '_blank');
     try {
       const API = process.env.NEXT_PUBLIC_API || 'https://supermarket-compare-production.up.railway.app';
       const res = await fetch(`${API}/api/shared-list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: list.map(i => ({ productId: i.product.id, name: i.product.name, barcode: i.product.barcode, brand: i.product.brand, qty: i.qty, minPrice: i.product.minPrice })) }) });
@@ -316,9 +318,10 @@ export default function Home() {
         const chainHe = (name: string) => CHAINS[name]?.he || name;
         const cheapestText = cheapest ? `\n─────────────────────\n🏆 הכי זול: ₪${cheapest.total.toFixed(0)} ב${chainHe(cheapest.subchainName || cheapest.chainName)}` : '';
         const text = `🛒 *רשימת קניות - סאבי*\n─────────────────────\n${list.map(i => `☐ ${i.product.name}${i.qty > 1 ? ` (x${i.qty})` : ''}`).join('\n')}${cheapestText}\n─────────────────────\n👉 ${url}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-      }
-    } catch { setToast('שגיאה בשיתוף'); setTimeout(() => setToast(''), 2000); }
+        if (win) win.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      } else { win?.close(); }
+    } catch { win?.close(); setToast('שגיאה בשיתוף'); setTimeout(() => setToast(''), 2000); }
     setSharing(false);
   };
 
