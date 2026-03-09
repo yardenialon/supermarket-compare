@@ -116,7 +116,7 @@ export default function DealsPage() {
       navigator.geolocation.getCurrentPosition(
         (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocLoading(false); },
         () => setLocLoading(false),
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
       );
     }
   }, []);

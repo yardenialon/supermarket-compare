@@ -255,7 +255,7 @@ export default function Home() {
       navigator.geolocation.getCurrentPosition(
         (pos) => { const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }; setUserLoc(loc); setLocStatus('granted'); try { localStorage.setItem('savy-loc', JSON.stringify(loc)); } catch {} },
         () => { setLocStatus('idle'); },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
       );
     }
   }, []);
@@ -383,7 +383,7 @@ export default function Home() {
           <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span></div>
           <div className="mt-4 flex justify-center gap-2">
             <button onClick={() => setLocMode('cheapest')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'cheapest' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>💰 הכי זול בארץ</button>
-            <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }); } }} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'nearby' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : locStatus === 'loading' ? "bg-amber-50 border border-amber-300 text-amber-600 animate-pulse" : "bg-white border-2 border-emerald-400 text-emerald-600 hover:bg-emerald-50 shadow-sm")}>
+            <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }); } }} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'nearby' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : locStatus === 'loading' ? "bg-amber-50 border border-amber-300 text-amber-600 animate-pulse" : "bg-white border-2 border-emerald-400 text-emerald-600 hover:bg-emerald-50 shadow-sm")}>
               {locStatus === 'loading' ? '📍 מאתר...' : '📍 הכי זול ליד'}
             </button>
             <button onClick={() => setLocMode('bychain')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'bychain' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>🏪 לפי רשת</button>
@@ -629,7 +629,7 @@ export default function Home() {
                       navigator.geolocation?.getCurrentPosition(
                         (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocStatus('granted'); setLocMode('nearby'); },
                         () => { setLocStatus('denied'); },
-                        { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
+                        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
                       );
                     }} className="px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border border-emerald-400 bg-white text-emerald-600 hover:bg-emerald-50">📍 קרוב אליי</button>
                   ) : null}
