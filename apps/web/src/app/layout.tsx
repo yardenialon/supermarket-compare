@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 const AccessibilityWidget = dynamic(() => import('@/components/AccessibilityWidget'), { ssr: false });
 import { ReactNode } from 'react';
 import Header from '@/components/Header';
+import BottomNav from '@/components/BottomNav';
 import Script from 'next/script';
 
 // Facebook domain verification added to head via metadata
@@ -68,6 +69,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <Header />
         <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
         <PWAInstall />
+      <BottomNav />
         <footer className="border-t bg-white/50 mt-12 py-8 text-center">
           <div className="text-xs text-stone-300">מחירים מתעדכנים יומית מנתוני שקיפות מחירים 🇮🇱</div>
           <div className="text-[10px] text-stone-200 mt-1">Savy — כי מגיע לכם לדעת</div>
