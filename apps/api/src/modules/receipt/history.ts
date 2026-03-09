@@ -115,3 +115,20 @@ export async function receiptHistoryRoutes(app: FastifyInstance) {
     return { insights: insights.slice(0, 10), totalScans: res.rows.length };
   });
 }
+
+export async function receiptSaveRoute(app: FastifyInstance) {
+  app.post('/receipt/save', async (req: any, reply: any) => {
+    const token = (req.cookies as any)?.session_token;
+    if (!token) return reply.code(401).send({ error: 'לא מחובר' });
+    const sessionRes = await query('SELECT user_id FROM session WHERE token=$1 AND expires_at > NOW()', [token]);
+    if (!sessionRes.rows.length) return reply.code(401).send({ error: 'session פג תוקף' });
+    const userId = (sessionRes.rows[0] as any).user_id;
+    const { store_name, total_paid, total_cheapest, saved, items } = req.body as any;
+    await query(
+      `INSERT INTO receipt_scan (user_id, store_name, total_paid, total_cheapest, saved, items)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, store_name, total_paid, total_cheapest, saved, JSON.stringify(items)]
+    );
+    return { success: true };
+  });
+}
