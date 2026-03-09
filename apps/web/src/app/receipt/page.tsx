@@ -1,5 +1,22 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '@/lib/useAuth';
+import AuthModal from '@/components/AuthModal';
+
+const API = 'https://supermarket-compare-production.up.railway.app';
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function categoryEmoji(cat: string) {
+  const map: Record<string, string> = {
+    'חלב וגבינות': '🧀', 'בשר ועוף': '🥩', 'ירקות ופירות': '🥦', 'לחם ומאפים': '🍞',
+    'שתייה': '🥤', 'חטיפים': '🍿', 'ניקיון': '🧹', 'טואלטיקה': '🧴', 'קפואים': '🧊',
+    'שימורים': '🥫', 'כללי': '🛒'
+  };
+  return map[cat] || '🛍️';
+}
 
 async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -10,6 +27,13 @@ async function fileToBase64(file: File): Promise<string> {
 }
 
 export default function ReceiptPage() {
+  const { user, setUser } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const [receipts, setReceipts] = useState<any[]>([]);
+  const [insights, setInsights] = useState<any[]>([]);
+  const [historyTab, setHistoryTab] = useState<'history'|'insights'>('history');
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [parts, setParts] = useState<{ url: string; base64: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -17,6 +41,18 @@ export default function ReceiptPage() {
   const [userLoc, setUserLoc] = useState<{lat: number; lng: number} | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    setHistoryLoading(true);
+    Promise.all([
+      fetch(`${API}/api/receipt/history`, { credentials: 'include' }).then(r => r.json()),
+      fetch(`${API}/api/receipt/insights`, { credentials: 'include' }).then(r => r.json()),
+    ]).then(([h, i]) => {
+      setReceipts(h.receipts || []);
+      setInsights(i.insights || []);
+    }).finally(() => setHistoryLoading(false));
+  }, [user]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -195,6 +231,88 @@ export default function ReceiptPage() {
           </div>
         )}
       </div>
+
+      {/* היסטוריה + המלצות */}
+      <div className="mt-8">
+        {!user ? (
+          <div className="bg-white rounded-2xl p-6 text-center border border-stone-100 shadow-sm">
+            <div className="text-3xl mb-2">📊</div>
+            <p className="text-stone-600 font-bold mb-1">היסטוריית קבלות והמלצות חיסכון</p>
+            <p className="text-stone-400 text-sm mb-4">התחבר כדי לשמור קבלות ולקבל המלצות אישיות</p>
+            <button onClick={() => setShowAuth(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl transition text-sm">
+              התחבר / הרשם
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setHistoryTab('history')} className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${historyTab === 'history' ? 'bg-stone-900 text-white' : 'bg-white border border-stone-200 text-stone-500'}`}>
+                🧾 קבלות ({receipts.length})
+              </button>
+              <button onClick={() => setHistoryTab('insights')} className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition ${historyTab === 'insights' ? 'bg-stone-900 text-white' : 'bg-white border border-stone-200 text-stone-500'}`}>
+                💡 המלצות ({insights.length})
+              </button>
+            </div>
+
+            {historyLoading ? (
+              <div className="text-center py-8 text-stone-400 text-sm">טוען...</div>
+            ) : historyTab === 'history' ? (
+              receipts.length === 0 ? (
+                <p className="text-center text-stone-400 text-sm py-6">עדיין אין קבלות שמורות — סרוק קבלה כדי להתחיל</p>
+              ) : (
+                <div className="space-y-2">
+                  {receipts.map((r: any) => (
+                    <div key={r.id} className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+                      <button onClick={() => setExpanded(expanded === r.id ? null : r.id)} className="w-full px-4 py-3.5 flex items-center gap-3 text-right">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-base flex-shrink-0">🧾</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-stone-700 text-sm truncate">{r.store_name || 'חנות לא ידועה'}</div>
+                          <div className="text-xs text-stone-400">{formatDate(r.scanned_at)}</div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="font-black text-stone-800 text-sm">₪{Number(r.total_paid).toFixed(2)}</div>
+                          {Number(r.saved) > 0 && <div className="text-xs text-emerald-500 font-bold">חסכת ₪{Number(r.saved).toFixed(2)}</div>}
+                        </div>
+                        <span className="text-stone-300 text-xs">{expanded === r.id ? '▲' : '▼'}</span>
+                      </button>
+                      {expanded === r.id && r.items && (
+                        <div className="border-t border-stone-50 px-4 py-3 space-y-1">
+                          {(r.items as any[]).map((item: any, i: number) => (
+                            <div key={i} className="flex justify-between text-xs">
+                              <span className="text-stone-500 truncate flex-1">{item.name}</span>
+                              <span className="text-stone-700 font-medium mr-2">₪{Number(item.price).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              insights.length === 0 ? (
+                <p className="text-center text-stone-400 text-sm py-6">סרוק עוד קבלות כדי לקבל המלצות חיסכון אישיות</p>
+              ) : (
+                <div className="space-y-3">
+                  {insights.map((ins: any, i: number) => (
+                    <div key={i} className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 flex items-start gap-3">
+                      <div className="text-2xl">{categoryEmoji(ins.category)}</div>
+                      <div className="flex-1">
+                        <div className="font-black text-stone-800 text-sm">{ins.category}</div>
+                        <div className="text-xs text-stone-500 mt-0.5">קנה ב-<span className="font-bold text-emerald-600">{ins.chain}</span> וחסוך</div>
+                        <div className="text-xl font-black text-emerald-500">₪{ins.potentialSaving}</div>
+                        {ins.items.length > 0 && <div className="text-xs text-stone-400 mt-1">{ins.items.join(', ')}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </div>
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); }} />}
     </div>
   );
 }
