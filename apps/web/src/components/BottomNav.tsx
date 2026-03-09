@@ -1,5 +1,5 @@
 'use client';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 
 const tabs = [
@@ -70,7 +70,7 @@ const tabs = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
 
   return (
     <>
