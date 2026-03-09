@@ -16,9 +16,7 @@ export default function HamburgerMenu({ listCount = 0 }: { listCount?: number })
 
   return (
     <>
-      <button onClick={() => setMenuOpen(!menuOpen)} className="fixed top-3 right-3 z-[60] w-10 h-10 rounded-xl bg-white/90 backdrop-blur border border-stone-200 shadow-md flex flex-col items-center justify-center gap-1 hover:bg-stone-50 transition-all">
-        {menuOpen ? <span className="text-stone-600 text-xl font-bold">✕</span> : <><span className="w-5 h-0.5 bg-stone-600 rounded-full"></span><span className="w-5 h-0.5 bg-stone-600 rounded-full"></span><span className="w-5 h-0.5 bg-stone-600 rounded-full"></span></>}
-      </button>
+
 
       {menuOpen && (
         <div className="fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm" onClick={close}>

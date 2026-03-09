@@ -39,7 +39,7 @@ export default function AccessibilityWidget() {
       <button
         onClick={() => setOpen(o => !o)}
         aria-label="פתח תפריט נגישות"
-        className="fixed bottom-6 left-4 z-50 w-12 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg flex items-center justify-center text-xl transition-all"
+        className="fixed bottom-24 left-4 z-50 w-12 h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg flex items-center justify-center text-xl transition-all"
         title="נגישות"
       >
         ♿
@@ -50,7 +50,7 @@ export default function AccessibilityWidget() {
         <div
           role="dialog"
           aria-label="תפריט נגישות"
-          className="fixed bottom-20 left-4 z-50 bg-white rounded-2xl shadow-2xl border border-stone-100 w-64 p-4"
+          className="fixed bottom-40 left-4 z-50 bg-white rounded-2xl shadow-2xl border border-stone-100 w-64 p-4"
           dir="rtl"
         >
           <div className="flex items-center justify-between mb-4">
