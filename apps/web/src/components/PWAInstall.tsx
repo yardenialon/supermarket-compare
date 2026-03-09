@@ -63,13 +63,16 @@ export default function PWAInstall() {
         <div className="flex-1 min-w-0">
           <p className="font-black text-stone-800 text-sm">הוסף את Savy למסך הבית</p>
           {isIOS ? (
-            <p className="text-xs text-stone-400 mt-0.5">לחץ על <span className="font-bold">שתף</span> ואז <span className="font-bold">הוסף למסך הבית</span></p>
+            <div className="text-xs text-stone-500 mt-1 space-y-0.5">
+              <p>1. לחץ על כפתור השיתוף <span className="inline-block bg-stone-100 rounded px-1 font-bold">⎙</span> בתחתית Safari</p>
+              <p>2. בחר <span className="font-bold text-stone-700">״הוסף למסך הבית״</span></p>
+            </div>
           ) : (
             <p className="text-xs text-stone-400 mt-0.5">גישה מהירה להשוואת מחירים</p>
           )}
         </div>
         <div className="flex gap-2 flex-shrink-0">
-          <button onClick={dismiss} className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1">אחר כך</button>
+          <button onClick={dismiss} className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1">סגור</button>
           {!isIOS && (
             <button onClick={install} className="text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition">
               התקן
