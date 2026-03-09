@@ -1,5 +1,5 @@
 'use client';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
 
 const tabs = [
@@ -16,7 +16,7 @@ const tabs = [
     ),
   },
   {
-    href: '/?tab=list',
+    href: '/?tab=search',
     label: 'חיפוש',
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -70,6 +70,7 @@ const tabs = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   return (
     <>
@@ -84,8 +85,10 @@ export default function BottomNav() {
           {tabs.map((tab) => {
             const isActive = tab.isFab
               ? pathname === '/receipt'
-              : pathname === '/' && tab.href === '/'
-              ? true
+              : tab.href === '/'
+              ? pathname === '/' && !searchParams?.get('tab')
+              : tab.href.includes('?tab=')
+              ? pathname === '/' && searchParams?.get('tab') === tab.href.split('tab=')[1]
               : pathname.startsWith(tab.href.split('?')[0]) && tab.href !== '/';
 
             if (tab.isFab) {
