@@ -80,6 +80,22 @@ export async function receiptRoutes(app: FastifyInstance) {
       }
     }
 
+    // שמור קבלה אם משתמש מחובר
+    try {
+      const token = req.cookies?.session_token;
+      if (token) {
+        const sessionRes = await query('SELECT user_id FROM session WHERE token=$1 AND expires_at > NOW()', [token]);
+        if (sessionRes.rows.length) {
+          const userId = (sessionRes.rows[0] as any).user_id;
+          await query(
+            `INSERT INTO receipt_scan (user_id, store_name, total_paid, total_cheapest, saved, items)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [userId, cheapestStore, totalPaid, totalCheapest, totalPaid - totalCheapest, JSON.stringify(items)]
+          );
+        }
+      }
+    } catch (e) { /* לא נכשיל את הסריקה בגלל שגיאת שמירה */ }
+
     return { items, totalPaid, savings: totalPaid - totalCheapest, cheapestStore };
   });
 }
