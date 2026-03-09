@@ -178,7 +178,13 @@ const CATS = [
 
 
 export default function Home() {
-  const [tab, setTab] = useState<'search' | 'list'>('search');
+  const [tab, setTab] = useState<'search' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('tab');
+      if (p === 'list') return 'list';
+    }
+    return 'search';
+  });
   const [q, setQ] = useState(""); const [results, setResults] = useState<Product[]>([]); const [sel, setSel] = useState<Product | null>(null);
   const [prices, setPrices] = useState<Price[]>([]); const [loading, setLoading] = useState(false); const [pLoading, setPLoading] = useState(false);
   const [showCats, setShowCats] = useState(false); const [chainFilter, setChainFilter] = useState<string | null>(null);
