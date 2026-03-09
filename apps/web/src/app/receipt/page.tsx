@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import AuthModal from '@/components/AuthModal';
+import dynamic from 'next/dynamic';
+const ScrollCapture = dynamic(() => import('@/components/ScrollCapture'), { ssr: false });
 
 const API = 'https://supermarket-compare-production.up.railway.app';
 
@@ -35,6 +37,7 @@ export default function ReceiptPage() {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [parts, setParts] = useState<{ url: string; base64: string }[]>([]);
+  const [showScrollCapture, setShowScrollCapture] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +112,13 @@ export default function ReceiptPage() {
                 <span className="text-3xl">🖼️</span><span>בחר מגלריה</span>
               </button>
             </div>
+            <button onClick={() => setShowScrollCapture(true)} className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-gradient-to-l from-emerald-500 to-teal-500 text-white font-bold hover:opacity-90 transition shadow-lg shadow-emerald-100">
+              <span className="text-2xl">📜</span>
+              <div className="text-right">
+                <div>סריקת קבלה ארוכה</div>
+                <div className="text-xs font-normal opacity-80">גלול לאט — נצלם אוטומטית</div>
+              </div>
+            </button>
             <input ref={cameraRef} type="file" accept="image/*;capture=camera" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ''; }} />
             <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { Array.from(e.target.files || []).forEach(f => addFile(f)); e.target.value = ''; }} />
 
@@ -313,6 +323,15 @@ export default function ReceiptPage() {
       </div>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); }} />}
+      {showScrollCapture && (
+        <ScrollCapture
+          onCapture={(frames) => {
+            setShowScrollCapture(false);
+            setParts(frames.map(b => ({ url: '', base64: b })));
+          }}
+          onCancel={() => setShowScrollCapture(false)}
+        />
+      )}
     </div>
   );
 }
