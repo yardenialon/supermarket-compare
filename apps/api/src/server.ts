@@ -9,6 +9,7 @@ import { storeRoutes } from './modules/store/routes.js';
 import { statusRoutes } from './modules/status/routes.js';
 import { receiptRoutes } from './modules/receipt/routes.js';
 import { receiptHistoryRoutes } from './modules/receipt/history.js';
+import { googleAuthRoutes } from './modules/auth/google.js';
 import { dealsRoutes } from './modules/deals/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { adminRoutes } from './modules/auth/admin.js';
@@ -40,6 +41,7 @@ async function main() {
   await app.register(statusRoutes);
   await app.register(receiptRoutes, { prefix: '/api' });
   await app.register(receiptHistoryRoutes, { prefix: '/api' });
+  await app.register(googleAuthRoutes, { prefix: '/api' });
   await app.register(dealsRoutes, { prefix: '/api' });
   await app.register(authRoutes, { prefix: '/api' });
   await app.register(adminRoutes, { prefix: '/api' });
