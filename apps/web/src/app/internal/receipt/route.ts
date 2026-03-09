@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     const { parts, base64, mimeType, lat, lng } = await req.json();
     // העבר session cookie ל-Railway לשמירת קבלה
     const sessionToken = req.cookies.get('session_token')?.value;
+    console.log('[Receipt] session_token:', sessionToken ? 'EXISTS' : 'MISSING', '| all cookies:', req.cookies.getAll().map(c=>c.name).join(','));
     const images: string[] = parts || (base64 ? [base64] : []);
     if (!images.length) return NextResponse.json({ error: 'חסרות תמונות' }, { status: 400 });
 
