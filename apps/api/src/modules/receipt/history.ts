@@ -118,7 +118,7 @@ export async function receiptHistoryRoutes(app: FastifyInstance) {
 
 export async function receiptSaveRoute(app: FastifyInstance) {
   app.post('/receipt/save', async (req: any, reply: any) => {
-    const token = (req.cookies as any)?.session_token;
+    const token = (req.headers as any)['x-session-token'] || (req.cookies as any)?.session_token;
     if (!token) return reply.code(401).send({ error: 'לא מחובר' });
     const sessionRes = await query('SELECT user_id FROM session WHERE token=$1 AND expires_at > NOW()', [token]);
     if (!sessionRes.rows.length) return reply.code(401).send({ error: 'session פג תוקף' });

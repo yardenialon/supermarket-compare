@@ -90,6 +90,23 @@ export async function POST(req: NextRequest) {
       .filter(i => i.productId)
       .reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
 
+    // שמור קבלה
+    try {
+      if (sessionToken) {
+        await fetch(`${API}/api/receipt/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-session-token': sessionToken },
+          body: JSON.stringify({
+            store_name: parsed.store,
+            total_paid: parsed.total,
+            total_cheapest: parsed.total - totalSavings,
+            saved: totalSavings,
+            items: itemsWithSavings,
+          }),
+        });
+      }
+    } catch (saveErr) { console.error('Save receipt error:', saveErr); }
+
     return NextResponse.json({
       store: parsed.store,
       branch: parsed.branch,
