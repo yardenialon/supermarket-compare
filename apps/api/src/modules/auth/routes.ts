@@ -117,7 +117,7 @@ export async function authRoutes(app: any) {
       expires: sessionExpires,
     });
 
-    return { success: true, user };
+    return { success: true, user, token };
   });
 
   // מי אני

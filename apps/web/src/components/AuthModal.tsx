@@ -49,6 +49,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       });
       const data = await res.json();
       if (!res.ok) return setError(data.error || 'שגיאה בהתחברות');
+      if (data.token) localStorage.setItem('session_token', data.token);
       onSuccess(data.user);
     } catch {
       setError('שגיאת רשת, נסה שוב');
@@ -92,6 +93,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
       });
       const data = await res.json();
       if (!res.ok) return setError(data.error || 'קוד שגוי');
+      if (data.token) localStorage.setItem('session_token', data.token);
       onSuccess(data.user);
     } catch {
       setError('שגיאת רשת, נסה שוב');

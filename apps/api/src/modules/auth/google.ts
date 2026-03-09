@@ -57,7 +57,7 @@ export async function googleAuthRoutes(app: FastifyInstance) {
       });
 
       const user = await query('SELECT id, phone, email, name, picture FROM "user" WHERE id=$1', [userId]);
-      return { success: true, user: user.rows[0] };
+      return { success: true, user: user.rows[0], token };
 
     } catch (e: any) {
       return reply.code(401).send({ error: 'אימות נכשל: ' + e.message });
