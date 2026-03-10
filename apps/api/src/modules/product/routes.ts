@@ -1,6 +1,18 @@
 import { query } from '../../db.js';
 const SERP_KEY = '2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a778';
-const TRUSTED_DOMAINS = ['shufersal.co.il', 'rfranco.com', 'tnuva.co.il', 'mybundles.co.il', 'mega.co.il', 'victoria.co.il', 'osheread.co.il', 'ramielevy.co.il', 'pricez.co.il', 'ha-pricelist.co.il', 'super-pharm.co.il', 'schnellers.co.il', 'yochananof.co.il'];
+const TRUSTED_DOMAINS = [
+  // רשתות סופרמרקט
+  'shufersal.co.il', 'mega.co.il', 'rami-levy.co.il', 'ramielevy.co.il',
+  'osheread.co.il', 'osherad.co.il', 'yochananof.co.il', 'tivtaam.co.il',
+  'victory.co.il', 'victoryonline.co.il', 'half-price.co.il', 'hazihiham.co.il',
+  'keshet-teamim.co.il', 'doralon.co.il', 'freshmarket.co.il',
+  'mahsaniashuk.co.il', 'yayno-bitan.co.il', 'kingstore.co.il',
+  // יצרנים ומותגים
+  'tnuva.co.il', 'strauss.co.il', 'osem.co.il', 'rfranco.com',
+  'mybundles.co.il', 'schnellers.co.il', 'super-pharm.co.il',
+  'telma.co.il', 'willi-food.com', 'elite.co.il', 'alpro.com',
+  'nestle.co.il', 'unilever.com', 'coca-cola.co.il', 'pepsico.com',
+];
 function isTrustedImage(url: string | undefined, barcode: string) {
   if (!url) return false;
   const lower = url.toLowerCase();
