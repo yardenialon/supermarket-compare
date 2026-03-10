@@ -520,7 +520,20 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4 px-4">
           {/* Results */}
           <div className="space-y-2">
-            {loading && <div className="text-center py-16"><div className="inline-block w-7 h-7 border-[3px] border-stone-200 border-t-stone-800 rounded-full animate-spin"></div></div>}
+            {loading && (
+              <div className="text-center py-16">
+                <div className="inline-flex flex-col items-center gap-3">
+                  <div className="relative w-14 h-14">
+                    <div className="absolute inset-0 rounded-full border-[3px] border-emerald-100" />
+                    <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-emerald-500 animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img src="/icons/savy-logo.png" alt="" className="w-8 h-8 object-contain" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-stone-400 font-medium animate-pulse">מחפש את המחיר הטוב ביותר...</p>
+                </div>
+              </div>
+            )}
             {sorted.map((p: Product) => (
               <div key={p.id} className={"group rounded-xl transition-all bg-white border " + (sel?.id === p.id ? "border-emerald-500 shadow-md ring-1 ring-emerald-500/20" : "border-stone-100 hover:border-stone-200 hover:shadow-sm")}>
                 <button onClick={() => pick(p)} className="w-full text-right p-4 sm:p-3.5">
@@ -536,8 +549,31 @@ export default function Home() {
                 <div className="px-4 pb-3 -mt-1"><button onClick={() => addToList(p)} className="text-sm sm:text-xs px-5 sm:px-4 py-2 sm:py-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-semibold hover:bg-emerald-100 transition">+ לרשימה</button></div>
               </div>
             ))}
-            {!loading && !q.trim() && <div className="text-center py-20"><div className="text-4xl mb-3 opacity-30">🔍</div><div className="text-stone-300 text-sm">התחילו לחפש מוצר</div></div>}
-            {!loading && q.trim() && !results.length && <div className="text-center py-16"><div className="text-3xl mb-2 opacity-30">🤷</div><div className="text-stone-300 text-sm">לא מצאנו</div></div>}
+            {!loading && !q.trim() && (
+              <div className="text-center py-20">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="#059669" strokeWidth="2"/>
+                    <path d="M21 21L16.65 16.65" stroke="#059669" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <p className="text-stone-400 text-sm font-medium">חפשו מוצר לפי שם או ברקוד</p>
+                <p className="text-stone-300 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
+              </div>
+            )}
+            {!loading && q.trim() && !results.length && (
+              <div className="text-center py-16">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-50 flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="#d1d5db" strokeWidth="2"/>
+                    <path d="M21 21L16.65 16.65" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M8 11H14" stroke="#d1d5db" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <p className="text-stone-400 text-sm font-medium">לא מצאנו תוצאות עבור "{q}"</p>
+                <p className="text-stone-300 text-xs mt-1">נסו לחפש בשם אחר או ברקוד</p>
+              </div>
+            )}
           </div>
 
           {/* Price panel - desktop: side panel, mobile: bottom sheet */}
@@ -559,7 +595,16 @@ export default function Home() {
               </button>))}
             </div>}
             <div className="max-h-[52vh] overflow-y-auto divide-y divide-stone-50">
-              {pLoading ? <div className="p-10 text-center"><div className="inline-block w-6 h-6 border-2 border-stone-200 border-t-stone-700 rounded-full animate-spin"></div></div> :
+              {pLoading ? <div className="p-10 text-center">
+                  <div className="relative w-12 h-12 mx-auto">
+                    <div className="absolute inset-0 rounded-full border-2 border-emerald-100" />
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img src="/icons/savy-logo.png" alt="" className="w-7 h-7 object-contain" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-300 mt-3 animate-pulse">משווה מחירים...</p>
+                </div> :
               !fp.length ? <div className="p-10 text-center text-stone-300 text-sm">אין מחירים</div> :
               fp.map((p: Price, i: number) => (
                 <div key={i} className={"flex items-center justify-between px-5 py-4 transition hover:bg-stone-50 " + (i === 0 ? "bg-emerald-50/40" : "")}>
@@ -605,7 +650,16 @@ export default function Home() {
               </button>))}
             </div>}
             <div className="overflow-y-auto divide-y divide-stone-50" style={{ maxHeight: 'calc(85vh - 200px)' }}>
-              {pLoading ? <div className="p-10 text-center"><div className="inline-block w-6 h-6 border-2 border-stone-200 border-t-stone-700 rounded-full animate-spin"></div></div> :
+              {pLoading ? <div className="p-10 text-center">
+                  <div className="relative w-12 h-12 mx-auto">
+                    <div className="absolute inset-0 rounded-full border-2 border-emerald-100" />
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img src="/icons/savy-logo.png" alt="" className="w-7 h-7 object-contain" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-300 mt-3 animate-pulse">משווה מחירים...</p>
+                </div> :
               !fp.length ? <div className="p-10 text-center text-stone-300 text-sm">אין מחירים</div> :
               fp.map((p: Price, i: number) => (
                 <div key={i} className={"flex items-center justify-between px-4 py-3.5 " + (i === 0 ? "bg-emerald-50/40" : "")}>
