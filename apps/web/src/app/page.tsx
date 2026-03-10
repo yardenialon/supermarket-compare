@@ -364,22 +364,75 @@ export default function Home() {
 
       {/* Hamburger Menu Button */}
       {/* Hero */}
-      <section className="text-center pt-6 sm:pt-8 pb-1 px-4">
-        <div className="flex justify-center mb-2"><img src="/icons/savy-logo.png" alt="Savy" className="h-28 sm:h-36 object-contain" /></div>
-        <h2 className="font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-stone-800 leading-tight">כמה אתם <span className="bg-gradient-to-l from-emerald-600 to-teal-500 bg-clip-text text-transparent">באמת</span> משלמים?</h2>
-        <p className="text-stone-400 text-sm sm:text-base mt-2 font-medium">משווים מחירים מכל רשתות השיווק בישראל</p>
+      <section className="relative overflow-hidden pt-6 pb-4 px-4">
+        {/* רקע דקורטיבי */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-100/60 rounded-full blur-3xl" />
+          <div className="absolute -top-10 -left-20 w-48 h-48 bg-teal-100/40 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative text-center max-w-lg mx-auto">
+          {/* לוגו */}
+          <div className="flex justify-center mb-3">
+            <img src="/icons/savy-logo.png" alt="Savy" className="h-20 sm:h-24 object-contain drop-shadow-sm" />
+          </div>
+
+          {/* כותרת */}
+          <h1 className="font-black text-3xl sm:text-4xl tracking-tight text-stone-800 leading-tight mb-2">
+            כמה אתם <span className="relative inline-block">
+              <span className="bg-gradient-to-l from-emerald-600 to-teal-500 bg-clip-text text-transparent">באמת</span>
+              <svg className="absolute -bottom-1 right-0 left-0 w-full" height="4" viewBox="0 0 100 4" preserveAspectRatio="none">
+                <path d="M0,3 Q50,0 100,3" stroke="url(#g)" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#059669"/><stop offset="100%" stopColor="#0d9488"/></linearGradient></defs>
+              </svg>
+            </span> משלמים?
+          </h1>
+          <p className="text-stone-400 text-sm mt-1">25+ רשתות · 7.5 מיליון מחירים · מתעדכן יומיומית</p>
+
+          {/* סטטיסטיקות */}
+          <div className="flex justify-center gap-4 mt-4">
+            <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
+              <div className="font-black text-lg text-emerald-600 leading-none">25+</div>
+              <div className="text-[10px] text-stone-400 mt-0.5">רשתות</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
+              <div className="font-black text-lg text-emerald-600 leading-none">7.5M</div>
+              <div className="text-[10px] text-stone-400 mt-0.5">מחירים</div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
+              <div className="font-black text-lg text-emerald-600 leading-none">חינם</div>
+              <div className="text-[10px] text-stone-400 mt-0.5">לגמרי</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Logo Marquee */}
       <LogoMarquee />
 
       {/* Tabs */}
-      <div className="flex justify-center gap-2 sm:gap-3 mb-5 sm:mb-6 px-4">
-        <button onClick={() => setTab('search')} className={"flex-1 sm:flex-none px-5 sm:px-8 py-3.5 sm:py-3 rounded-xl text-base sm:text-sm font-bold transition-all duration-200 " + (tab === 'search' ? "bg-stone-900 text-white shadow-lg" : "bg-white text-stone-500 shadow-sm border border-stone-200 hover:border-stone-300")}>🔍 חיפוש מוצר</button>
-        <button onClick={() => setTab('list')} className={"flex-1 sm:flex-none px-5 sm:px-8 py-3.5 sm:py-3 rounded-xl text-base sm:text-sm font-bold transition-all duration-200 relative " + (tab === 'list' ? "bg-stone-900 text-white shadow-lg" : "bg-white text-stone-500 shadow-sm border border-stone-200 hover:border-stone-300")}>
-          🛒 רשימת קניות
-          {list.length > 0 && <span className="absolute -top-2 -left-2 bg-emerald-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold shadow">{list.length}</span>}
-        </button>
+      <div className="flex justify-center px-4 mb-5 mt-2">
+        <div className="flex bg-stone-100 rounded-2xl p-1 gap-1 w-full max-w-sm">
+          <button onClick={() => setTab('search')}
+            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 " +
+              (tab === 'search' ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2.5"/>
+              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+            חיפוש מוצר
+          </button>
+          <button onClick={() => setTab('list')}
+            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 relative " +
+              (tab === 'list' ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M6 2L3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6L18 2H6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 6H21M16 10C16 11.1 15.6 12.2 14.8 13C14.1 13.8 13 14 12 14C11 14 9.9 13.8 9.2 13C8.4 12.2 8 11.1 8 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            רשימת קניות
+            {list.length > 0 && <span className="absolute -top-1.5 -left-1.5 bg-emerald-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black shadow">{list.length}</span>}
+          </button>
+        </div>
       </div>
 
       {/* ==================== SEARCH TAB ==================== */}
