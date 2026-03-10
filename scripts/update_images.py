@@ -18,11 +18,17 @@ BATCH_SIZE = int(os.environ.get("IMAGE_BATCH_SIZE", "500"))
 DELAY = 0.3
 
 TRUSTED_DOMAINS = [
-    'shufersal.co.il', 'rfranco.com', 'tnuva.co.il', 'mybundles.co.il',
-    'mega.co.il', 'victoria.co.il', 'osheread.co.il', 'ramielevy.co.il',
-    'pricez.co.il', 'ha-pricelist.co.il', 'super-pharm.co.il',
-    'schnellers.co.il', 'yochananof.co.il', 'barcode-list.co.il',
-    'openfoodfacts.org', 'barcodelookup.com', 'world.openfoodfacts.org',
+    # רשתות סופרמרקט
+    'shufersal.co.il', 'mega.co.il', 'rami-levy.co.il', 'ramielevy.co.il',
+    'osheread.co.il', 'osherad.co.il', 'yochananof.co.il', 'tivtaam.co.il',
+    'victory.co.il', 'victoryonline.co.il', 'half-price.co.il',
+    'keshet-teamim.co.il', 'freshmarket.co.il', 'mahsaniashuk.co.il',
+    # יצרנים ומותגים
+    'tnuva.co.il', 'strauss.co.il', 'osem.co.il', 'rfranco.com',
+    'mybundles.co.il', 'schnellers.co.il', 'super-pharm.co.il',
+    'telma.co.il', 'elite.co.il', 'nestle.co.il', 'unilever.com',
+    # מאגרי מידע פתוחים בלבד
+    'openfoodfacts.org', 'world.openfoodfacts.org',
 ]
 
 def is_trusted(url: str, barcode: str) -> bool:
@@ -51,13 +57,17 @@ def fetch_from_off(barcode: str) -> str | None:
     except:
         return None
 
+_serp_disabled = False  # נכבה אוטומטית אם 429
+
 def fetch_from_serp(barcode: str) -> str | None:
     """SerpAPI — רק ברקוד, רק דומיינים מהימנים"""
+    global _serp_disabled
+    if _serp_disabled: return None
     if not barcode or len(barcode) < 8: return None
     try:
         q = urllib.parse.quote(barcode)
-        url = f"https://serpapi.com/search.json?engine=google_images&q={q}&api_key={SERP_KEY}&num=10&hl=he&gl=il"
-        with urllib.request.urlopen(url, timeout=10) as r:
+        url = f"https://serpapi.com/search.json?engine=google_images&q={q}&api_key={SERP_KEY}&num=5&hl=he&gl=il"
+        with urllib.request.urlopen(url, timeout=5) as r:
             data = json.loads(r.read())
         results = data.get("images_results", [])
         for r in results:
@@ -67,7 +77,12 @@ def fetch_from_serp(barcode: str) -> str | None:
                 return orig
         return None
     except Exception as e:
-        log.warning(f"  SerpAPI error for {barcode}: {e}")
+        msg = str(e)
+        if '429' in msg:
+            log.warning(f"  SerpAPI 429 — מכבה SerpAPI לשאר הריצה")
+            _serp_disabled = True
+        elif 'timed out' not in msg:
+            log.warning(f"  SerpAPI error for {barcode}: {e}")
         return None
 
 def main():
