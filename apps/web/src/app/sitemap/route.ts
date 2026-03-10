@@ -30,9 +30,11 @@ ${sitemaps}
     const res = await fetch(`${API}/products/sitemap?page=${page}&limit=${PAGE_SIZE}`, { next: { revalidate: 86400 }, signal: AbortSignal.timeout(25000) });
     const ids = await res.json();
 
+    const today = new Date().toISOString().split('T')[0];
     const urls = ids.map((id: number) => `
   <url>
     <loc>https://savy.co.il/product/${id}</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>`).join("");
