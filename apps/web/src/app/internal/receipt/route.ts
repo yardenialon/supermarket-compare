@@ -36,14 +36,15 @@ async function extractFromSinglePdf(b64: string) {
   "date": "תאריך",
   "total": 123.45,
   "items": [
-    { "name": "שם המוצר", "barcode": null, "price": 12.90, "qty": 1, "subtotal": 12.90 }
+    { "name": "שם המוצר", "barcode": null, "price": 4.30, "qty": 3, "subtotal": 12.90 }
   ]
 }
 חוקים:
 - חלץ את כל המוצרים שמופיעים בקבלה
 - ברקוד: אם לא מופיע = null
 - כמות: ברירת מחדל 1
-- מחיר: המחיר הסופי אחרי הנחות
+- price: מחיר ליחידה אחת (לא סכום כולל)
+- subtotal: price × qty (סכום שורה)
 - אם שדה לא קיים: null`
         }
       ],
@@ -84,14 +85,15 @@ async function extractFromImage(b64: string, imgIndex: number, total: number) {
   "date": "תאריך או null",
   "total": null,
   "items": [
-    { "name": "שם המוצר", "barcode": null, "price": 12.90, "qty": 1, "subtotal": 12.90 }
+    { "name": "שם המוצר", "barcode": null, "price": 4.30, "qty": 3, "subtotal": 12.90 }
   ]
 }
 חוקים:
 - חלץ רק מוצרים הנראים בתמונה זו
 - ברקוד: אם לא נראה = null
 - כמות: ברירת מחדל 1
-- מחיר: המחיר הסופי אחרי הנחות
+- price: מחיר ליחידה אחת (לא סכום כולל)
+- subtotal: price × qty (סכום שורה)
 - total: רק אם נראה סכום כולל, אחרת null
 - אם התמונה לא ברורה: { "store": null, "branch": null, "date": null, "total": null, "items": [] }`
         }
@@ -210,7 +212,7 @@ export async function POST(req: NextRequest) {
       } catch (e: any) { console.error('List error:', e.message); }
     }
 
-    const foundTotal = itemsWithSavings.filter(i => i.productId).reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+    const foundTotal = itemsWithSavings.filter(i => i.productId && i.barcode).reduce((s, i) => s + (i.subtotal || i.price), 0);
 
     try {
       if (sessionToken) {
