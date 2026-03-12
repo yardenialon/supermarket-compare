@@ -231,6 +231,7 @@ function ResultsView({ results, onReset }: { results: any; onReset: () => void }
                     <div className="flex-1 min-w-0">
                       <div className={`font-bold text-sm ${isBest ? 'text-emerald-800' : 'text-gray-700'}`}>{store.subchainName || store.chainName}</div>
                       <div className="text-xs text-gray-400 truncate">{store.storeName}{store.city ? ` · ${store.city}` : ''}</div>
+              <div className="text-xs text-gray-400">{store.availableCount}/{store.availableCount + store.missingCount} מוצרים</div>
                     </div>
                     <div className="text-left flex-shrink-0">
                       <div className={`font-black text-lg ${isBest ? 'text-emerald-700' : 'text-gray-800'}`}>₪{store.total.toFixed(2)}</div>

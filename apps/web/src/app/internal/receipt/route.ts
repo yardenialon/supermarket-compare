@@ -199,11 +199,11 @@ export async function POST(req: NextRequest) {
         const listRes = await fetch(`${API}/api/list`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: listItems, lat, lng }),
+          body: JSON.stringify({ items: listItems, lat, lng, topN: 10 }),
         });
         if (listRes.ok) {
           const listData = await listRes.json();
-          bestStores = (listData.bestStoreCandidates || []).slice(0, 3);
+          bestStores = (listData.bestStoreCandidates || []).slice(0, 10);
         }
       } catch (e: any) { console.error('List error:', e.message); }
     }
