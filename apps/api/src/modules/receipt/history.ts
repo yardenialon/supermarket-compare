@@ -4,7 +4,7 @@ import { query } from '../../db.js';
 export async function receiptHistoryRoutes(app: FastifyInstance) {
   // היסטוריית קבלות
   app.get('/receipt/history', async (req, reply) => {
-    const token = req.cookies?.session_token;
+    const token = (req.headers as any)['x-session-token'] || req.cookies?.session_token;
     if (!token) return reply.code(401).send({ error: 'לא מחובר' });
     const sessionRes = await query('SELECT user_id FROM session WHERE token=$1 AND expires_at > NOW()', [token]);
     if (!sessionRes.rows.length) return reply.code(401).send({ error: 'session פג תוקף' });
@@ -23,7 +23,7 @@ export async function receiptHistoryRoutes(app: FastifyInstance) {
 
   // ניתוח חיסכון לפי קטגוריה
   app.get('/receipt/insights', async (req, reply) => {
-    const token = req.cookies?.session_token;
+    const token = (req.headers as any)['x-session-token'] || req.cookies?.session_token;
     if (!token) return reply.code(401).send({ error: 'לא מחובר' });
     const sessionRes = await query('SELECT user_id FROM session WHERE token=$1 AND expires_at > NOW()', [token]);
     if (!sessionRes.rows.length) return reply.code(401).send({ error: 'session פג תוקף' });
