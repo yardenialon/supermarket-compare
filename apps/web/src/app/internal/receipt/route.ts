@@ -4,60 +4,96 @@ import { NextRequest, NextResponse } from 'next/server';
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const API = 'https://supermarket-compare-production.up.railway.app';
 
-// ── זיהוי סוג קובץ מ-base64 ────────────────────────────────────────────────
 function detectMimeType(b64: string): string {
   const header = b64.substring(0, 8);
   if (header.startsWith('JVBERi0')) return 'application/pdf';
   if (header.startsWith('/9j/')) return 'image/jpeg';
   if (header.startsWith('iVBORw')) return 'image/png';
-  if (header.startsWith('R0lGOD')) return 'image/gif';
   if (header.startsWith('UklGRi')) return 'image/webp';
-  return 'image/jpeg'; // default
+  return 'image/jpeg';
 }
 
-// ── בניית image block לפי סוג ────────────────────────────────────────────────
-function buildContentBlock(b64: string) {
-  const mime = detectMimeType(b64);
-
-  if (mime === 'application/pdf') {
-    // Claude תומך ב-PDF כ-document block
-    return {
-      type: 'document' as const,
-      source: {
-        type: 'base64' as const,
-        media_type: 'application/pdf' as const,
-        data: b64,
-      },
-    };
-  }
-
-  return {
-    type: 'image' as const,
-    source: {
-      type: 'base64' as const,
-      media_type: mime as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
-      data: b64,
-    },
-  };
-}
-
-async function extractFromImage(b64: string, imgIndex: number, total: number) {
-  const contentBlock = buildContentBlock(b64);
-  const mime = detectMimeType(b64);
-  const isPdf = mime === 'application/pdf';
-
+async function extractFromSinglePdf(b64: string) {
+  // PDF — שולחים בבקשה אחת עם claude-3-5-sonnet שתומך ב-PDF
   const msg = await client.messages.create({
     model: 'claude-opus-4-5',
     max_tokens: 4096,
     messages: [{
       role: 'user',
       content: [
-        contentBlock as any,
+        {
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: b64 },
+        } as any,
         {
           type: 'text',
-          text: isPdf
-            ? `זהו קובץ PDF של קבלה מסופרמרקט ישראלי (${imgIndex + 1} מתוך ${total}).\nחלץ את כל הפרטים מהקבלה.\nהחזר JSON בלבד:\n{\n  "store": "שם הרשת או null",\n  "branch": "שם הסניף או null",\n  "date": "תאריך או null",\n  "total": null,\n  "items": [\n    { "name": "שם המוצר", "barcode": null, "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים:\n- חלץ את כל המוצרים שמופיעים\n- ברקוד: אם לא נראה = null\n- כמות: ברירת מחדל 1\n- מחיר: המחיר הסופי אחרי הנחות\n- total: הסכום הכולל אם מופיע`
-            : `זוהי תמונה ${imgIndex + 1} מתוך ${total} של קבלה מסופרמרקט ישראלי.\nחלץ את כל המידע הנראה בתמונה זו בלבד.\nהחזר JSON בלבד:\n{\n  "store": "שם הרשת או null",\n  "branch": "שם הסניף או null",\n  "date": "תאריך או null",\n  "total": null,\n  "items": [\n    { "name": "שם המוצר", "barcode": null, "price": 12.90, "qty": 1, "subtotal": 12.90 }\n  ]\n}\nחוקים:\n- חלץ רק מוצרים הנראים בתמונה זו\n- ברקוד: אם לא נראה = null\n- כמות: ברירת מחדל 1\n- מחיר: המחיר הסופי אחרי הנחות\n- total: רק אם נראה סכום כולל, אחרת null\n- אם התמונה לא ברורה: { "store": null, "branch": null, "date": null, "total": null, "items": [] }`
+          text: `זהו קובץ PDF של קבלה מסופרמרקט ישראלי.
+חלץ את כל הפרטים מהקבלה — שם חנות, תאריך, פריטים ומחירים.
+החזר JSON בלבד, ללא הסברים:
+{
+  "store": "שם הרשת",
+  "branch": "שם הסניף",
+  "date": "תאריך",
+  "total": 123.45,
+  "items": [
+    { "name": "שם המוצר", "barcode": null, "price": 12.90, "qty": 1, "subtotal": 12.90 }
+  ]
+}
+חוקים:
+- חלץ את כל המוצרים שמופיעים בקבלה
+- ברקוד: אם לא מופיע = null
+- כמות: ברירת מחדל 1
+- מחיר: המחיר הסופי אחרי הנחות
+- אם שדה לא קיים: null`
+        }
+      ],
+    }],
+  });
+
+  const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
+  try {
+    return JSON.parse(text.replace(/```json|```/g, '').trim());
+  } catch {
+    return { store: null, branch: null, date: null, total: null, items: [] };
+  }
+}
+
+async function extractFromImage(b64: string, imgIndex: number, total: number) {
+  const msg = await client.messages.create({
+    model: 'claude-opus-4-5',
+    max_tokens: 4096,
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: detectMimeType(b64) as 'image/jpeg' | 'image/png' | 'image/webp',
+            data: b64,
+          },
+        },
+        {
+          type: 'text',
+          text: `זוהי תמונה ${imgIndex + 1} מתוך ${total} של קבלה מסופרמרקט ישראלי.
+חלץ את כל המידע הנראה בתמונה זו בלבד.
+החזר JSON בלבד:
+{
+  "store": "שם הרשת או null",
+  "branch": "שם הסניף או null",
+  "date": "תאריך או null",
+  "total": null,
+  "items": [
+    { "name": "שם המוצר", "barcode": null, "price": 12.90, "qty": 1, "subtotal": 12.90 }
+  ]
+}
+חוקים:
+- חלץ רק מוצרים הנראים בתמונה זו
+- ברקוד: אם לא נראה = null
+- כמות: ברירת מחדל 1
+- מחיר: המחיר הסופי אחרי הנחות
+- total: רק אם נראה סכום כולל, אחרת null
+- אם התמונה לא ברורה: { "store": null, "branch": null, "date": null, "total": null, "items": [] }`
         }
       ],
     }],
@@ -101,19 +137,35 @@ export async function POST(req: NextRequest) {
     const images: string[] = parts || (base64 ? [base64] : []);
     if (!images.length) return NextResponse.json({ error: 'חסרות תמונות' }, { status: 400 });
 
+    // בדוק אם יש PDF — שלח בנפרד
     const partialResults: any[] = [];
     const BATCH_SIZE = 6;
-    for (let i = 0; i < images.length; i += BATCH_SIZE) {
-      const batch = images.slice(i, i + BATCH_SIZE);
+
+    // הפרד PDFs מתמונות
+    const pdfs = images.filter(b => detectMimeType(b) === 'application/pdf');
+    const imgs = images.filter(b => detectMimeType(b) !== 'application/pdf');
+
+    // עבד PDFs — כל PDF בנפרד
+    for (const pdf of pdfs) {
+      const result = await extractFromSinglePdf(pdf);
+      partialResults.push(result);
+    }
+
+    // עבד תמונות במקביל
+    for (let i = 0; i < imgs.length; i += BATCH_SIZE) {
+      const batch = imgs.slice(i, i + BATCH_SIZE);
       const batchResults = await Promise.all(
-        batch.map((b64, bIdx) => extractFromImage(b64, i + bIdx, images.length))
+        batch.map((b64, bIdx) => extractFromImage(b64, i + bIdx, imgs.length))
       );
       partialResults.push(...batchResults);
     }
 
     const parsed = mergeResults(partialResults);
+
     if (!parsed.items.length) {
-      return NextResponse.json({ error: 'לא הצלחנו לזהות פריטים. נסה תמונה ברורה יותר.' }, { status: 422 });
+      return NextResponse.json({
+        error: 'לא הצלחנו לזהות פריטים בקבלה. אם זה PDF — נסה לצלם תמונה של הקבלה במקום.'
+      }, { status: 422 });
     }
 
     const itemsWithSavings = await Promise.all(
