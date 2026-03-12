@@ -102,24 +102,39 @@ function NavItem({
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function HamburgerMenu({ listCount = 0 }: { listCount?: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [visible, setVisible] = useState(false); // controls DOM presence after close animation
   const [menuPage, setMenuPage] = useState<'about' | 'contact' | null>(null);
 
   useEffect(() => {
-    const handler = () => setMenuOpen(true);
+    const handler = () => {
+      setVisible(true);
+      // tiny delay so browser paints the initial translateX(100%) before we animate in
+      requestAnimationFrame(() => requestAnimationFrame(() => setMenuOpen(true)));
+    };
     document.addEventListener('open-hamburger', handler);
     return () => document.removeEventListener('open-hamburger', handler);
   }, []);
 
-  const close = () => { setMenuOpen(false); setMenuPage(null); };
+  const close = () => {
+    setMenuOpen(false);
+    setMenuPage(null);
+    // wait for the transition to finish before removing from DOM
+    setTimeout(() => setVisible(false), 320);
+  };
 
-  if (!menuOpen) return null;
+  if (!visible) return null;
 
   return (
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 z-[55]"
-        style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(3px)' }}
+        className="fixed inset-0 z-[55] transition-opacity duration-300"
+        style={{
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(3px)',
+          opacity: menuOpen ? 1 : 0,
+          pointerEvents: menuOpen ? 'auto' : 'none',
+        }}
         onClick={close}
       />
 
@@ -127,7 +142,11 @@ export default function HamburgerMenu({ listCount = 0 }: { listCount?: number })
       <div
         dir="rtl"
         className="fixed top-0 right-0 z-[56] h-full w-72 sm:w-80 flex flex-col shadow-2xl"
-        style={{ background: 'linear-gradient(160deg,#ffffff 0%,#f0fdf4 100%)' }}
+        style={{
+          background: 'linear-gradient(160deg,#ffffff 0%,#f0fdf4 100%)',
+          transform: menuOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
         onClick={e => e.stopPropagation()}
       >
 
