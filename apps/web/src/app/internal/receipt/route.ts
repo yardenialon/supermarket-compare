@@ -192,6 +192,7 @@ export async function POST(req: NextRequest) {
 
     const totalSavings = itemsWithSavings.reduce((s, i) => s + (i.savings || 0), 0);
     const listItems = itemsWithSavings
+    .filter(i => i.productId && i.barcode && i.price > 0)
     .map(i => ({ productId: i.productId, qty: i.qty || 1 }));
 
     let bestStores: any[] = [];
