@@ -133,6 +133,7 @@ function mergeResults(results: any[]) {
 export async function POST(req: NextRequest) {
   try {
     const { parts, base64, lat, lng } = await req.json();
+    console.log("[Receipt] all headers:", Object.fromEntries(req.headers.entries()));
     const sessionToken = req.headers.get('x-session-token') || req.cookies.get('session_token')?.value;
     const images: string[] = parts || (base64 ? [base64] : []);
     if (!images.length) return NextResponse.json({ error: 'חסרות תמונות' }, { status: 400 });
