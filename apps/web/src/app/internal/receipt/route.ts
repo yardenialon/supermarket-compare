@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
           }
           if (!match) return { ...item, savings: 0 };
           if (match.minPrice && match.minPrice < item.price)
-            return { ...item, productId: match.id, minPrice: match.minPrice, savings: +(item.price - match.minPrice).toFixed(2) };
+            const qty = item.qty || 1; return { ...item, productId: match.id, minPrice: match.minPrice, savings: +((item.price - match.minPrice) * qty).toFixed(2) };
           return { ...item, productId: match.id, minPrice: match.minPrice || null, savings: 0 };
         } catch { return { ...item, savings: 0 }; }
       })
