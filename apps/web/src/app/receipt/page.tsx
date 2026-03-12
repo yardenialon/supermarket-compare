@@ -428,7 +428,30 @@ export default function ReceiptPage() {
     }
   }, []);
 
-  async function addFile(file: File) {
+  async function pdfToImages(file: File): Promise<string[]> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfjsLib = await import('pdfjs-dist');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const images: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    images.push(canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
+  }
+  return images;
+}
+
+async function addFile(file: File) {
+  if (file.type === 'application/pdf') {
+    const imgs = await pdfToImages(file);
+    imgs.forEach(base64 => setParts(prev => [...prev, { url: '', base64 }]));
+    return;
+  }
     const base64 = await fileToBase64(file);
     const url = URL.createObjectURL(file);
     setParts(prev => [...prev, { url, base64 }]);
