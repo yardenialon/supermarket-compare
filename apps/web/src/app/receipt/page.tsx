@@ -512,7 +512,7 @@ export default function ReceiptPage() {
 
       <input ref={cameraRef} type="file" accept="image/*;capture=camera" className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = ''; }} />
-      <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden"
+      <input ref={galleryRef} type="file" accept="image/*,application/pdf" multiple className="hidden"
         onChange={(e) => { Array.from(e.target.files || []).forEach(f => addFile(f)); e.target.value = ''; }} />
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); }} />}
