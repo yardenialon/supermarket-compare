@@ -31,9 +31,11 @@ const IconTag = () => (
     <circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none" />
   </svg>
 );
-const IconOnline = () => (
+const IconBasket = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-    <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <path d="M16 10a4 4 0 01-8 0" />
   </svg>
 );
 const IconStatus = () => (
@@ -200,7 +202,7 @@ export default function HamburgerMenu({ listCount = 0 }: { listCount?: number })
                 onClick={close}
                 badge={<span className="text-xs px-1.5 py-0.5 rounded-full bg-red-100 text-red-500 font-semibold">🔥</span>}
               />
-              <NavItem icon={<IconOnline />} label="קניות אונליין" href="/online" onClick={close} />
+              <NavItem icon={<IconBasket />} label="סל ירקות ופירות" sublabel="השווה מחירי תוצרת טרייה" href="/produce" onClick={close} />
 
               {/* Info */}
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-3 pt-4 pb-1.5">מידע</p>
