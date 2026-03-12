@@ -305,8 +305,8 @@ function HistorySection({ user, onLogin }: { user: any; onLogin: () => void }) {
     const token = typeof window !== 'undefined' ? localStorage.getItem('session_token') : null;
     const headers: any = token ? { 'x-session-token': token } : {};
     Promise.all([
-      fetch(`${API}/api/receipt/history`, { headers }).then(r => r.json()),
-      fetch(`${API}/api/receipt/insights`, { headers }).then(r => r.json()),
+      fetch(`/internal/receipt-history`, { headers }).then(r => r.json()),
+      fetch(`/internal/receipt-insights`, { headers }).then(r => r.json()),
     ]).then(([h, ins]) => {
       setReceipts(h.receipts || []);
       setInsights(ins.insights || []);
