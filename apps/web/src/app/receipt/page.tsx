@@ -220,29 +220,42 @@ function ResultsView({ results, onReset }: { results: any; onReset: () => void }
             )}
           </div>
           <div className="px-3 pb-3 space-y-2">
-            {results.bestStores.map((store: any, i: number) => {
-              const isBest = i === 0;
-              const diff = i > 0 && results.bestStores[0] ? store.total - results.bestStores[0].total : 0;
-              return (
-                <div key={i} className="rounded-2xl overflow-hidden"
-                  style={isBest ? { background: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '1.5px solid #6ee7b7' } : { background: '#f9fafb', border: '1.5px solid #f3f4f6' }}>
-                  <div className="px-4 py-3 flex items-center gap-3">
-                    {isBest && <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">🏆</div>}
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-bold text-sm ${isBest ? 'text-emerald-800' : 'text-gray-700'}`}>{store.subchainName || store.chainName}</div>
-                      <div className="text-xs text-gray-400 truncate">{store.storeName}{store.city ? ` · ${store.city}` : ''}</div>
-              <div className="text-xs text-gray-400">{store.availableCount}/{store.availableCount + store.missingCount} מוצרים</div>
-                    </div>
-                    <div className="text-left flex-shrink-0">
-                      <div className={`font-black text-lg ${isBest ? 'text-emerald-700' : 'text-gray-800'}`}>₪{store.total.toFixed(2)}</div>
-                      {diff > 0 && <div className="text-xs text-red-400 font-semibold">+₪{diff.toFixed(2)}</div>}
-                      {isBest && results.foundTotal > 0 && store.total < results.foundTotal && (
-                        <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{(results.foundTotal - store.total).toFixed(2)}</div>
-                      )}
+            {(() => {
+              // קיבוץ לפי רשת — הכי זול בכל רשת
+              const byChain: Record<string, any> = {};
+              for (const s of results.bestStores) {
+                const key = s.chainName;
+                if (!byChain[key] || s.availableCount > byChain[key].availableCount || (s.availableCount === byChain[key].availableCount && s.total < byChain[key].total))
+                  byChain[key] = s;
+              }
+              const chains = Object.values(byChain)
+                .sort((a: any, b: any) => b.availableCount - a.availableCount || a.total - b.total)
+                .slice(0, 6);
+              const best = chains[0];
+              return chains.map((store: any, i: number) => {
+                const isBest = i === 0;
+                const diff = i > 0 && best ? store.total - best.total : 0;
+                const saving = results.foundTotal > 0 && store.total < results.foundTotal ? results.foundTotal - store.total : 0;
+                const totalItems = store.availableCount + store.missingCount;
+                return (
+                  <div key={i} className="rounded-2xl overflow-hidden"
+                    style={isBest ? { background: 'linear-gradient(135deg,#ecfdf5,#d1fae5)', border: '1.5px solid #6ee7b7' } : { background: '#f9fafb', border: '1.5px solid #f3f4f6' }}>
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      {isBest && <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">🏆</div>}
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-bold text-sm ${isBest ? 'text-emerald-800' : 'text-gray-700'}`}>{store.chainName}</div>
+                        <div className="text-xs text-gray-400">{store.availableCount}/{totalItems} מוצרים נמצאו{store.city ? ` · ${store.city}` : ''}</div>
+                      </div>
+                      <div className="text-left flex-shrink-0">
+                        <div className={`font-black text-lg ${isBest ? 'text-emerald-700' : 'text-gray-800'}`}>₪{store.total.toFixed(2)}</div>
+                        {diff > 0 && <div className="text-xs text-red-400 font-semibold">+₪{diff.toFixed(2)}</div>}
+                        {isBest && saving > 0 && <div className="text-xs text-emerald-600 font-bold">חיסכון ₪{saving.toFixed(2)}</div>}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
+              });
+            })()}
             })}
           </div>
         </div>
