@@ -239,7 +239,7 @@ function EditItemsView({ items, onConfirm, onCancel }: { items: any[]; onConfirm
                     {item.qty > 1 && <span className="text-xs text-gray-400">x{item.qty}</span>}
                   </div>
                   <div className="font-bold text-gray-800 text-sm flex-shrink-0 cursor-pointer" onClick={() => setEditingIdx(i)}>
-                    ₪{Number(item.price).toFixed(2)}
+                    ₪{Number(item.subtotal || item.price).toFixed(2)}
                   </div>
                 </div>
               )}
