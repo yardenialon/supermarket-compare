@@ -551,13 +551,42 @@ export default function ReceiptPage() {
   return images;
 }
 
+
+async function compressImage(base64: string, maxSizeKB = 800): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let quality = 0.7;
+      let scale = 1;
+      // אם התמונה גדולה מדי — הקטן
+      if (img.width > 1600) scale = 1600 / img.width;
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // נסה עם quality יורד עד שהגודל מתאים
+      const tryCompress = (q: number) => {
+        const data = canvas.toDataURL('image/jpeg', q).split(',')[1];
+        if (data.length * 0.75 < maxSizeKB * 1024 || q < 0.3) {
+          resolve(data);
+        } else {
+          tryCompress(q - 0.1);
+        }
+      };
+      tryCompress(quality);
+    };
+    img.src = 'data:image/jpeg;base64,' + base64;
+  });
+}
 async function addFile(file: File) {
   if (file.type === 'application/pdf') {
     const imgs = await pdfToImages(file);
     imgs.forEach(base64 => setParts(prev => [...prev, { url: '', base64 }]));
     return;
   }
-    const base64 = await fileToBase64(file);
+    let base64 = await fileToBase64(file);
+    base64 = await compressImage(base64);
     const url = URL.createObjectURL(file);
     setParts(prev => [...prev, { url, base64 }]);
   }
