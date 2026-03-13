@@ -634,7 +634,8 @@ async function addFile(file: File) {
           </div>
         )}
 
-        {results && <ResultsView results={results} onReset={reset} />}
+        {isEditing && results && <EditItemsView items={editItems} onConfirm={(confirmedItems) => { setResults((prev: any) => ({ ...prev, items: confirmedItems })); setIsEditing(false); }} onCancel={() => { setResults(null); setEditItems([]); setIsEditing(false); setParts([]); }} />}
+        {!isEditing && results && <ResultsView results={results} onReset={reset} />}
 
         <div className="mt-8">
           <HistorySection user={user} onLogin={() => setShowAuth(true)} />
