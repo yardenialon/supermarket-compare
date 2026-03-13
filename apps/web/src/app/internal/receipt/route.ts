@@ -62,7 +62,6 @@ async function extractFromSinglePdf(b64: string) {
 
   const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
   try {
-    console.log('[Receipt] raw response:', text.substring(0, 200));
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON found in: ' + text.substring(0, 100));
     return JSON.parse(jsonMatch[0]);
