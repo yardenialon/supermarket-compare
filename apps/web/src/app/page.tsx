@@ -178,9 +178,6 @@ const CATS = [
 
 
 export default function Home() {
-  const [barcodeScanning, setBarcodeScanning] = useState(false);
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   async function handleBarcodeDetected(barcode: string) {
     setShowBarcodeScanner(false);
@@ -420,10 +417,6 @@ export default function Home() {
   return (
     <div className="pb-24">
       {/* Toast */}
-      {showBarcodeScanner && <BarcodeScanner
-        onDetected={handleBarcodeDetected}
-        onClose={() => setShowBarcodeScanner(false)}
-      />}
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50"><div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>{toast} נוסף לרשימה</div></div>}
 
       {/* Hamburger Menu Button */}
