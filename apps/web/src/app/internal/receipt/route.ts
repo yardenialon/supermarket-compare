@@ -36,12 +36,12 @@ async function extractFromSinglePdf(b64: string) {
   "date": "תאריך",
   "total": 123.45,
   "items": [
-    { "name": "שם המוצר", "barcode": null, "price": 4.30, "qty": 3, "subtotal": 12.90 }
+    { "name": "שם המוצר", "barcode": "7290000000001", "price": 4.30, "qty": 3, "subtotal": 12.90 }
   ]
 }
 חוקים:
 - חלץ את כל המוצרים שמופיעים בקבלה
-- ברקוד: אם לא מופיע = null
+- barcode: חלץ את הברקוד המספרי שמופיע ליד המוצר (לרוב 13 ספרות). חשוב מאוד לחלץ! null רק אם אין בכלל
 - כמות: ברירת מחדל 1
 - price: מחיר ליחידה אחת (לא סכום כולל)
 - subtotal: price × qty (סכום שורה)
@@ -87,12 +87,12 @@ async function extractFromImage(b64: string, imgIndex: number, total: number) {
   "date": "תאריך או null",
   "total": null,
   "items": [
-    { "name": "שם המוצר", "barcode": null, "price": 4.30, "qty": 3, "subtotal": 12.90 }
+    { "name": "שם המוצר", "barcode": "7290000000001", "price": 4.30, "qty": 3, "subtotal": 12.90 }
   ]
 }
 חוקים:
 - חלץ רק מוצרים הנראים בתמונה זו
-- ברקוד: אם לא נראה = null
+- barcode: חלץ את הברקוד המספרי שמופיע ליד המוצר (לרוב 13 ספרות). חשוב מאוד לחלץ! null רק אם אין בכלל
 - כמות: ברירת מחדל 1
 - price: מחיר ליחידה אחת (לא סכום כולל)
 - subtotal: price × qty (סכום שורה)
