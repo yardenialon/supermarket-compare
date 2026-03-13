@@ -178,6 +178,43 @@ const CATS = [
 
 
 export default function Home() {
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
+
+  async function scanBarcode(file: File) {
+    setBarcodeScanning(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+        // שלח לClaude לזהות ברקוד
+        const res = await fetch('/internal/barcode-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 })
+        });
+        const data = await res.json();
+        if (data.barcode) {
+          const searchRes = await fetch(`${API}/api/search?q=${data.barcode}&limit=1`);
+          const searchData = await searchRes.json();
+          const product = searchData.results?.[0];
+          if (product) {
+            addToList(product);
+          } else {
+            alert('המוצר לא נמצא במאגר');
+          }
+        } else {
+          alert('לא זוהה ברקוד — נסה שוב');
+        }
+        setBarcodeScanning(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setBarcodeScanning(false);
+      alert('שגיאה בסריקה');
+    }
+  }
+
   const [tab, setTab] = useState<'search' | 'list'>(() => {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search).get('tab');
@@ -699,6 +736,12 @@ export default function Home() {
                 <h3 className="font-black text-lg text-stone-800">הרשימה שלי <span className="text-stone-300 font-medium text-sm">({list.length})</span></h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { setList([]); setListResults([]); }} className="text-xs px-3 py-2 rounded-lg border border-stone-200 text-stone-400 font-semibold hover:text-red-500 hover:border-red-200 transition whitespace-nowrap">🗑 נקה</button>
+                  <input ref={barcodeInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) scanBarcode(f); e.target.value = ''; }} />
+                  <button onClick={() => barcodeInputRef.current?.click()} disabled={barcodeScanning}
+                    className="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition whitespace-nowrap disabled:opacity-50">
+                    {barcodeScanning ? '⏳' : '📷 סרוק'}
+                  </button>
                   <button onClick={() => setTab('search')} className="text-xs px-3 py-2 rounded-lg bg-stone-900 text-white font-bold hover:bg-stone-700 transition whitespace-nowrap">+ הוסף</button>
                   <button onClick={shareList} disabled={sharing} className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-[#25D366] text-white font-bold hover:bg-[#1fb855] transition-all shadow-md shadow-green-200 disabled:opacity-50 whitespace-nowrap">
                     {sharing ? "שולח..." : <>
