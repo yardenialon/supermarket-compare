@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
         const listRes = await fetch(`${API}/api/list`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: listItems, lat, lng, topN: 10 }),
+          body: JSON.stringify({ items: listItems, lat, lng, topN: 50, radiusKm: 10 }),
         });
         if (listRes.ok) {
           const listData = await listRes.json();
