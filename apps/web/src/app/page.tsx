@@ -184,26 +184,40 @@ export default function Home() {
   async function scanBarcode(file: File) {
     setBarcodeScanning(true);
     try {
-      const { BrowserMultiFormatReader } = await import('@zxing/library');
-      const codeReader = new BrowserMultiFormatReader();
       const url = URL.createObjectURL(file);
       try {
-        const result = await codeReader.decodeFromImageUrl(url);
-        const barcode = result.getText();
-        URL.revokeObjectURL(url);
-        const searchRes = await fetch(`${API}/api/search?q=${barcode}&limit=1`);
-        const searchData = await searchRes.json();
-        const product = searchData.results?.[0];
-        if (product) {
-          addToList(product);
-        } else {
-          alert('המוצר לא נמצא במאגר (ברקוד: ' + barcode + ')');
-        }
+        const Quagga = (await import('quagga')).default;
+        await new Promise<void>((resolve, reject) => {
+          Quagga.decodeSingle({
+            decoder: { readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'code_39_reader', 'upc_reader'] },
+            locate: true,
+            src: url,
+          }, (result: any) => {
+            if (result?.codeResult?.code) {
+              resolve();
+              const barcode = result.codeResult.code;
+              URL.revokeObjectURL(url);
+              fetch(`${API}/api/search?q=${barcode}&limit=1`)
+                .then(r => r.json())
+                .then(searchData => {
+                  const product = searchData.results?.[0];
+                  if (product) {
+                    addToList(product);
+                  } else {
+                    alert('המוצר לא נמצא במאגר (ברקוד: ' + barcode + ')');
+                  }
+                  setBarcodeScanning(false);
+                });
+            } else {
+              reject(new Error('no barcode'));
+            }
+          });
+        });
       } catch {
         URL.revokeObjectURL(url);
-        alert('לא זוהה ברקוד — נסה לצלם שוב מקרוב יותר');
+        alert('לא זוהה ברקוד — נסה לצלם מקרוב, ברקוד ישר ותאורה טובה');
+        setBarcodeScanning(false);
       }
-      setBarcodeScanning(false);
       return;
     } catch {
       setBarcodeScanning(false);
