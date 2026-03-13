@@ -185,28 +185,26 @@ export default function Home() {
     setBarcodeScanning(true);
     try {
       const { BrowserMultiFormatReader } = await import('@zxing/library');
-      const reader = new BrowserMultiFormatReader();
+      const codeReader = new BrowserMultiFormatReader();
       const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = async () => {
-        try {
-          const result = await reader.decodeFromImageElement(img);
-          const barcode = result.getText();
-          URL.revokeObjectURL(url);
-          const searchRes = await fetch(`${API}/api/search?q=${barcode}&limit=1`);
-          const searchData = await searchRes.json();
-          const product = searchData.results?.[0];
-          if (product) {
-            addToList(product);
-          } else {
-            alert('המוצר לא נמצא במאגר (ברקוד: ' + barcode + ')');
-          }
-        } catch {
-          alert('לא זוהה ברקוד — נסה לצלם שוב, וודא שהברקוד ברור');
+      try {
+        const result = await codeReader.decodeFromImageUrl(url);
+        const barcode = result.getText();
+        URL.revokeObjectURL(url);
+        const searchRes = await fetch(`${API}/api/search?q=${barcode}&limit=1`);
+        const searchData = await searchRes.json();
+        const product = searchData.results?.[0];
+        if (product) {
+          addToList(product);
+        } else {
+          alert('המוצר לא נמצא במאגר (ברקוד: ' + barcode + ')');
         }
-        setBarcodeScanning(false);
-      };
-      img.src = url;
+      } catch {
+        URL.revokeObjectURL(url);
+        alert('לא זוהה ברקוד — נסה לצלם שוב מקרוב יותר');
+      }
+      setBarcodeScanning(false);
+      return;
     } catch {
       setBarcodeScanning(false);
       alert('שגיאה בסריקה');
@@ -480,7 +478,7 @@ export default function Home() {
     <input ref={barcodeInputRef} type="file" accept="image/*" capture="environment" className="hidden"
       onChange={e => { const f = e.target.files?.[0]; if (f) scanBarcode(f); e.target.value = ''; }} />
     <button onClick={() => barcodeInputRef.current?.click()} disabled={barcodeScanning}
-      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition disabled:opacity-50"
+      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white hover:bg-emerald-600 transition disabled:opacity-50 shadow-sm"
       title="סרוק ברקוד">
       {barcodeScanning ? (
         <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
