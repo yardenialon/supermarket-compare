@@ -235,6 +235,9 @@ export default function Home() {
     }
   }
 
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<'search' | 'list'>(() => {
     if (typeof window !== 'undefined') {
       const p = new URLSearchParams(window.location.search).get('tab');
