@@ -346,7 +346,6 @@ function ResultsView({ results, onReset }: { results: any; onReset: () => void }
                 );
               });
             })()}
-            })}
           </div>
         </div>
       )}
