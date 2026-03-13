@@ -53,7 +53,9 @@ async function extractFromSinglePdf(b64: string) {
 
   const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
   try {
-    return JSON.parse(text.replace(/```json|```/g, '').trim());
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON found in: ' + text.substring(0, 100));
+    return JSON.parse(jsonMatch[0]);
   } catch {
     return { store: null, branch: null, date: null, total: null, items: [] };
   }
@@ -103,7 +105,9 @@ async function extractFromImage(b64: string, imgIndex: number, total: number) {
 
   const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
   try {
-    return JSON.parse(text.replace(/```json|```/g, '').trim());
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON found in: ' + text.substring(0, 100));
+    return JSON.parse(jsonMatch[0]);
   } catch {
     return { store: null, branch: null, date: null, total: null, items: [] };
   }
