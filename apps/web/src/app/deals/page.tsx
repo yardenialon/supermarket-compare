@@ -157,14 +157,14 @@ export default function DealsPage() {
   return (
     <div className="min-h-screen bg-stone-50" dir="rtl">
       {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
           <div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">&#10003;</span>
             {toast} נוסף לרשימה
           </div>
         </div>
       )}
-      {selectedDeal && <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={handleAddToList} />}
+      {selectedDeal && <DealModal deal={selectedDeal} onClose={() => setSelectedDeal(null)} onAddToList={(deal) => { handleAddToList(deal); setTimeout(() => setSelectedDeal(null), 100); }} />}
 
       <div className="bg-white border-b border-stone-100 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
