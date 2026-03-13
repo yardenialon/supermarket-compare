@@ -476,7 +476,28 @@ export default function Home() {
       {tab === 'search' && (<div>
         <HotDealsSlider userLat={userLoc?.lat} userLng={userLoc?.lng} onAddToList={(deal) => { try { const saved = localStorage.getItem("savy-list"); const list = saved ? JSON.parse(saved) : []; if (!list.find((i: any) => i.product?.id === deal.productId)) { list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 }); localStorage.setItem("savy-list", JSON.stringify(list)); } } catch {} }} />
         <div className="max-w-2xl mx-auto px-4">
-          <div className="relative"><input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" /><span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span></div>
+          <div className="relative">
+    <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 pl-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" />
+    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span>
+    <input ref={barcodeInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+      onChange={e => { const f = e.target.files?.[0]; if (f) scanBarcode(f); e.target.value = ''; }} />
+    <button onClick={() => barcodeInputRef.current?.click()} disabled={barcodeScanning}
+      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition disabled:opacity-50"
+      title="סרוק ברקוד">
+      {barcodeScanning ? (
+        <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/>
+          <rect x="3" y="16" width="5" height="5"/>
+          <line x1="16" y1="16" x2="21" y2="16"/><line x1="21" y1="16" x2="21" y2="21"/>
+          <line x1="16" y1="21" x2="21" y2="21"/><line x1="16" y1="16" x2="16" y2="18"/>
+          <line x1="9" y1="3" x2="9" y2="9"/><line x1="3" y1="9" x2="9" y2="9"/>
+          <line x1="9" y1="16" x2="9" y2="21"/>
+        </svg>
+      )}
+    </button>
+  </div>
           <div className="mt-4 flex justify-center gap-2">
             <button onClick={() => setLocMode('cheapest')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'cheapest' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>💰 הכי זול בארץ</button>
             <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }); } }} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'nearby' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : locStatus === 'loading' ? "bg-amber-50 border border-amber-300 text-amber-600 animate-pulse" : "bg-white border-2 border-emerald-400 text-emerald-600 hover:bg-emerald-50 shadow-sm")}>
@@ -736,12 +757,6 @@ export default function Home() {
                 <h3 className="font-black text-lg text-stone-800">הרשימה שלי <span className="text-stone-300 font-medium text-sm">({list.length})</span></h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { setList([]); setListResults([]); }} className="text-xs px-3 py-2 rounded-lg border border-stone-200 text-stone-400 font-semibold hover:text-red-500 hover:border-red-200 transition whitespace-nowrap">🗑 נקה</button>
-                  <input ref={barcodeInputRef} type="file" accept="image/*" capture="environment" className="hidden"
-                    onChange={e => { const f = e.target.files?.[0]; if (f) scanBarcode(f); e.target.value = ''; }} />
-                  <button onClick={() => barcodeInputRef.current?.click()} disabled={barcodeScanning}
-                    className="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition whitespace-nowrap disabled:opacity-50">
-                    {barcodeScanning ? '⏳' : '📷 סרוק'}
-                  </button>
                   <button onClick={() => setTab('search')} className="text-xs px-3 py-2 rounded-lg bg-stone-900 text-white font-bold hover:bg-stone-700 transition whitespace-nowrap">+ הוסף</button>
                   <button onClick={shareList} disabled={sharing} className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-[#25D366] text-white font-bold hover:bg-[#1fb855] transition-all shadow-md shadow-green-200 disabled:opacity-50 whitespace-nowrap">
                     {sharing ? "שולח..." : <>
