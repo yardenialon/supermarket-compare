@@ -184,31 +184,29 @@ export default function Home() {
   async function scanBarcode(file: File) {
     setBarcodeScanning(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1];
-        // שלח לClaude לזהות ברקוד
-        const res = await fetch('/internal/barcode-scan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 })
-        });
-        const data = await res.json();
-        if (data.barcode) {
-          const searchRes = await fetch(`${API}/api/search?q=${data.barcode}&limit=1`);
+      const { BrowserMultiFormatReader } = await import('@zxing/library');
+      const reader = new BrowserMultiFormatReader();
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          const result = await reader.decodeFromImageElement(img);
+          const barcode = result.getText();
+          URL.revokeObjectURL(url);
+          const searchRes = await fetch(`${API}/api/search?q=${barcode}&limit=1`);
           const searchData = await searchRes.json();
           const product = searchData.results?.[0];
           if (product) {
             addToList(product);
           } else {
-            alert('המוצר לא נמצא במאגר');
+            alert('המוצר לא נמצא במאגר (ברקוד: ' + barcode + ')');
           }
-        } else {
-          alert('לא זוהה ברקוד — נסה שוב');
+        } catch {
+          alert('לא זוהה ברקוד — נסה לצלם שוב, וודא שהברקוד ברור');
         }
         setBarcodeScanning(false);
       };
-      reader.readAsDataURL(file);
+      img.src = url;
     } catch {
       setBarcodeScanning(false);
       alert('שגיאה בסריקה');
