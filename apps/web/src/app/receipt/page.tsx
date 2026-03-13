@@ -552,14 +552,14 @@ export default function ReceiptPage() {
 }
 
 
-async function compressImage(base64: string, maxSizeKB = 800): Promise<string> {
+async function compressImage(base64: string, maxSizeKB = 400): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       let quality = 0.7;
       let scale = 1;
       // אם התמונה גדולה מדי — הקטן
-      if (img.width > 1600) scale = 1600 / img.width;
+      if (img.width > 1200) scale = 1200 / img.width;
       const canvas = document.createElement('canvas');
       canvas.width = img.width * scale;
       canvas.height = img.height * scale;
