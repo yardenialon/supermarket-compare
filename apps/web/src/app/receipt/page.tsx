@@ -170,6 +170,96 @@ function PartsPreview({ parts, onAdd, onRemove, onScan, loading }: {
   );
 }
 
+
+function EditItemsView({ items, onConfirm, onCancel }: { items: any[]; onConfirm: (items: any[]) => void; onCancel: () => void }) {
+  const [editedItems, setEditedItems] = useState<any[]>(items.map(i => ({ ...i })));
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+
+  function updateItem(idx: number, field: string, value: any) {
+    setEditedItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item));
+  }
+  function deleteItem(idx: number) {
+    setEditedItems(prev => prev.filter((_, i) => i !== idx));
+  }
+  function addItem() {
+    setEditedItems(prev => [...prev, { name: '', price: 0, qty: 1, barcode: null, savings: 0, subtotal: 0 }]);
+    setEditingIdx(editedItems.length);
+  }
+
+  return (
+    <div className="space-y-4 pb-24">
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex gap-3 items-start">
+        <div className="text-xl">✏️</div>
+        <div>
+          <div className="font-bold text-amber-800 text-sm">בדוק את הפריטים</div>
+          <div className="text-xs text-amber-600 mt-0.5">Claude זיהה {items.length} פריטים — תקן שגיאות לפני ההשוואה</div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-50">
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+          <h3 className="font-black text-gray-900">פריטים ({editedItems.length})</h3>
+          <button onClick={addItem} className="text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-1.5 rounded-full">+ הוסף</button>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {editedItems.map((item, i) => (
+            <div key={i} className="px-4 py-3">
+              {editingIdx === i ? (
+                <div className="space-y-2">
+                  <input
+                    className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 text-right"
+                    value={item.name}
+                    onChange={e => updateItem(i, 'name', e.target.value)}
+                    placeholder="שם המוצר"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 text-right"
+                      type="number"
+                      value={item.price}
+                      onChange={e => updateItem(i, 'price', parseFloat(e.target.value) || 0)}
+                      placeholder="מחיר"
+                    />
+                    <input
+                      className="w-16 text-sm border border-gray-200 rounded-xl px-3 py-2 text-right"
+                      type="number"
+                      value={item.qty}
+                      onChange={e => updateItem(i, 'qty', parseInt(e.target.value) || 1)}
+                      placeholder="כמות"
+                    />
+                  </div>
+                  <button onClick={() => setEditingIdx(null)} className="w-full py-2 bg-emerald-500 text-white rounded-xl text-sm font-bold">שמור</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <button onClick={() => deleteItem(i)} className="w-7 h-7 rounded-full bg-red-50 text-red-400 text-xs flex items-center justify-center flex-shrink-0">✕</button>
+                  <div className="flex-1 min-w-0" onClick={() => setEditingIdx(i)}>
+                    <div className="font-semibold text-gray-800 text-sm leading-tight truncate">{item.name || 'פריט חדש'}</div>
+                    {item.qty > 1 && <span className="text-xs text-gray-400">x{item.qty}</span>}
+                  </div>
+                  <div className="font-bold text-gray-800 text-sm flex-shrink-0 cursor-pointer" onClick={() => setEditingIdx(i)}>
+                    ₪{Number(item.price).toFixed(2)}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button onClick={() => onConfirm(editedItems)}
+        className="w-full py-4 rounded-2xl font-black text-white text-base"
+        style={{ background: 'linear-gradient(135deg,#10b981,#059669)' }}>
+        השווה מחירים ←
+      </button>
+      <button onClick={onCancel} className="w-full py-3 text-gray-400 text-sm font-bold">
+        ביטול
+      </button>
+    </div>
+  );
+}
+
 function ResultsView({ results, onReset }: { results: any; onReset: () => void }) {
   const [expandedStore, setExpandedStore] = useState<number | null>(null);
   const [showAllItems, setShowAllItems] = useState(false);
@@ -428,6 +518,8 @@ export default function ReceiptPage() {
   const [showScrollCapture, setShowScrollCapture] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [editItems, setEditItems] = useState<any[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -485,6 +577,8 @@ async function addFile(file: File) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בעיבוד הקבלה');
+      setEditItems(data.items || []);
+      setIsEditing(true);
       setResults(data);
     } catch (e: any) {
       setError(e.message);
