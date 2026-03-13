@@ -218,7 +218,7 @@ function EditItemsView({ items, onConfirm, onCancel }: { items: any[]; onConfirm
                       className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 text-right"
                       type="number"
                       value={item.price}
-                      onChange={e => updateItem(i, 'price', parseFloat(e.target.value) || 0)}
+                      onFocus={e => { if (e.target.value === "0") e.target.value = ""; }} onChange={e => updateItem(i, 'price', parseFloat(e.target.value) || 0)}
                       placeholder="מחיר"
                     />
                     <input
