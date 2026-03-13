@@ -184,52 +184,31 @@ export default function Home() {
   async function scanBarcode(file: File) {
     setBarcodeScanning(true);
     try {
-      const url = URL.createObjectURL(file);
       try {
-        let barcode: string | null = null;
-
-        // נסה BarcodeDetector API (אנדרואיד/כרום)
-        if ('BarcodeDetector' in window) {
-          const detector = new (window as any).BarcodeDetector({
-            formats: ['ean_13', 'ean_8', 'code_128', 'upc_a', 'upc_e']
-          });
-          const bitmap = await createImageBitmap(file);
-          const results = await detector.detect(bitmap);
-          if (results.length > 0) barcode = results[0].rawValue;
-        }
-
-        // גיבוי — Claude
-        if (!barcode) {
-          const base64 = await new Promise<string>((res) => {
-            const r = new FileReader();
-            r.onload = () => res((r.result as string).split(',')[1]);
-            r.readAsDataURL(file);
-          });
-          const response = await fetch('/internal/barcode-scan', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64 })
-          });
-          const data = await response.json();
-          barcode = data.barcode;
-        }
-
-        URL.revokeObjectURL(url);
-
-        if (barcode) {
-          const searchRes = await fetch(`${API}/api/search?q=${barcode}&limit=1`);
+        const base64 = await new Promise<string>((res) => {
+          const r = new FileReader();
+          r.onload = () => res((r.result as string).split(',')[1]);
+          r.readAsDataURL(file);
+        });
+        const response = await fetch('/internal/barcode-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 })
+        });
+        const data = await response.json();
+        if (data.barcode) {
+          const searchRes = await fetch(`${API}/api/search?q=${data.barcode}&limit=1`);
           const searchData = await searchRes.json();
           const product = searchData.results?.[0];
           if (product) {
             addToList(product);
           } else {
-            alert('המוצר לא נמצא במאגר (ברקוד: ' + barcode + ')');
+            alert('המוצר לא נמצא במאגר (ברקוד: ' + data.barcode + ')');
           }
         } else {
-          alert('לא זוהה ברקוד — נסה לצלם מקרוב יותר');
+          alert('לא זוהה ברקוד — נסה לצלם מקרוב יותר עם תאורה טובה');
         }
-      } catch (e) {
-        URL.revokeObjectURL(url);
+      } catch {
         alert('שגיאה בסריקה — נסה שוב');
       }
       setBarcodeScanning(false);
