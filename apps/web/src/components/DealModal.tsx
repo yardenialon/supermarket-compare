@@ -90,7 +90,7 @@ export function DealModal({ deal, onClose, onAddToList }: { deal: any; onClose: 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" dir="rtl">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="relative bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl pb-24">
         <button onClick={onClose} className="absolute top-4 left-4 w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200 z-10">✕</button>
 
         <div className="relative bg-stone-50 rounded-t-3xl h-52 flex items-center justify-center">
