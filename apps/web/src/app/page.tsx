@@ -179,7 +179,6 @@ const CATS = [
 
 export default function Home() {
   const [barcodeScanning, setBarcodeScanning] = useState(false);
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   async function scanBarcode(file: File) {
@@ -402,10 +401,6 @@ export default function Home() {
   return (
     <div className="pb-24">
       {/* Toast */}
-      {showBarcodeScanner && <BarcodeScanner
-        onDetected={handleBarcodeDetected}
-        onClose={() => setShowBarcodeScanner(false)}
-      />}
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50"><div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>{toast} נוסף לרשימה</div></div>}
 
       {/* Hamburger Menu Button */}
@@ -488,7 +483,7 @@ export default function Home() {
           <div className="relative">
     <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 pl-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" />
     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span>
-<button onClick={() => setShowBarcodeScanner(true)} disabled={barcodeScanning}
+<button onClick={() => barcodeInputRef.current?.click()} disabled={barcodeScanning}
       className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white hover:bg-emerald-600 transition disabled:opacity-50 shadow-sm"
       title="סרוק ברקוד">
       {barcodeScanning ? (
