@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import AuthModal from '@/components/AuthModal';
 import dynamic from 'next/dynamic';
-const ScrollCapture = dynamic(() => import('@/components/ScrollCapture'), { ssr: false });
+const GuidedCapture = dynamic(() => import('@/components/GuidedCapture'), { ssr: false });
 
 const API = 'https://supermarket-compare-production.up.railway.app';
 
@@ -649,7 +649,7 @@ async function addFile(file: File) {
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); }} />}
       {showScrollCapture && (
-        <ScrollCapture
+        <GuidedCapture
           onCapture={(frames) => {
             setShowScrollCapture(false);
             setParts(frames.map(b => ({ url: '', base64: b })));
