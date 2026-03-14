@@ -197,6 +197,10 @@ export default function ProductPageClient({
     .sort((a, b) => a.price - b.price);
 
   const cheap = fp.length ? Math.min(...fp.map((p) => p.price)) : 0;
+  const expensive = fp.length ? Math.max(...fp.map((p) => p.price)) : 0;
+  const priceDiff = cheap > 0 && expensive > 0 ? Math.round((expensive - cheap) / cheap * 100) : 0;
+  const cheapestEntry = fp.length ? fp.reduce((a, b) => a.price < b.price ? a : b) : null;
+  const cheapestChain = cheapestEntry ? (cheapestEntry.subchainName || cheapestEntry.chainName) : null;
   const exp   = fp.length ? Math.max(...fp.map((p) => p.price)) : 0;
   const uChains = [...new Set(prices.map((p) => p.chainName))].sort();
 
@@ -379,7 +383,9 @@ export default function ProductPageClient({
             {name}{brand ? ` של ${brand}` : ""}
             {category ? ` בקטגוריית ${category}` : ""} —
             מחיר עדכני ב-{storeCount} חנויות ברחבי ישראל.
-            {cheap > 0 && ` המחיר הזול ביותר כרגע הוא ₪${cheap.toFixed(2)}.`}
+            {cheap > 0 && ` המחיר הזול ביותר כרגע הוא ₪${cheap.toFixed(2)}`}
+            {cheap > 0 && expensive > 0 && cheapestChain ? ` ב${cheapestChain}.` : "."}
+            {cheap > 0 && expensive > 0 && priceDiff > 0 && ` הפרש המחיר בין הזול ליקר ביותר הוא ${priceDiff}% — חיסכון של עד ₪${(expensive - cheap).toFixed(2)}.`}
             {" "}Savy משווה מחירים מכל רשתות הסופרמרקטים ומתעדכן יומית.
           </p>
           {barcode && (
