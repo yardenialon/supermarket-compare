@@ -76,11 +76,6 @@ function ProductJsonLd({ product, prices, id }: { product: any; prices: any[]; i
         })),
       }),
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.5",
-      reviewCount: prices.length || 1,
-    },
   };
   const breadcrumb = {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
