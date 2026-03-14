@@ -116,6 +116,47 @@ interface Product {
 
 // ─── Main client component ────────────────────────────────────────
 
+const API = typeof window !== "undefined"
+  ? (process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api")
+  : (process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api");
+
+function RelatedProducts({ category, currentId }: { category: string; currentId: number }) {
+  const [related, setRelated] = useState<any[]>([]);
+  useEffect(() => {
+    fetch(`${API}/category/${encodeURIComponent(category)}/products?page=0`)
+      .then(r => r.json())
+      .then(d => {
+        const filtered = (d.products || []).filter((p: any) => p.id !== currentId).slice(0, 6);
+        setRelated(filtered);
+      })
+      .catch(() => {});
+  }, [category, currentId]);
+  if (!related.length) return null;
+  return (
+    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
+      <h2 className="font-bold text-stone-800 mb-3 text-base">מוצרים נוספים ב{category}</h2>
+      <div className="grid grid-cols-3 gap-2">
+        {related.map(p => (
+          <a key={p.id} href={`/product/${p.id}`}
+            className="flex flex-col gap-1.5 p-2 rounded-xl border border-stone-100 hover:border-emerald-300 hover:shadow-sm transition">
+            <div className="w-full aspect-square bg-stone-50 rounded-lg flex items-center justify-center overflow-hidden">
+              {p.imageUrl
+                ? <img src={p.imageUrl} alt={p.name} className="max-w-full max-h-full object-contain p-1" />
+                : <span className="text-2xl">📦</span>}
+            </div>
+            <div className="text-xs font-medium text-stone-700 leading-snug line-clamp-2">{p.name}</div>
+            {p.minPrice && <div className="text-xs font-black text-emerald-600">₪{Number(p.minPrice).toFixed(2)}</div>}
+          </a>
+        ))}
+      </div>
+      <a href={`/category/${encodeURIComponent(category)}`}
+        className="block text-center text-xs text-emerald-600 hover:underline mt-3 font-medium">
+        כל המוצרים ב{category} ←
+      </a>
+    </div>
+  );
+}
+
 export default function ProductPageClient({
   product,
   initialPrices,
@@ -373,6 +414,9 @@ export default function ProductPageClient({
             </div>
           )}
         </div>
+
+        {/* Related products */}
+        {category && <RelatedProducts category={category} currentId={product.id} />}
 
         {/* SEO text block - helps Google understand the page */}
         <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
