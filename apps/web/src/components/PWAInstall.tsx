@@ -49,6 +49,16 @@ export default function PWAInstall() {
     }
   }
 
+  // חשוף פונקציית install גלובלית לשימוש מבאנרים אחרים
+  useEffect(() => {
+    (window as any).__savyInstallPWA = install;
+    (window as any).__savyShowPWABanner = () => setShowBanner(true);
+    return () => {
+      delete (window as any).__savyInstallPWA;
+      delete (window as any).__savyShowPWABanner;
+    };
+  }, [deferredPrompt]);
+
   function dismiss() {
     setShowBanner(false);
     localStorage.setItem('pwa-ios-dismissed', '1');

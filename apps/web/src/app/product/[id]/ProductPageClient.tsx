@@ -120,6 +120,63 @@ const API = typeof window !== "undefined"
   ? (process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api")
   : (process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api");
 
+function SavyPromoBanner() {
+  function handleInstall() {
+    if ((window as any).__savyInstallPWA) {
+      (window as any).__savyInstallPWA();
+    } else if ((window as any).__savyShowPWABanner) {
+      (window as any).__savyShowPWABanner();
+    } else {
+      window.location.href = '/';
+    }
+  }
+  return (
+    <div style={{ background: "linear-gradient(135deg, #10b981, #059669)", borderRadius: 20, padding: "20px 18px", position: "relative", overflow: "hidden", direction: "rtl" }}>
+      <div style={{ position: "absolute", top: -30, left: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+      <div style={{ position: "absolute", bottom: -20, left: 40, width: 80, height: 80, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
+      <div className="inline-block bg-white/20 rounded-xl px-3 py-1 mb-3">
+        <span className="text-white text-xs font-bold">Savy — השוואת מחירי סופרמרקט</span>
+      </div>
+      <div className="text-white font-black text-lg leading-snug mb-2">
+        חוסכים יותר, קונים חכם יותר
+      </div>
+      <div className="text-white/85 text-sm leading-relaxed mb-4">
+        בנו רשימת קניות משותפת, השוו סל קניות מלא ומצאו את הסופר הזול ביותר — 25+ רשתות, מתעדכן 24/7.
+      </div>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { icon: "🛒", title: "רשימת קניות", sub: "משותפת" },
+          { icon: "💰", title: "השוואת סל", sub: "מי הזול?" },
+          { icon: "📸", title: "סריקת קבלה", sub: "כמה שילמת?" },
+        ].map(({ icon, title, sub }) => (
+          <div key={title} className="bg-white/15 rounded-2xl p-2.5 text-center">
+            <div className="text-lg mb-1">{icon}</div>
+            <div className="text-white text-xs font-bold leading-tight">{title}</div>
+            <div className="text-white/75 text-[10px] mt-0.5">{sub}</div>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <button onClick={handleInstall}
+          className="flex-1 bg-white text-emerald-600 font-black text-sm rounded-xl py-3 hover:bg-emerald-50 transition active:scale-95">
+          הוסף למסך הבית
+        </button>
+        <a href="/"
+          className="bg-white/20 text-white font-bold text-sm rounded-xl py-3 px-4 hover:bg-white/30 transition active:scale-95 whitespace-nowrap">
+          נסה עכשיו
+        </a>
+      </div>
+      <div className="flex items-center gap-3 mt-3">
+        <span className="text-white/80 text-xs">25+ רשתות</span>
+        <div className="w-px h-3 bg-white/30" />
+        <span className="text-white/80 text-xs">615K מוצרים</span>
+        <div className="w-px h-3 bg-white/30" />
+        <span className="text-white/80 text-xs">עדכון יומי</span>
+      </div>
+    </div>
+  );
+}
+
 function RelatedProducts({ category, currentId }: { category: string; currentId: number }) {
   const [related, setRelated] = useState<any[]>([]);
   useEffect(() => {
@@ -416,6 +473,7 @@ export default function ProductPageClient({
         </div>
 
         {/* Related products */}
+        <SavyPromoBanner />
         {category && <RelatedProducts category={category} currentId={product.id} />}
 
         {/* SEO text block - helps Google understand the page */}
