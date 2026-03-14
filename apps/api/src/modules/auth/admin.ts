@@ -55,6 +55,8 @@ export async function adminRoutes(app: any) {
     for (const row of res.rows as any[]) {
       const cat = row.category as string;
       const sub = row.subcategory as string | null;
+      if (!map[cat]) map[cat] = [];
+      if (sub && map[cat].indexOf(sub) === -1) map[cat].push(sub);
     }
     return map;
   });
