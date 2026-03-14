@@ -4,12 +4,13 @@ import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
-export default function CategoryClient({ name }: { name: string }) {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function CategoryClient({ name, initialProducts = [] }: { name: string; initialProducts?: any[] }) {
+  const [products, setProducts] = useState<any[]>(initialProducts);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
 
   useEffect(() => {
+    if (page === 0) return;
     setLoading(true);
     fetch(`${API}/category/${encodeURIComponent(name)}/products?page=${page}`)
       .then(r => r.json())

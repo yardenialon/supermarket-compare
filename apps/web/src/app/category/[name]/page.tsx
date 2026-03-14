@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
 import CategoryClient from "./CategoryClient";
 
+const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
+
+async function getProducts(name: string) {
+  try {
+    const res = await fetch(`${API}/category/${encodeURIComponent(name)}/products?page=0`, {
+      next: { revalidate: 3600 }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.products ?? [];
+  } catch { return []; }
+}
+
 export async function generateMetadata({ params }: { params: { name: string } }): Promise<Metadata> {
   const name = decodeURIComponent(params.name);
   return {
@@ -16,6 +29,8 @@ export async function generateMetadata({ params }: { params: { name: string } })
   };
 }
 
-export default function CategoryPage({ params }: { params: { name: string } }) {
-  return <CategoryClient name={decodeURIComponent(params.name)} />;
+export default async function CategoryPage({ params }: { params: { name: string } }) {
+  const name = decodeURIComponent(params.name);
+  const initialProducts = await getProducts(name);
+  return <CategoryClient name={name} initialProducts={initialProducts} />;
 }
