@@ -1,21 +1,17 @@
 # robots.txt — savy.co.il
-
 User-agent: *
 Allow: /
-
+Allow: /_next/static/
 Allow: /category/
 Allow: /product/
 Allow: /deals
 Allow: /deals/
-
 Disallow: /admin
 Disallow: /admin/
 Disallow: /api/
-Disallow: /_next/
-Disallow: /static/
 Disallow: /auth/
 
-Sitemap: https://savy.co.il/sitemap-index.xml
+Sitemap: https://savy.co.il/sitemap
 
 User-agent: AhrefsBot
 Crawl-delay: 10
