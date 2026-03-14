@@ -16,13 +16,19 @@ async function getProducts(name: string) {
 
 export async function generateMetadata({ params }: { params: { name: string } }): Promise<Metadata> {
   const name = decodeURIComponent(params.name);
+  const products = await getProducts(name);
+  const count = products.length;
+  const minPrice = count > 0 ? Math.min(...products.map((p: any) => Number(p.minPrice)).filter(Boolean)) : null;
+  const countStr = count > 0 ? `${count}+ מוצרים` : "";
+  const priceStr = minPrice ? ` החל מ-₪${minPrice.toFixed(2)}` : "";
+  const description = `השווה מחירי ${name} ב-25+ רשתות סופרמרקט בישראל. ${countStr}${priceStr} — עדכון יומי, מצא את הזול ביותר.`;
   return {
-    title: `${name} | השוואת מחירים | Savy`,
-    description: `השווה מחירי ${name} ב-25+ רשתות סופרמרקט בישראל. מצא את המחיר הזול ביותר על מוצרי ${name} — עדכון יומי.`,
+    title: `${name} | השוואת מחירים בסופר | Savy`,
+    description,
     alternates: { canonical: `/category/${encodeURIComponent(name)}` },
     openGraph: {
-      title: `${name} | השוואת מחירים | Savy`,
-      description: `השווה מחירי ${name} ב-25+ רשתות סופרמרקט בישראל.`,
+      title: `${name} | השוואת מחירים בסופר | Savy`,
+      description,
       url: `https://savy.co.il/category/${encodeURIComponent(name)}`,
       siteName: "Savy", locale: "he_IL", type: "website",
     },
