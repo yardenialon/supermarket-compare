@@ -4,7 +4,7 @@ const pool = new pg.Pool({
   max: 10, 
   ssl: { rejectUnauthorized: false },
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 30000,
 });
 
 // keepalive — מונע מ-Neon לעבור למצב Idle
