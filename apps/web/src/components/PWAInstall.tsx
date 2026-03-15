@@ -16,6 +16,10 @@ export default function PWAInstall() {
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
+      // GA event — pwa launched
+      if ((window as any).gtag) {
+        (window as any).gtag('event', 'pwa_launched', { event_category: 'PWA', event_label: 'standalone' });
+      }
       return;
     }
 
@@ -44,7 +48,13 @@ export default function PWAInstall() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') setShowBanner(false);
+      if (outcome === 'accepted') {
+        setShowBanner(false);
+        // GA event
+        if ((window as any).gtag) {
+          (window as any).gtag('event', 'pwa_install_accepted', { event_category: 'PWA', event_label: 'android' });
+        }
+      }
       setDeferredPrompt(null);
     }
   }
