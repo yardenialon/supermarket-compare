@@ -63,7 +63,7 @@ export async function storeRoutes(app) {
     }
   });
   // GET /savy-basket — רשימת המוצרים במדד
-  app.get('/savy-basket', async () => {
+  app.get('/savy-basket', async (req: any) => {
     const result = await query(`
       SELECT sb.id, sb.product_id as "productId", p.name, p.barcode, p.image_url as "imageUrl",
              p.store_count as "storeCount", p.min_price as "minPrice", p.category
@@ -108,21 +108,32 @@ export async function storeRoutes(app) {
     if (!basket.rows.length) return reply.code(400).send({ error: 'Basket is empty' });
     const productIds = basket.rows.map((r: any) => r.product_id);
 
+    // מחיר MIN לכל מוצר בכל רשת, ללא אילת וללא אינטרנט
     const result = await query(`
       SELECT 
         rc.name as chain,
         rc.name_he as "chainHe",
-        COUNT(DISTINCT sp.product_id)::int as "productCount",
-        ROUND(AVG(sp.price)::numeric, 2) as "avgPrice",
-        ROUND(SUM(sp.price)::numeric, 2) as "totalPrice"
-      FROM store_price sp
-      JOIN store s ON s.id = sp.store_id
-      JOIN retailer_chain rc ON rc.id = s.chain_id
-      WHERE sp.product_id = ANY($1)
-        AND rc.is_active = true
-        AND sp.price > 0
+        COUNT(DISTINCT product_id)::int as "productCount",
+        ROUND(AVG(min_price)::numeric, 2) as "avgPrice",
+        ROUND(SUM(min_price)::numeric, 2) as "totalPrice"
+      FROM (
+        SELECT sp.product_id, rc2.id as chain_id,
+               MIN(sp.price) as min_price
+        FROM store_price sp
+        JOIN store s ON s.id = sp.store_id
+        JOIN retailer_chain rc2 ON rc2.id = s.chain_id
+        WHERE sp.product_id = ANY($1)
+          AND rc2.is_active = true
+          AND sp.price > 0
+          AND s.city NOT IN ('אילת', 'Eilat')
+          AND s.name NOT ILIKE '%אונליין%'
+          AND s.name NOT ILIKE '%online%'
+          AND s.name NOT ILIKE '%אינטרנט%'
+        GROUP BY sp.product_id, rc2.id
+      ) as min_prices
+      JOIN retailer_chain rc ON rc.id = chain_id
       GROUP BY rc.id, rc.name, rc.name_he
-      HAVING COUNT(DISTINCT sp.product_id) >= $2
+      HAVING COUNT(DISTINCT product_id) >= $2
       ORDER BY "avgPrice" ASC
     `, [productIds, Math.floor(productIds.length * 0.7)]);
 
