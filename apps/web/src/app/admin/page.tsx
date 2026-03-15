@@ -9,7 +9,7 @@ interface Product {
   min_price: number; image_url?: string; category?: string; subcategory?: string;
 }
 
-type Tab = 'images' | 'categories';
+type Tab = 'images' | 'categories' | 'basket';
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -26,6 +26,15 @@ export default function AdminPage() {
   const [imgLoading, setImgLoading] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<number, string>>({});
   const [saved, setSaved] = useState<Record<number, boolean>>({});
+
+  // --- Basket state ---
+  const [basketProducts, setBasketProducts] = useState<any[]>([]);
+  const [basketSearch, setBasketSearch] = useState('');
+  const [basketSearchResults, setBasketSearchResults] = useState<any[]>([]);
+  const [basketLoading, setBasketLoading] = useState(false);
+  const [basketSearchLoading, setBasketSearchLoading] = useState(false);
+  const [basketComputing, setBasketComputing] = useState(false);
+  const [basketMsg, setBasketMsg] = useState('');
 
   // --- Categories state ---
   const [catProducts, setCatProducts] = useState<Product[]>([]);
@@ -57,6 +66,62 @@ export default function AdminPage() {
   }, [imgOffset, imgSearch, showAll, authed, tab]);
 
   useEffect(() => { loadImages(); }, [loadImages]);
+
+  // Load basket
+  const loadBasket = useCallback(async () => {
+    if (!authed || tab !== 'basket') return;
+    setBasketLoading(true);
+    try {
+      const res = await fetch(`${API}/savy-basket`, { headers: { 'x-admin-key': ADMIN_KEY } });
+      const data = await res.json();
+      setBasketProducts(data.products || []);
+    } finally { setBasketLoading(false); }
+  }, [authed, tab]);
+
+  useEffect(() => { loadBasket(); }, [loadBasket]);
+
+  async function searchBasketProducts(q: string) {
+    if (!q || q.length < 2) { setBasketSearchResults([]); return; }
+    setBasketSearchLoading(true);
+    try {
+      const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=8`);
+      const data = await res.json();
+      setBasketSearchResults(data.results || []);
+    } finally { setBasketSearchLoading(false); }
+  }
+
+  async function addToBasket(productId: number) {
+    await fetch(`${API}/savy-basket/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
+      body: JSON.stringify({ productId })
+    });
+    setBasketSearch('');
+    setBasketSearchResults([]);
+    loadBasket();
+  }
+
+  async function removeFromBasket(productId: number) {
+    await fetch(`${API}/savy-basket/remove/${productId}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-key': ADMIN_KEY }
+    });
+    loadBasket();
+  }
+
+  async function computeBasket() {
+    setBasketComputing(true);
+    setBasketMsg('');
+    try {
+      const res = await fetch(`${API}/savy-basket/compute`, {
+        method: 'POST',
+        headers: { 'x-admin-key': ADMIN_KEY }
+      });
+      const data = await res.json();
+      if (data.success) setBasketMsg(`✓ המדד חושב בהצלחה — ${data.chains} רשתות`);
+      else setBasketMsg('שגיאה: ' + data.error);
+    } finally { setBasketComputing(false); }
+  }
 
   // Load categories
   const loadCategories = useCallback(async () => {
@@ -140,6 +205,10 @@ export default function AdminPage() {
           <button onClick={() => setTab('categories')}
             className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition ${tab === 'categories' ? 'bg-white border border-b-white border-stone-200 text-emerald-600' : 'text-stone-500 hover:text-stone-700'}`}>
             🏷️ קטגוריות
+          </button>
+          <button onClick={() => setTab('basket')}
+            className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition ${tab === 'basket' ? 'bg-white border border-b-white border-stone-200 text-emerald-600' : 'text-stone-500 hover:text-stone-700'}`}>
+            🛒 מדד סאבי
           </button>
         </div>
 
@@ -271,6 +340,68 @@ export default function AdminPage() {
             </div>
           </>
         )}
+
+        {/* ── TAB: BASKET ── */}
+        {tab === 'basket' && (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-stone-500">{basketProducts.length} מוצרים בסל</span>
+              <button onClick={computeBasket} disabled={basketComputing || basketProducts.length === 0}
+                className="px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded-xl hover:bg-emerald-600 disabled:opacity-40 transition">
+                {basketComputing ? 'מחשב...' : '⚡ חשב מדד עכשיו'}
+              </button>
+            </div>
+            {basketMsg && <div className="mb-4 px-4 py-2 bg-emerald-50 text-emerald-700 text-sm rounded-xl">{basketMsg}</div>}
+
+            {/* חיפוש מוצרים */}
+            <div className="relative mb-4">
+              <input type="text" placeholder="חפש מוצר להוסיף לסל..." value={basketSearch}
+                onChange={e => { setBasketSearch(e.target.value); searchBasketProducts(e.target.value); }}
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-stone-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+              {basketSearchResults.length > 0 && (
+                <div className="absolute top-full right-0 left-0 bg-white border border-stone-200 rounded-xl shadow-lg z-10 mt-1 max-h-64 overflow-y-auto">
+                  {basketSearchLoading && <div className="p-3 text-center text-stone-400 text-sm">מחפש...</div>}
+                  {basketSearchResults.map(p => (
+                    <button key={p.id} onClick={() => addToBasket(p.id)}
+                      className="w-full text-right px-4 py-3 hover:bg-emerald-50 transition flex items-center gap-3 border-b border-stone-50 last:border-0">
+                      <div className="w-10 h-10 bg-stone-50 rounded-lg flex-shrink-0 overflow-hidden">
+                        {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-contain" /> : <span className="text-xl flex items-center justify-center h-full">📦</span>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-stone-800 truncate">{p.name}</div>
+                        <div className="text-xs text-stone-400">{p.store_count} חנויות · מ-₪{Number(p.minPrice || 0).toFixed(2)}</div>
+                      </div>
+                      <span className="text-emerald-500 text-lg">+</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* רשימת מוצרים בסל */}
+            {basketLoading ? <div className="text-center py-12 text-stone-400">טוען...</div> : (
+              <div className="space-y-2">
+                {basketProducts.map(p => (
+                  <div key={p.productId} className="bg-white rounded-xl border border-stone-100 p-3 flex items-center gap-3">
+                    <div className="w-12 h-12 bg-stone-50 rounded-lg flex-shrink-0 overflow-hidden">
+                      {p.imageUrl ? <img src={p.imageUrl} alt="" className="w-full h-full object-contain" /> : <span className="text-2xl flex items-center justify-center h-full">📦</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-stone-800 text-sm truncate">{p.name}</div>
+                      <div className="text-xs text-stone-400 mt-0.5">{p.storeCount} חנויות · מ-₪{Number(p.minPrice || 0).toFixed(2)}</div>
+                    </div>
+                    <button onClick={() => removeFromBasket(p.productId)}
+                      className="text-red-400 hover:text-red-600 transition text-lg px-2">✕</button>
+                  </div>
+                ))}
+                {basketProducts.length === 0 && (
+                  <div className="text-center py-12 text-stone-400 text-sm">אין מוצרים בסל — חפש והוסף מוצרים למעלה</div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
       </div>
     </div>
   );
