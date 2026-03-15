@@ -74,6 +74,44 @@ export async function storeRoutes(app) {
     return { products: result.rows };
   });
 
+  // GET /savy-basket/missing — אילו מוצרים חסרים לכל רשת
+  app.get('/savy-basket/missing', async () => {
+    const basket = await query('SELECT sb.product_id, p.name FROM savy_basket sb JOIN product p ON p.id = sb.product_id');
+    if (!basket.rows.length) return { missing: {} };
+    const productIds = basket.rows.map((r: any) => r.product_id);
+    const names: Record<number, string> = {};
+    basket.rows.forEach((r: any) => { names[r.product_id] = r.name; });
+
+    const result = await query(`
+      SELECT rc.name as chain, rc.name_he as "chainHe", sp.product_id
+      FROM store_price sp
+      JOIN store s ON s.id = sp.store_id
+      JOIN retailer_chain rc ON rc.id = s.chain_id
+      WHERE sp.product_id = ANY($1)
+        AND rc.is_active = true
+        AND sp.price > 0
+        AND s.city NOT IN ('אילת', 'Eilat')
+        AND s.name NOT ILIKE '%אונליין%'
+        AND s.name NOT ILIKE '%online%'
+      GROUP BY rc.name, rc.name_he, sp.product_id
+    `, [productIds]);
+
+    const found: Record<string, Set<number>> = {};
+    for (const row of result.rows as any[]) {
+      if (!found[row.chain]) found[row.chain] = new Set();
+      found[row.chain].add(row.product_id);
+    }
+
+    const missing: Record<string, string[]> = {};
+    for (const [chain, foundIds] of Object.entries(found)) {
+      const missingIds = productIds.filter((id: number) => !foundIds.has(id));
+      if (missingIds.length > 0) {
+        missing[chain] = missingIds.map((id: number) => names[id]);
+      }
+    }
+    return { missing };
+  });
+
   // POST /savy-basket/add — הוספת מוצר
   app.post('/savy-basket/add', async (req: any, reply: any) => {
     if (req.headers['x-admin-key'] !== (process.env.ADMIN_PASSWORD || 'savy-admin-2024')) {
