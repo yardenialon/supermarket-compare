@@ -2,10 +2,14 @@ import { query } from '../../db.js';
 export async function storeRoutes(app) {
   app.get('/stores', async () => { const r = await query('SELECT s.id, s.name, s.city, rc.name as "chainName" FROM store s JOIN retailer_chain rc ON rc.id=s.chain_id ORDER BY rc.name LIMIT 50'); return { stores: r.rows }; });
   app.get('/chains', async () => { const r = await query('SELECT rc.id, rc.name, rc.name_he as "nameHe", COUNT(DISTINCT s.id)::int as "storeCount" FROM retailer_chain rc LEFT JOIN store s ON s.chain_id=rc.id WHERE rc.is_active=true GROUP BY rc.id ORDER BY rc.name'); return { chains: r.rows }; });
-  // קריאת מדד מחירים מ-cache
+  // קריאת מדד מחירים מ-cache — basket קודם, אחר כך auto
   app.get('/price-index', async (req: any, reply: any) => {
-    const result = await query('SELECT data, computed_at FROM price_index_cache ORDER BY computed_at DESC LIMIT 1');
-    if (!result.rows[0]) return reply.code(404).send({ error: 'No data yet' });
+    const result = await query("SELECT data, computed_at FROM price_index_cache WHERE type='basket' ORDER BY computed_at DESC LIMIT 1");
+    if (!result.rows[0]) {
+      const fallback = await query('SELECT data, computed_at FROM price_index_cache ORDER BY computed_at DESC LIMIT 1');
+      if (!fallback.rows[0]) return reply.code(404).send({ error: 'No data yet' });
+      return { ...fallback.rows[0].data, computedAt: fallback.rows[0].computed_at };
+    }
     return { ...result.rows[0].data, computedAt: result.rows[0].computed_at };
   });
 
@@ -136,8 +140,8 @@ export async function storeRoutes(app) {
     }));
 
     const data = { chains, productCount: productIds.length, basketSize: productIds.length };
-    await query('INSERT INTO price_index_cache (data) VALUES ($1)', [JSON.stringify(data)]);
-    await query('DELETE FROM price_index_cache WHERE id NOT IN (SELECT id FROM price_index_cache ORDER BY computed_at DESC LIMIT 5)');
+    await query('INSERT INTO price_index_cache (data, type) VALUES ($1, $2)', [JSON.stringify(data), 'basket']);
+    await query("DELETE FROM price_index_cache WHERE type='basket' AND id NOT IN (SELECT id FROM price_index_cache WHERE type='basket' ORDER BY computed_at DESC LIMIT 5)");
 
     return { success: true, chains: chains.length };
   });
