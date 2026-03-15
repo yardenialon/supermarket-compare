@@ -67,6 +67,11 @@ ${urls}
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://savy.co.il/price-index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://savy.co.il/online</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
