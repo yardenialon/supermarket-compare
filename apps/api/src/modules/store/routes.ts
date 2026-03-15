@@ -4,16 +4,7 @@ export async function storeRoutes(app) {
   app.get('/chains', async () => { const r = await query('SELECT rc.id, rc.name, rc.name_he as "nameHe", COUNT(DISTINCT s.id)::int as "storeCount" FROM retailer_chain rc LEFT JOIN store s ON s.chain_id=rc.id WHERE rc.is_active=true GROUP BY rc.id ORDER BY rc.name'); return { chains: r.rows }; });
   // מדד מחירים לפי רשת — מבוסס על מוצרים משותפים
   app.get('/price-index', async () => {
-    // 100 המוצרים הנמכרים ביותר (עם הכי הרבה חנויות)
-    const topProducts = await query(`
-      SELECT id FROM product 
-      WHERE store_count > 50
-      ORDER BY store_count DESC 
-      LIMIT 100
-    `);
-    const productIds = topProducts.rows.map((r: any) => r.id);
-    
-    // ממוצע מחיר לפי רשת עבור המוצרים האלה
+    // שאילתה אחת מאוחדת — TOP 50 מוצרים
     const result = await query(`
       SELECT 
         rc.name as chain,
@@ -25,13 +16,15 @@ export async function storeRoutes(app) {
       FROM store_price sp
       JOIN store s ON s.id = sp.store_id
       JOIN retailer_chain rc ON rc.id = s.chain_id
-      WHERE sp.product_id = ANY($1)
+      WHERE sp.product_id IN (
+        SELECT id FROM product WHERE store_count > 100 ORDER BY store_count DESC LIMIT 50
+      )
         AND rc.is_active = true
         AND sp.price > 0
       GROUP BY rc.id, rc.name, rc.name_he
-      HAVING COUNT(DISTINCT sp.product_id) >= 20
+      HAVING COUNT(DISTINCT sp.product_id) >= 10
       ORDER BY "avgPrice" ASC
-    `, [productIds]);
+    `);
 
     // חישוב אינדקס יחסי (הזול ביותר = 100)
     const rows = result.rows as any[];
