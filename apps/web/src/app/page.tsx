@@ -545,6 +545,7 @@ export default function Home() {
                     <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300 mr-auto" style={{ width: `${(([1,3,5,10,15,20,30,50].indexOf(radius) + 1) / 8) * 100}%`, marginRight: 0, marginLeft: 'auto' }} />
                   </div>
                   <input
+                    aria-label="רדיוס חיפוש בקילומטרים"
                     type="range"
                     min={0}
                     max={7}
@@ -560,7 +561,7 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between mt-2 px-0.5">
                   {[1,3,5,10,15,20,30,50].map((v, i) => (
-                    <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-300 hover:text-stone-400")}>{v}</button>
+                    <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-500 hover:text-stone-700")}>{v}</button>
                   ))}
                 </div>
               </div>
@@ -576,9 +577,9 @@ export default function Home() {
         </div>
 
         {results.length > 0 && <div className="max-w-2xl mx-auto mt-4 flex items-center gap-2 px-4">
-          <span className="text-stone-300 text-sm sm:text-xs">מיון:</span>
+          <span className="text-stone-500 text-sm sm:text-xs">מיון:</span>
           {([['price','מחיר'],['stores','חנויות'],['name','א-ב']] as const).map(([k,l]) => (<button key={k} onClick={() => setSortBy(k)} className={"px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition " + (sortBy === k ? "bg-stone-900 text-white" : "bg-white text-stone-400 border border-stone-200")}>{l}</button>))}
-          <span className="text-stone-300 text-sm sm:text-xs mr-auto">{results.length} תוצאות</span>
+          <span className="text-stone-500 text-sm sm:text-xs mr-auto">{results.length} תוצאות</span>
         </div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4 px-4">
@@ -605,7 +606,7 @@ export default function Home() {
                     <ProductImg barcode={p.barcode} name={p.name} size={60} imageUrl={productImages[p.id] || p.imageUrl} />
                     <div className="flex-1"><div className="font-bold text-stone-800 text-base sm:text-sm leading-snug">{p.name}</div><div className="text-sm sm:text-xs text-stone-400 mt-0.5">{p.brand}{p.unitQty && p.unitQty !== '0' ? ` · ${p.unitQty} ${p.unitMeasure}` : ''}</div></div>
                     <div className="text-left shrink-0 flex items-center gap-2 sm:gap-3">
-                      <div>{p.minPrice && <div className="font-mono font-black text-xl sm:text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-xs sm:text-[11px] text-stone-300 mt-0.5">{p.storeCount} חנויות</div>}</div>
+                      <div>{p.minPrice && <div className="font-mono font-black text-xl sm:text-lg text-emerald-600 leading-none">₪{Number(p.minPrice).toFixed(2)}</div>}{p.storeCount > 0 && <div className="text-xs sm:text-[11px] text-stone-400 mt-0.5">{p.storeCount} חנויות</div>}</div>
                       <span className="text-stone-200 group-hover:text-stone-400 transition text-lg">‹</span>
                     </div>
                   </div>
@@ -622,7 +623,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-stone-400 text-sm font-medium">חפשו מוצר לפי שם או ברקוד</p>
-                <p className="text-stone-300 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
+                <p className="text-stone-400 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
               </div>
             )}
             {!loading && q.trim() && !results.length && (
@@ -635,7 +636,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-stone-400 text-sm font-medium">לא מצאנו תוצאות עבור "{q}"</p>
-                <p className="text-stone-300 text-xs mt-1">נסו לחפש בשם אחר או ברקוד</p>
+                <p className="text-stone-400 text-xs mt-1">נסו לחפש בשם אחר או ברקוד</p>
               </div>
             )}
           </div>
@@ -824,12 +825,12 @@ export default function Home() {
                       <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300 mr-auto" style={{ width: `${(([1,3,5,10,15,20,30,50].indexOf(radius) + 1) / 8) * 100}%`, marginRight: 0, marginLeft: 'auto' }} />
                       </div>
-                      <input type="range" min={0} max={7} value={[1,3,5,10,15,20,30,50].indexOf(radius)} onChange={e => setRadius([1,3,5,10,15,20,30,50][7 - parseInt(e.target.value)])} dir="ltr" className="absolute inset-0 w-full opacity-0 cursor-pointer" style={{ height: '36px', top: '-14px' }} />
+                      <input aria-label="רדיוס חיפוש בקילומטרים" type="range" min={0} max={7} value={[1,3,5,10,15,20,30,50].indexOf(radius)} onChange={e => setRadius([1,3,5,10,15,20,30,50][7 - parseInt(e.target.value)])} dir="ltr" className="absolute inset-0 w-full opacity-0 cursor-pointer" style={{ height: '36px', top: '-14px' }} />
                       <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none" style={{ right: `calc(${([1,3,5,10,15,20,30,50].indexOf(radius) / 7) * 100}% - 10px)`, left: 'auto' }} />
                     </div>
                     <div className="flex justify-between mt-2 px-0.5">
                       {[1,3,5,10,15,20,50].map(v => (
-                        <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-300 hover:text-stone-400")}>{v}</button>
+                        <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-500 hover:text-stone-700")}>{v}</button>
                       ))}
                     </div>
                   </div>
@@ -1007,13 +1008,13 @@ export default function Home() {
 
             {/* Social Icons */}
             <div className="flex items-center gap-4">
-              <a href="https://www.facebook.com/profile.php?id=61588513298725" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.facebook.com/profile.php?id=61588513298725" target="_blank" rel="noopener noreferrer" aria-label="Savy בפייסבוק"
                 className="w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center transition-all hover:scale-110">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </a>
-              <a href="https://www.instagram.com/savy.co.il" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.instagram.com/savy.co.il" target="_blank" rel="noopener noreferrer" aria-label="Savy באינסטגרם"
                 className="w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center transition-all hover:scale-110">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1021,13 +1022,13 @@ export default function Home() {
                   <circle cx="17.5" cy="6.5" r="1" fill="#10b981"/>
                 </svg>
               </a>
-              <a href="https://www.tiktok.com/@savy.co.il" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.tiktok.com/@savy.co.il" target="_blank" rel="noopener noreferrer" aria-label="Savy בטיקטוק"
                 className="w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center transition-all hover:scale-110">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#10b981">
                   <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.74a4.85 4.85 0 01-1.01-.05z"/>
                 </svg>
               </a>
-              <a href="https://www.youtube.com/@SAVYCOIL" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.youtube.com/@SAVYCOIL" target="_blank" rel="noopener noreferrer" aria-label="Savy ביוטיוב"
                 className="w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center transition-all hover:scale-110">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z" stroke="#10b981" strokeWidth="2"/>
