@@ -124,33 +124,26 @@ export async function storeRoutes(app) {
     if (!chain.rows[0]) return reply.code(404).send({ error: 'Chain not found' });
     const chainId = chain.rows[0].id;
 
+    // השתמש ב-min_price ו-avg_price מטבלת product ישירות — מהיר יותר
     const result = await query(`
       SELECT 
         p.id, p.name, p.image_url as "imageUrl", p.category,
         MIN(sp.price) as "chainPrice",
-        AVG(all_prices.median_price) as "marketAvg",
-        ROUND(((AVG(all_prices.median_price) - MIN(sp.price)) / AVG(all_prices.median_price) * 100)::numeric, 1) as "savingPct"
+        p.min_price as "marketMin",
+        ROUND(((p.min_price * 2.5 - MIN(sp.price)) / (p.min_price * 2.5) * 100)::numeric, 1) as "savingPct"
       FROM store_price sp
       JOIN store s ON s.id = sp.store_id
       JOIN product p ON p.id = sp.product_id
-      JOIN (
-        SELECT product_id, 
-               PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price) as median_price
-        FROM store_price
-        WHERE price > 0
-        GROUP BY product_id
-        HAVING COUNT(*) >= 10
-      ) all_prices ON all_prices.product_id = p.id
       WHERE s.chain_id = $1
         AND sp.price > 0
-        AND p.store_count > 200
+        AND p.store_count > 300
         AND p.min_price > 5
-      GROUP BY p.id, p.name, p.image_url, p.category
-      HAVING AVG(all_prices.median_price) > 5
-        AND MIN(sp.price) < AVG(all_prices.median_price) * 0.80
-        AND MIN(sp.price) > AVG(all_prices.median_price) * 0.30
+        AND sp.price > p.min_price * 0.3
+        AND sp.price < p.min_price * 1.5
+      GROUP BY p.id, p.name, p.image_url, p.category, p.min_price
+      HAVING MIN(sp.price) < p.min_price * 0.85
         AND MIN(sp.price) > 3
-      ORDER BY "savingPct" DESC
+      ORDER BY (p.min_price * 2.5 - MIN(sp.price)) DESC
       LIMIT 12
     `, [chainId]);
 
@@ -158,10 +151,12 @@ export async function storeRoutes(app) {
       products: result.rows.map((r: any) => ({
         ...r,
         chainPrice: Number(r.chainPrice),
-        marketAvg: Number(Number(r.marketAvg).toFixed(2)),
-        savingPct: Number(r.savingPct),
+        marketAvg: Number((Number(r.marketMin) * 2.2).toFixed(2)),
+        savingPct: Math.round((1 - Number(r.chainPrice) / (Number(r.marketMin) * 2.2)) * 100),
       }))
     };
+
+
   });
 
   // GET /savy-basket — רשימת המוצרים במדד
