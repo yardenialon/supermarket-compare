@@ -50,6 +50,18 @@ const CHAIN_LOGOS: Record<string, string> = {
   "Super Yuda": "/logos/super-yuda.png",
   "Polizer": "/logos/polizer.png",
   "Salach Dabach": "/logos/salach-dabach.png",
+  "Netiv Hased": "/logos/Netiv-Hased.png",
+  "King Store": "/logos/king-store.png",
+  "Dor Alon": "/logos/alunit.png",
+  "Super Sapir": "/logos/Super-Sapir.png",
+  "Good Pharm": "/logos/Good-Pharm.png",
+  "Het Cohen": "/logos/Het-Cohen.png",
+  "Maayan 2000": "/logos/maian2000.png",
+  "Shefa Barcart Ashem": "/logos/Shefa-Barcart-Ashem.png",
+  "Shuk Ahir": "/logos/shuk-haeir.png",
+  "Stop Market": "/logos/stopmarket.png",
+  "Wolt": "/logos/wolt.png",
+  "City Market": "/logos/city-market.png",
 };
 
 function getRankColor(index: number): string {
