@@ -18,8 +18,32 @@ export async function GET(request: Request) {
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://savy.co.il/sitemap?page=categories</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://savy.co.il/sitemap?page=chains</loc>
   </sitemap>${sitemaps}
 </sitemapindex>`;
+      return new NextResponse(xml, { headers: { "Content-Type": "application/xml", "Cache-Control": "public, max-age=86400, s-maxage=86400" } });
+    }
+
+    // Chains sitemap
+    if (pageParam === "chains") {
+      const chainsRes = await fetch(`${API}/chains`, { next: { revalidate: 86400 } });
+      const chainsData = await chainsRes.json();
+      const today = new Date().toISOString().split("T")[0];
+      const urls = chainsData.chains
+        .filter((c: any) => c.storeCount > 0)
+        .map((c: any) => `
+  <url>
+    <loc>https://savy.co.il/chain/${encodeURIComponent(c.name)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join("");
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
       return new NextResponse(xml, { headers: { "Content-Type": "application/xml", "Cache-Control": "public, max-age=86400, s-maxage=86400" } });
     }
 
