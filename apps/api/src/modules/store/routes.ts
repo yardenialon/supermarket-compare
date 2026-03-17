@@ -127,22 +127,27 @@ export async function storeRoutes(app) {
       SELECT 
         p.id, p.name, p.image_url as "imageUrl", p.category,
         MIN(sp.price) as "chainPrice",
-        AVG(all_prices.avg_price) as "marketAvg",
-        ROUND(((AVG(all_prices.avg_price) - MIN(sp.price)) / AVG(all_prices.avg_price) * 100)::numeric, 1) as "savingPct"
+        AVG(all_prices.median_price) as "marketAvg",
+        ROUND(((AVG(all_prices.median_price) - MIN(sp.price)) / AVG(all_prices.median_price) * 100)::numeric, 1) as "savingPct"
       FROM store_price sp
       JOIN store s ON s.id = sp.store_id
       JOIN product p ON p.id = sp.product_id
       JOIN (
-        SELECT product_id, AVG(price) as avg_price
+        SELECT product_id, 
+               PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price) as median_price
         FROM store_price
+        WHERE price > 0
         GROUP BY product_id
+        HAVING COUNT(*) >= 10
       ) all_prices ON all_prices.product_id = p.id
       WHERE s.chain_id = $1
         AND sp.price > 0
-        AND p.store_count > 100
+        AND p.store_count > 200
+        AND p.min_price > 2
       GROUP BY p.id, p.name, p.image_url, p.category
-      HAVING AVG(all_prices.avg_price) > 0
-        AND MIN(sp.price) < AVG(all_prices.avg_price) * 0.85
+      HAVING AVG(all_prices.median_price) > 2
+        AND MIN(sp.price) < AVG(all_prices.median_price) * 0.85
+        AND MIN(sp.price) > 1
       ORDER BY "savingPct" DESC
       LIMIT 12
     `, [chainId]);
