@@ -118,8 +118,11 @@ export default function AdminPage() {
         headers: { 'x-admin-key': ADMIN_KEY }
       });
       const data = await res.json();
-      if (data.success) setBasketMsg(`✓ המדד חושב בהצלחה — ${data.chains} רשתות`);
-      else setBasketMsg('שגיאה: ' + data.error);
+      if (data.success) {
+        // revalidate Vercel cache
+        await fetch('/api/revalidate-price-index', { method: 'POST' }).catch(() => {});
+        setBasketMsg(`✓ המדד חושב בהצלחה — ${data.chains} רשתות. הדף יתעדכן תוך דקה.`);
+      } else setBasketMsg('שגיאה: ' + data.error);
     } finally { setBasketComputing(false); }
   }
 
