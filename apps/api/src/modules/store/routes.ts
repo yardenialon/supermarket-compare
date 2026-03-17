@@ -144,11 +144,12 @@ export async function storeRoutes(app) {
       WHERE s.chain_id = $1
         AND sp.price > 0
         AND p.store_count > 200
-        AND p.min_price > 2
+        AND p.min_price > 5
       GROUP BY p.id, p.name, p.image_url, p.category
-      HAVING AVG(all_prices.median_price) > 2
-        AND MIN(sp.price) < AVG(all_prices.median_price) * 0.85
-        AND MIN(sp.price) > 1
+      HAVING AVG(all_prices.median_price) > 5
+        AND MIN(sp.price) < AVG(all_prices.median_price) * 0.80
+        AND MIN(sp.price) > AVG(all_prices.median_price) * 0.30
+        AND MIN(sp.price) > 3
       ORDER BY "savingPct" DESC
       LIMIT 12
     `, [chainId]);
