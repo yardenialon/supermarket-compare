@@ -1068,6 +1068,8 @@ export default function Home() {
 
             {/* Links */}
             <div className="flex items-center gap-4 flex-wrap justify-center">
+              <a href="/supermarkets" className="text-xs text-stone-400 hover:text-emerald-600 transition">רשתות סופרמרקט</a>
+              <span className="text-stone-200">·</span>
               <a href="/terms" className="text-xs text-stone-400 hover:text-emerald-600 transition">תנאי שימוש</a>
               <span className="text-stone-200">·</span>
               <a href="/accessibility" className="text-xs text-stone-400 hover:text-emerald-600 transition">נגישות</a>
