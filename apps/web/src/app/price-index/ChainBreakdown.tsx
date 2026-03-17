@@ -52,7 +52,8 @@ export default function ChainBreakdown({
           const { label, color } = getRankLabel(c.index);
           const isOpen = openChain === c.chain;
           const prods = chainPrices[c.chain] || {};
-          const missingCount = products.filter(p => !prods[p.id]).length;
+          const missingCount = products.filter(p => !prods[p.id] && !prods[String(p.id)]).length;
+
 
           return (
             <div key={c.chain}>
@@ -90,7 +91,7 @@ export default function ChainBreakdown({
                 <div className="bg-stone-50/50 border-t border-stone-100">
                   <div className="divide-y divide-stone-100">
                     {products.map((p) => {
-                      const price = prods[p.id];
+                      const price = prods[p.id] ?? prods[String(p.id)];
                       const missing = !price;
                       return (
                         <Link key={p.id} href={`/product/${p.id}`}
