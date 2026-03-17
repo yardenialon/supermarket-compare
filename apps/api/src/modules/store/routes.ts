@@ -1,6 +1,53 @@
 import { query } from '../../db.js';
 export async function storeRoutes(app) {
   app.get('/stores', async () => { const r = await query('SELECT s.id, s.name, s.city, rc.name as "chainName" FROM store s JOIN retailer_chain rc ON rc.id=s.chain_id ORDER BY rc.name LIMIT 50'); return { stores: r.rows }; });
+  // GET /chain/:name — פרטי רשת עם סניפים
+  app.get('/chain/:name', async (req: any, reply: any) => {
+    const name = decodeURIComponent(req.params.name);
+    const chain = await query(
+      'SELECT id, name, name_he as "nameHe" FROM retailer_chain WHERE name = $1 OR name_he = $1',
+      [name]
+    );
+    if (!chain.rows[0]) return reply.code(404).send({ error: 'Chain not found' });
+    const chainId = chain.rows[0].id;
+
+    const stores = await query(`
+      SELECT id, name, city, address, lat, lng, subchain_name as "subchainName"
+      FROM store
+      WHERE chain_id = $1 AND lat IS NOT NULL
+      ORDER BY city, name
+    `, [chainId]);
+
+    const deals = await query(`
+      SELECT d.description, d.discounted_price as "discountedPrice", d.discount_rate as "discountRate",
+             d.end_date as "endDate", d.product_name as "productName", d.barcode,
+             s.name as "storeName", s.city
+      FROM deal d
+      JOIN store s ON s.id = d.store_id
+      WHERE s.chain_id = $1
+        AND (d.end_date IS NULL OR d.end_date > NOW())
+        AND d.discounted_price > 20
+      ORDER BY d.discounted_price DESC
+      LIMIT 20
+    `, [chainId]);
+
+    const priceIndex = await query(`
+      SELECT data FROM price_index_cache WHERE type='basket' ORDER BY computed_at DESC LIMIT 1
+    `);
+    let chainIndex = null;
+    if (priceIndex.rows[0]) {
+      const indexData = priceIndex.rows[0].data;
+      const chainData = indexData.chains?.find((c: any) => c.chain === chain.rows[0].name);
+      if (chainData) chainIndex = chainData.index;
+    }
+
+    return {
+      chain: { ...chain.rows[0], storeCount: stores.rows.length, priceIndex: chainIndex },
+      stores: stores.rows,
+      hotDeals: deals.rows,
+    };
+  });
+
   app.get('/chains', async () => { const r = await query('SELECT rc.id, rc.name, rc.name_he as "nameHe", COUNT(DISTINCT s.id)::int as "storeCount" FROM retailer_chain rc LEFT JOIN store s ON s.chain_id=rc.id WHERE rc.is_active=true GROUP BY rc.id ORDER BY rc.name'); return { chains: r.rows }; });
   // קריאת מדד מחירים מ-cache — basket קודם, אחר כך auto
   app.get('/price-index', async (req: any, reply: any) => {
