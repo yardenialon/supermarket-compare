@@ -112,6 +112,50 @@ export async function storeRoutes(app) {
       return reply.code(500).send({ error: err.message });
     }
   });
+  // GET /chain/:name/best-deals — המוצרים הזולים ביותר ברשת ביחס לממוצע השוק
+  app.get('/chain/:name/best-deals', async (req: any, reply: any) => {
+    const name = decodeURIComponent(req.params.name);
+    const chain = await query(
+      'SELECT id FROM retailer_chain WHERE name = $1 OR name_he = $1',
+      [name]
+    );
+    if (!chain.rows[0]) return reply.code(404).send({ error: 'Chain not found' });
+    const chainId = chain.rows[0].id;
+
+    const result = await query(`
+      SELECT 
+        p.id, p.name, p.image_url as "imageUrl", p.category,
+        MIN(sp.price) as "chainPrice",
+        AVG(all_prices.avg_price) as "marketAvg",
+        ROUND(((AVG(all_prices.avg_price) - MIN(sp.price)) / AVG(all_prices.avg_price) * 100)::numeric, 1) as "savingPct"
+      FROM store_price sp
+      JOIN store s ON s.id = sp.store_id
+      JOIN product p ON p.id = sp.product_id
+      JOIN (
+        SELECT product_id, AVG(price) as avg_price
+        FROM store_price
+        GROUP BY product_id
+      ) all_prices ON all_prices.product_id = p.id
+      WHERE s.chain_id = $1
+        AND sp.price > 0
+        AND p.store_count > 100
+      GROUP BY p.id, p.name, p.image_url, p.category
+      HAVING AVG(all_prices.avg_price) > 0
+        AND MIN(sp.price) < AVG(all_prices.avg_price) * 0.85
+      ORDER BY "savingPct" DESC
+      LIMIT 12
+    `, [chainId]);
+
+    return {
+      products: result.rows.map((r: any) => ({
+        ...r,
+        chainPrice: Number(r.chainPrice),
+        marketAvg: Number(Number(r.marketAvg).toFixed(2)),
+        savingPct: Number(r.savingPct),
+      }))
+    };
+  });
+
   // GET /savy-basket — רשימת המוצרים במדד
   app.get('/savy-basket', async (req: any) => {
     const result = await query(`
