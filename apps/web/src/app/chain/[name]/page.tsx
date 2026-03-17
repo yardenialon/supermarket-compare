@@ -4,6 +4,15 @@ import { notFound } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
+async function getBestDeals(name: string) {
+  try {
+    const res = await fetch(`${API}/chain/${encodeURIComponent(name)}/best-deals`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.products || [];
+  } catch { return []; }
+}
+
 async function getChain(name: string) {
   try {
     const res = await fetch(`${API}/chain/${encodeURIComponent(name)}`, { next: { revalidate: 3600 } });
@@ -13,7 +22,7 @@ async function getChain(name: string) {
 }
 
 export async function generateMetadata({ params }: { params: { name: string } }): Promise<Metadata> {
-  const data = await getChain(decodeURIComponent(params.name));
+  const [data, bestDeals] = await Promise.all([getChain(decodeURIComponent(params.name)), getBestDeals(decodeURIComponent(params.name))]);
   if (!data) return { title: "רשת לא נמצאה | Savy" };
   const { chain } = data;
   const nameHe = chain.nameHe || chain.name;
@@ -53,7 +62,7 @@ const CHAIN_LOGOS: Record<string, string> = {
 };
 
 export default async function ChainPage({ params }: { params: { name: string } }) {
-  const data = await getChain(decodeURIComponent(params.name));
+  const [data, bestDeals] = await Promise.all([getChain(decodeURIComponent(params.name)), getBestDeals(decodeURIComponent(params.name))]);
   if (!data) notFound();
 
   const { chain, stores, hotDeals } = data;
@@ -133,6 +142,34 @@ export default async function ChainPage({ params }: { params: { name: string } }
             </Link>
           </div>
         </div>
+
+        {/* המוצרים הזולים ביותר */}
+        {bestDeals.length > 0 && (
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-stone-50">
+              <h2 className="font-bold text-stone-800 text-base">💚 {nameHe} הכי זולה על אלה</h2>
+              <p className="text-xs text-stone-400 mt-0.5">מוצרים שמשמעותית זולים יותר ביחס לממוצע השוק</p>
+            </div>
+            <div className="grid grid-cols-3 gap-0 divide-x divide-y divide-stone-50">
+              {bestDeals.map((p: any) => (
+                <a key={p.id} href={`/product/${p.id}`}
+                  className="flex flex-col items-center gap-1.5 p-3 hover:bg-stone-50 transition">
+                  <div className="w-16 h-16 bg-stone-50 rounded-xl overflow-hidden flex items-center justify-center border border-stone-100">
+                    {p.imageUrl
+                      ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-contain p-1" />
+                      : <span className="text-2xl">📦</span>}
+                  </div>
+                  <div className="text-[11px] font-medium text-stone-700 text-center leading-tight line-clamp-2">{p.name}</div>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div className="text-xs font-black text-emerald-600">₪{p.chainPrice}</div>
+                    <div className="text-[10px] text-stone-400 line-through">₪{p.marketAvg}</div>
+                    <div className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">-{p.savingPct}%</div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* מבצעים חמים */}
         {hotDeals.length > 0 && (
