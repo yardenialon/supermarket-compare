@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ChainBreakdown from "./ChainBreakdown";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
@@ -18,6 +19,14 @@ export const metadata: Metadata = {
 async function getPriceIndex() {
   try {
     const res = await fetch(`${API}/price-index`, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    return res.json();
+  } catch { return null; }
+}
+
+async function getBreakdown() {
+  try {
+    const res = await fetch(`${API}/savy-basket/breakdown`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     return res.json();
   } catch { return null; }
@@ -81,7 +90,7 @@ function getRankLabel(index: number): { label: string; color: string } {
 }
 
 export default async function PriceIndexPage() {
-  const [data, basketProducts] = await Promise.all([getPriceIndex(), getBasketProducts()]);
+  const [data, basketProducts, breakdown] = await Promise.all([getPriceIndex(), getBasketProducts(), getBreakdown()]);
   const chains = data?.chains || [];
   const computedAt = data?.computedAt
     ? new Date(data.computedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
@@ -218,6 +227,16 @@ export default async function PriceIndexPage() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Chain Breakdown */}
+        {breakdown && breakdown.chains?.length > 0 && (
+          <ChainBreakdown
+            chains={chains.map((c: any) => ({ ...c, chainHe: c.chainHe }))}
+            products={breakdown.products}
+            chainPrices={breakdown.chainPrices}
+            basketSize={breakdown.chains?.length || 0}
+          />
         )}
 
         {/* Methodology */}
