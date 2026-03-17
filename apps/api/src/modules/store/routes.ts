@@ -19,15 +19,15 @@ export async function storeRoutes(app) {
     `, [chainId]);
 
     const deals = await query(`
-      SELECT d.description, d.discounted_price as "discountedPrice", d.discount_rate as "discountRate",
-             d.end_date as "endDate", d.product_name as "productName", d.barcode,
+      SELECT pr.description, pr.discounted_price as "discountedPrice", pr.discount_rate as "discountRate",
+             pr.end_date as "endDate", pr.product_name as "productName", pr.barcode,
              s.name as "storeName", s.city
-      FROM deal d
-      JOIN store s ON s.id = d.store_id
+      FROM promotion pr
+      JOIN store s ON s.id = pr.store_id
       WHERE s.chain_id = $1
-        AND (d.end_date IS NULL OR d.end_date > NOW())
-        AND d.discounted_price > 20
-      ORDER BY d.discounted_price DESC
+        AND (pr.end_date IS NULL OR pr.end_date > NOW())
+        AND pr.discounted_price > 20
+      ORDER BY pr.discounted_price DESC
       LIMIT 20
     `, [chainId]);
 
