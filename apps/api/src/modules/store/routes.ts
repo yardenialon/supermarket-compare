@@ -19,10 +19,11 @@ export async function storeRoutes(app) {
     `, [chainId]);
 
     const deals = await query(`
-      SELECT pr.description, pr.discounted_price as "discountedPrice", pr.discount_rate as "discountRate",
-             pr.end_date as "endDate",
-             COALESCE(p.name, pr.description) as "productName",
-             s.name as "storeName", s.city
+      SELECT DISTINCT ON (pr.description)
+        pr.description, pr.discounted_price as "discountedPrice", pr.discount_rate as "discountRate",
+        pr.end_date as "endDate",
+        COALESCE(p.name, pr.description) as "productName",
+        s.name as "storeName", s.city
       FROM promotion pr
       JOIN store s ON s.id = pr.store_id
       LEFT JOIN promotion_item pi ON pi.promotion_id = pr.id
@@ -30,7 +31,7 @@ export async function storeRoutes(app) {
       WHERE s.chain_id = $1
         AND (pr.end_date IS NULL OR pr.end_date > NOW())
         AND pr.discounted_price > 20
-      ORDER BY pr.discounted_price DESC
+      ORDER BY pr.description, pr.discounted_price DESC
       LIMIT 20
     `, [chainId]);
 
