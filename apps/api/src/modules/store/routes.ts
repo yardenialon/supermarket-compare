@@ -171,6 +171,57 @@ export async function storeRoutes(app) {
     return { products: result.rows };
   });
 
+  // GET /savy-basket/breakdown — מחיר כל מוצר בסל לפי רשת
+  app.get('/savy-basket/breakdown', async () => {
+    const basket = await query(`
+      SELECT sb.product_id, p.name, p.image_url as "imageUrl", p.barcode
+      FROM savy_basket sb
+      JOIN product p ON p.id = sb.product_id
+      ORDER BY p.name
+    `);
+    if (!basket.rows.length) return { products: [], chains: [] };
+    const productIds = basket.rows.map((r: any) => r.product_id);
+
+    const prices = await query(`
+      SELECT rc.name as chain, rc.name_he as "chainHe",
+             sp.product_id,
+             MIN(sp.price) as price
+      FROM store_price sp
+      JOIN store s ON s.id = sp.store_id
+      JOIN retailer_chain rc ON rc.id = s.chain_id
+      WHERE sp.product_id = ANY($1)
+        AND rc.is_active = true
+        AND sp.price > 0
+        AND s.city NOT IN ('אילת', 'Eilat')
+        AND s.name NOT ILIKE '%אונליין%'
+        AND s.name NOT ILIKE '%online%'
+      GROUP BY rc.name, rc.name_he, sp.product_id
+    `, [productIds]);
+
+    // בנה מפה: chain -> { productId -> price }
+    const chainPrices: Record<string, Record<number, number>> = {};
+    for (const row of prices.rows as any[]) {
+      if (!chainPrices[row.chain]) chainPrices[row.chain] = {};
+      chainPrices[row.chain][row.product_id] = Number(row.price);
+    }
+
+    // רק רשתות עם 70%+ מהמוצרים
+    const minProducts = Math.floor(productIds.length * 0.7);
+    const chains = Object.entries(chainPrices)
+      .filter(([_, prods]) => Object.keys(prods).length >= minProducts)
+      .map(([chain, prods]) => {
+        const total = productIds.reduce((sum, id) => sum + (prods[id] || 0), 0);
+        return { chain, total: Number(total.toFixed(2)) };
+      })
+      .sort((a, b) => a.total - b.total);
+
+    return {
+      products: basket.rows,
+      chainPrices,
+      chains,
+    };
+  });
+
   // GET /savy-basket/missing — אילו מוצרים חסרים לכל רשת
   app.get('/savy-basket/missing', async () => {
     const basket = await query('SELECT sb.product_id, p.name FROM savy_basket sb JOIN product p ON p.id = sb.product_id');
