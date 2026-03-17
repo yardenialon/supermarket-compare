@@ -1037,6 +1037,35 @@ export default function Home() {
               </a>
             </div>
 
+            {/* Chain links — SEO internal linking */}
+            <div className="w-full border-t border-stone-100 pt-4">
+              <p className="text-xs text-stone-400 text-center mb-2">רשתות סופרמרקט</p>
+              <div className="flex flex-wrap gap-1.5 justify-center">
+                {[
+                  { name: "Shufersal", he: "שופרסל" },
+                  { name: "Rami Levy", he: "רמי לוי" },
+                  { name: "Osher Ad", he: "אושר עד" },
+                  { name: "Yochananof", he: "יוחננוף" },
+                  { name: "Carrefour", he: "קרפור" },
+                  { name: "Victory", he: "ויקטורי" },
+                  { name: "Hazi Hinam", he: "חצי חינם" },
+                  { name: "Tiv Taam", he: "טיב טעם" },
+                  { name: "Mahsani Ashuk", he: "מחסני השוק" },
+                  { name: "Freshmarket", he: "פרשמרקט" },
+                  { name: "Netiv Hased", he: "נתיב החסד" },
+                  { name: "Super Sapir", he: "סופר ספיר" },
+                  { name: "Keshet Taamim", he: "קשת טעמים" },
+                  { name: "Zol Vebegadol", he: "זול ובגדול" },
+                  { name: "Dor Alon", he: "דור אלון" },
+                ].map(c => (
+                  <a key={c.name} href={`/chain/${encodeURIComponent(c.name)}`}
+                    className="text-[11px] text-stone-400 hover:text-emerald-600 transition px-2 py-0.5 rounded-lg hover:bg-emerald-50">
+                    {c.he}
+                  </a>
+                ))}
+              </div>
+            </div>
+
             {/* Links */}
             <div className="flex items-center gap-4 flex-wrap justify-center">
               <a href="/terms" className="text-xs text-stone-400 hover:text-emerald-600 transition">תנאי שימוש</a>
