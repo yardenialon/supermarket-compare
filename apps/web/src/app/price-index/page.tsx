@@ -234,6 +234,19 @@ export default async function PriceIndexPage() {
           </div>
         </div>
 
+        {/* רשתות — internal linking */}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
+          <h2 className="font-bold text-stone-800 mb-3 text-base">כל רשתות הסופרמרקט</h2>
+          <div className="flex flex-wrap gap-2">
+            {chains.map((c: any) => (
+              <a key={c.chain} href={`/chain/${encodeURIComponent(c.chain)}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-50 hover:bg-emerald-50 border border-stone-200 hover:border-emerald-300 rounded-xl text-sm text-stone-600 hover:text-emerald-700 transition">
+                {c.chainHe || c.chain}
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* CTA */}
         <div className="bg-emerald-500 rounded-2xl p-5 text-center">
           <div className="font-black text-white text-lg mb-1">רוצה לדעת כמה תחסוך?</div>
