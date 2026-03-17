@@ -16,6 +16,7 @@ export async function storeRoutes(app) {
       FROM store
       WHERE chain_id = $1 AND lat IS NOT NULL
       ORDER BY city, name
+      LIMIT 150
     `, [chainId]);
 
     const deals = await query(`
