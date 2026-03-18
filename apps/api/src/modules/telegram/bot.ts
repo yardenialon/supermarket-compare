@@ -89,7 +89,7 @@ export async function handleTelegramMessage(chatId: string, text: string, lat?: 
     const classifyRes = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 100,
-      messages: [{ role: 'user', content: 'Classify: SHOPPING_LIST, ADD_TO_BASKET, COMPARE_BASKET, DEALS, AVAILABILITY, CLEAR_BASKET, OTHER. One word only. Message: "' + text + '"' }]
+      messages: [{ role: 'user', content: 'Classify into ONE word only: SHOPPING_LIST (user wants to find/buy specific products, even if mentions sale/deal), ADD_TO_BASKET (add to my basket), COMPARE_BASKET (compare my basket), DEALS (general deals with no specific product), AVAILABILITY (where to find), CLEAR_BASKET (clear basket), OTHER. Message: "' + text + '"' }]
     });
     const intent = classifyRes.content[0].type === 'text' ? classifyRes.content[0].text.trim().toUpperCase() : 'OTHER';
     console.log('Intent:', intent, 'ChatId:', chatId, 'Text:', text);
