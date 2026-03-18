@@ -165,43 +165,13 @@ export default async function PriceIndexPage() {
           </div>
         )}
 
-        {/* Main table */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-stone-50">
-            <h2 className="font-bold text-stone-800 text-base">דירוג רשתות לפי מחיר הסל</h2>
-            <p className="text-xs text-stone-400 mt-0.5">מחיר הסל = סכום המחיר הזול ביותר של כל מוצר באותה רשת. ללא סניפי אילת וסניפי אינטרנט.</p>
-          </div>
-          <div className="divide-y divide-stone-50">
-            {chains.map((c: any, i: number) => {
-              const logo = CHAIN_LOGOS[c.chain];
-              const barWidth = Math.min(100, Math.max(5, (c.index - 95) * 2.5));
-              const { label, color } = getRankLabel(c.index);
-              return (
-                <div key={c.chain} className={`flex items-center gap-3 px-5 py-3.5 transition ${i === 0 ? "bg-emerald-50/50" : "hover:bg-stone-50"}`}>
-                  <div className={`w-6 text-center font-black text-sm ${i === 0 ? "text-emerald-500" : i <= 2 ? "text-stone-500" : "text-stone-300"}`}>{i + 1}</div>
-                  <div className="w-10 h-10 rounded-xl bg-stone-50 flex-shrink-0 overflow-hidden flex items-center justify-center border border-stone-100">
-                    {logo
-                      ? <img src={logo} alt={c.chainHe || c.chain} className="w-full h-full object-contain p-1" />
-                      : <span className="text-xs font-black text-stone-400">{(c.chainHe || c.chain).slice(0, 2)}</span>}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-stone-800 text-sm">{c.chainHe || c.chain}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${getRankColor(c.index)}`} style={{ width: `${barWidth}%` }} />
-                      </div>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${color}`}>{label}</span>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 text-left">
-                    <div className="font-mono font-black text-stone-700 text-sm">₪{c.totalPrice}</div>
-                    <div className="text-[10px] text-stone-400 text-center mt-0.5">מדד {c.index}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* Chain Breakdown with accordion */}
+        <ChainBreakdown
+          chains={chains.map((c: any) => ({ ...c, chainHe: c.chainHe }))}
+          products={breakdown?.products || basketProducts.map((p: any) => ({ id: p.productId, name: p.name, imageUrl: p.imageUrl }))}
+          chainPrices={breakdown?.chainPrices || {}}
+          basketSize={basketProducts.length}
+        />
 
         {/* Basket products */}
         {basketProducts.length > 0 && (
@@ -229,15 +199,7 @@ export default async function PriceIndexPage() {
           </div>
         )}
 
-        {/* Chain Breakdown */}
-        {breakdown && breakdown.chains?.length > 0 && (
-          <ChainBreakdown
-            chains={chains.map((c: any) => ({ ...c, chainHe: c.chainHe }))}
-            products={breakdown.products}
-            chainPrices={breakdown.chainPrices}
-            basketSize={breakdown.chains?.length || 0}
-          />
-        )}
+
 
         {/* Methodology */}
         <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
