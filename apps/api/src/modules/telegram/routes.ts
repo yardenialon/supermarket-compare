@@ -13,16 +13,19 @@ export async function telegramRoutes(app: FastifyInstance) {
 
       const chatId = String(message.chat.id);
       const text = message.text;
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      console.log('Token first 10 chars:', token?.slice(0, 10), 'length:', token?.length);
 
-      // Process message and send response
       const response = await handleTelegramMessage(text);
       console.log('Bot response:', response?.slice(0, 100));
 
-      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: chatId, text: response, parse_mode: 'Markdown' })
-      }).then(r => r.json()).then(r => console.log('TG response:', JSON.stringify(r)));
+      });
+      const tgJson = await tgRes.json();
+      console.log('TG response:', JSON.stringify(tgJson));
 
       return reply.send({ ok: true });
     } catch (e) {
