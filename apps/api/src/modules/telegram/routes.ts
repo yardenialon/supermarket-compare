@@ -13,7 +13,7 @@ export async function telegramRoutes(app: FastifyInstance) {
 
       const chatId = String(message.chat.id);
       const text = message.text;
-      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const token = process.env.TELEGRAM_BOT_TOKEN || '8729757551:AAGUz8eN0Da59_YwgYBCu1MXH2uLnVWa74c';
       console.log('Token first 10 chars:', token?.slice(0, 10), 'length:', token?.length);
 
       const response = await handleTelegramMessage(text);
