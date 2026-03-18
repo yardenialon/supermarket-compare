@@ -4,11 +4,25 @@ import { handleTelegramMessage } from './bot.js';
 const TELEGRAM_API = 'https://api.telegram.org/bot';
 const userLocations = new Map<string, { lat: number; lng: number; timestamp: number }>();
 
-async function sendMessage(token: string, chatId: string, text: string) {
+async function sendMessage(token: string, chatId: string, text: string, showLocationButton = false) {
+  const body: any = {
+    chat_id: chatId,
+    text,
+    parse_mode: 'Markdown'
+  };
+
+  if (showLocationButton) {
+    body.reply_markup = {
+      keyboard: [[{ text: '📍 שתף מיקום', request_location: true }]],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    };
+  }
+
   await fetch(TELEGRAM_API + token + '/sendMessage', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
+    body: JSON.stringify(body)
   }).then(r => r.json()).then(r => { if (!r.ok) console.error('TG error:', JSON.stringify(r)); });
 }
 
@@ -36,20 +50,22 @@ export async function telegramRoutes(app: FastifyInstance) {
 
       // Handle /start
       if (text === '/start') {
-        await sendMessage(token, chatId, 'שלום! אני סאבי - עוזר הקניות החכם שלך 🛒\n\nאני יכול לעזור לך למצוא את הסל הזול ביותר בסופרמרקטים בישראל.\n\nשלח לי רשימת קניות כמו:\n"חלב, לחם, ביצים, עגבניות"\n\n📍 לתוצאות לפי סניף קרוב אליך - שלח מיקום (📎 → Location)');
+        await sendMessage(token, chatId,
+          'שלום! אני סאבי - עוזר הקניות החכם שלך 🛒\n\nאני יכול לעזור לך למצוא את הסל הזול ביותר בסופרמרקטים בישראל.\n\nשלח לי רשימת קניות כמו:\n"חלב, לחם, ביצים, עגבניות"\n\n📍 לחץ על הכפתור למטה לשתף מיקום ולקבל תוצאות קרוב אליך!',
+          true
+        );
         return reply.send({ ok: true });
       }
 
       reply.send({ ok: true });
 
-      // Get saved location (valid for 2 hours)
       const loc = userLocations.get(chatId);
       const hasValidLocation = loc && (Date.now() - loc.timestamp < 2 * 60 * 60 * 1000);
 
       const response = await handleTelegramMessage(text, hasValidLocation ? loc.lat : undefined, hasValidLocation ? loc.lng : undefined);
 
-      const locationNote = hasValidLocation ? '' : '\n\n📍 _שלח מיקום לתוצאות קרובות אליך_';
-      await sendMessage(token, chatId, response + locationNote);
+      const locationNote = hasValidLocation ? '' : '';
+      await sendMessage(token, chatId, response + locationNote, !hasValidLocation);
 
     } catch (e) {
       console.error('Webhook error:', e);
