@@ -49,11 +49,19 @@ async function compareBasket(items: {productId: number, name: string, qty: numbe
   } catch(e) { return '[]'; }
 }
 
-async function getDeals(): Promise<string> {
+async function getDeals(searchTerm?: string): Promise<string> {
   try {
-    const res = await fetch(API + '/deals?limit=15');
+    const res = await fetch(API + '/deals?limit=30');
     const data = await res.json();
-    return JSON.stringify(data?.deals?.slice(0, 15) || data?.slice(0, 15) || []);
+    let deals = data?.deals || data || [];
+    if (searchTerm) {
+      deals = deals.filter((d: any) =>
+        d.name?.includes(searchTerm) ||
+        d.description?.includes(searchTerm) ||
+        d.itemName?.includes(searchTerm)
+      );
+    }
+    return JSON.stringify(deals.slice(0, 10));
   } catch { return '[]'; }
 }
 
@@ -89,7 +97,14 @@ export async function handleTelegramMessage(chatId: string, text: string, lat?: 
     let contextData = '';
 
     if (intent === 'DEALS') {
-      contextData = 'Deals data: ' + await getDeals();
+      // Extract search term from text
+      const dealSearchRes = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 100,
+        messages: [{ role: 'user', content: 'Extract the product name from this deals request in Hebrew (1-2 words max), or return empty string if general: "' + text + '". Return only the Hebrew product name or empty string.' }]
+      });
+      const dealSearchTerm = dealSearchRes.content[0].type === 'text' ? dealSearchRes.content[0].text.trim() : '';
+      contextData = 'Deals data for "' + dealSearchTerm + '": ' + await getDeals(dealSearchTerm || undefined);
     }
     else if (intent === 'ADD_TO_BASKET' || intent === 'SHOPPING_LIST') {
       // Parse items
