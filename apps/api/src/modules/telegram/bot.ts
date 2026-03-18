@@ -84,7 +84,7 @@ export async function handleTelegramMessage(chatId: string, text: string, lat?: 
       messages: [{ role: 'user', content: 'Classify: SHOPPING_LIST, ADD_TO_BASKET, COMPARE_BASKET, DEALS, AVAILABILITY, CLEAR_BASKET, OTHER. One word only. Message: "' + text + '"' }]
     });
     const intent = classifyRes.content[0].type === 'text' ? classifyRes.content[0].text.trim().toUpperCase() : 'OTHER';
-    console.log('Intent:', intent, 'ChatId:', chatId);
+    console.log('Intent:', intent, 'ChatId:', chatId, 'Text:', text);
 
     let contextData = '';
 
