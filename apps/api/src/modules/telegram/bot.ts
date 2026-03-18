@@ -22,7 +22,7 @@ Format nicely for Telegram - no markdown tables, use simple lines.`;
 
 async function searchProduct(name: string): Promise<{productId: number, name: string} | null> {
   try {
-    const res = await fetch(API + '/search?q=' + encodeURIComponent(name) + '&limit=3');
+    const res = await fetch(API + '/search?q=' + encodeURIComponent(name.trim()));
     const data = await res.json();
     const results = data?.results || data || [];
     const exact = results.find((r: any) => r.name?.toLowerCase().includes(name.toLowerCase()));
