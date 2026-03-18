@@ -32,7 +32,6 @@ export async function telegramRoutes(app: FastifyInstance) {
       if (message.location) {
         const { latitude, longitude } = message.location;
         userLocations.set(chatId, { lat: latitude, lng: longitude, timestamp: Date.now() });
-        console.log('Location saved for', chatId, latitude, longitude);
         await sendMessage(token, chatId, '📍 מיקום התקבל! עכשיו שלח לי רשימת קניות ואמצא לך את הסניף הזול ביותר קרוב אליך 🛒');
         return reply.send({ ok: true });
       }
@@ -42,7 +41,7 @@ export async function telegramRoutes(app: FastifyInstance) {
 
       if (text === '/start') {
         await sendMessage(token, chatId,
-          'שלום! אני סאבי - עוזר הקניות החכם שלך 🛒\n\nשלח לי רשימת קניות ואמצא לך את הסל הזול ביותר בסופרמרקטים בישראל 💚\n\n📍 לחץ על הכפתור למטה לתוצאות קרוב אליך!',
+          'שלום! אני סאבי - עוזר הקניות החכם שלך 🛒\n\nאני יכול לעזור לך:\n• 🧺 לבנות סל קניות\n• 💰 להשוות מחירים בין רשתות\n• 🏷️ למצוא מבצעים\n• 📍 למצוא סניף זול קרוב אליך\n\nפשוט כתוב לי מה אתה צריך!',
           true
         );
         return reply.send({ ok: true });
@@ -53,7 +52,7 @@ export async function telegramRoutes(app: FastifyInstance) {
       const loc = userLocations.get(chatId);
       const hasValidLocation = loc && (Date.now() - loc.timestamp < 2 * 60 * 60 * 1000);
 
-      const response = await handleTelegramMessage(text, hasValidLocation ? loc.lat : undefined, hasValidLocation ? loc.lng : undefined);
+      const response = await handleTelegramMessage(chatId, text, hasValidLocation ? loc.lat : undefined, hasValidLocation ? loc.lng : undefined);
       await sendMessage(token, chatId, response, !hasValidLocation);
 
     } catch (e) {
