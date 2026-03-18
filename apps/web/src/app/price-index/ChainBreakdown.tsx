@@ -95,7 +95,7 @@ export default function ChainBreakdown({
                       const price = prods[pid] ?? prods[String(pid)];
                       const missing = !price;
                       return (
-                        <Link key={p.id} href={`/product/${p.id}`}
+                        <Link key={pid} href={`/product/${pid}`}
                           className={`flex items-center gap-3 px-5 py-3 hover:bg-white transition ${missing ? "opacity-60" : ""}`}>
                           <div className="w-10 h-10 bg-white rounded-xl overflow-hidden flex items-center justify-center border border-stone-100 flex-shrink-0">
                             {p.imageUrl
