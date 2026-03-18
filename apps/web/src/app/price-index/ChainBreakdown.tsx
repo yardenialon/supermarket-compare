@@ -27,7 +27,7 @@ function getRankLabel(index: number) {
   return { label: "יקר מאוד", color: "bg-red-50 text-red-600" };
 }
 
-interface Product { id: number; name: string; imageUrl?: string; }
+interface Product { id?: number; product_id?: number; name: string; imageUrl?: string; }
 interface Chain { chain: string; chainHe?: string; index: number; avgPrice: number; totalPrice: number; productCount: number; }
 
 export default function ChainBreakdown({
@@ -52,7 +52,7 @@ export default function ChainBreakdown({
           const { label, color } = getRankLabel(c.index);
           const isOpen = openChain === c.chain;
           const prods = chainPrices[c.chain] || {};
-          const missingCount = products.filter(p => !prods[p.id] && !prods[String(p.id)]).length;
+          const missingCount = products.filter(p => { const pid = p.id ?? (p as any).product_id; return !prods[pid] && !prods[String(pid)]; }).length;
 
 
           return (
@@ -91,7 +91,8 @@ export default function ChainBreakdown({
                 <div className="bg-stone-50/50 border-t border-stone-100">
                   <div className="divide-y divide-stone-100">
                     {products.map((p) => {
-                      const price = prods[p.id] ?? prods[String(p.id)];
+                      const pid = p.id ?? (p as any).product_id;
+                      const price = prods[pid] ?? prods[String(pid)];
                       const missing = !price;
                       return (
                         <Link key={p.id} href={`/product/${p.id}`}
