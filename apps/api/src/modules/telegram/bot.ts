@@ -62,3 +62,4 @@ export async function handleTelegramMessage(text: string): Promise<string> {
     return 'מצטער, אירעה שגיאה. נסה שוב בעוד רגע';
   }
 }
+
