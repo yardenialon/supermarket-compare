@@ -20,14 +20,16 @@ When comparing prices, show: store name + city - total price - items found/total
 Always offer to find the cheapest store for their basket.
 Format nicely for Telegram - no markdown tables, use simple lines.`;
 
-async function searchProduct(name: string): Promise<{productId: number, name: string} | null> {
+async function searchProduct(name: string): Promise<{productId: number, name: string, minPrice?: number} | null> {
   try {
     const res = await fetch(API + '/search?q=' + encodeURIComponent(name.trim()));
     const data = await res.json();
     const results = data?.results || data || [];
-    const exact = results.find((r: any) => r.name?.toLowerCase().includes(name.toLowerCase()));
-    const product = exact || results[0];
-    if (product) return { productId: product.id || product.productId, name: product.name };
+    // Find best match - prefer results with minPrice
+    const withPrice = results.filter((r: any) => r.minPrice);
+    const exact = withPrice.find((r: any) => r.name?.includes(name)) || results.find((r: any) => r.name?.includes(name));
+    const product = exact || withPrice[0] || results[0];
+    if (product) return { productId: product.id || product.productId, name: product.name, minPrice: product.minPrice };
     return null;
   } catch { return null; }
 }
