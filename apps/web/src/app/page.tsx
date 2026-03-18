@@ -52,6 +52,7 @@ const SUBCHAINS: Record<string, { he: string; logo: string }> = {
   'שופרסל שלי':    { he: 'שופרסל שלי',    logo: '/logos/subchains/shufersal-sheli.png' },
   'שופרסל דיל':    { he: 'שופרסל דיל',    logo: '/logos/subchains/shufersal-deal.png' },
   'שופרסל אקספרס': { he: 'שופרסל אקספרס', logo: '/logos/subchains/shufersal-express.png' },
+  'יש חסד':        { he: 'יש חסד',        logo: '/logos/subchains/yesh-hesed.png' },
   'Be':            { he: 'BE',             logo: '/logos/subchains/be.png' },
   'יש חסד':        { he: 'יש חסד',         logo: '/logos/subchains/yesh-hesed.png' },
   'יוניברס':       { he: 'יוניברס',        logo: '/logos/subchains/universe.png' },
