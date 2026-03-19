@@ -136,13 +136,13 @@ export async function storeRoutes(app) {
       JOIN product p ON p.id = sp.product_id
       WHERE s.chain_id = $1
         AND sp.price > 0
-        AND p.store_count > 300
-        AND p.min_price > 5
-        AND sp.price > p.min_price * 0.3
-        AND sp.price < p.min_price * 1.5
+        AND p.store_count > 50
+        AND p.min_price > 3
+        AND sp.price > p.min_price * 0.2
+        AND sp.price < p.min_price * 2.0
       GROUP BY p.id, p.name, p.image_url, p.category, p.min_price
-      HAVING MIN(sp.price) < p.min_price * 0.85
-        AND MIN(sp.price) > 3
+      HAVING MIN(sp.price) < p.min_price * 0.95
+        AND MIN(sp.price) > 2
       ORDER BY (p.min_price * 2.5 - MIN(sp.price)) DESC
       LIMIT 12
     `, [chainId]);
