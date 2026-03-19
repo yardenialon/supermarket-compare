@@ -116,6 +116,10 @@ export default async function ChainPage({ params }: { params: { name: string } }
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="font-black text-2xl text-stone-800 leading-tight">{nameHe}</h1>
+                <p className="sr-only">
+                  {nameHe} — {chain.storeCount} סניפים בישראל. השווה מחירים ב{nameHe} מול שופרסל, רמי לוי, ויקטורי ועוד 25 רשתות.
+                  מבצעים עדכניים, מחירים יומיים, וניווט לסניף הקרוב אליך.
+                </p>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span className="flex items-center gap-1 text-sm text-stone-500 bg-stone-50 px-2.5 py-1 rounded-full border border-stone-100">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2"/></svg>
