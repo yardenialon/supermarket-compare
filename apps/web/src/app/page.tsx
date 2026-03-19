@@ -1072,6 +1072,7 @@ export default function Home() {
               <a href="/supermarkets" className="text-xs text-stone-400 hover:text-emerald-600 transition">רשתות סופרמרקט</a>
               <span className="text-stone-200">·</span>
               <a href="/terms" className="text-xs text-stone-400 hover:text-emerald-600 transition">תנאי שימוש</a>
+              <a href="/guide" className="text-xs text-stone-400 hover:text-emerald-600 transition">מדריך השוואת מחירים</a>
               <span className="text-stone-200">·</span>
               <a href="/accessibility" className="text-xs text-stone-400 hover:text-emerald-600 transition">נגישות</a>
               <span className="text-stone-200">·</span>
