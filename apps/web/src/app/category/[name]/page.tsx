@@ -38,5 +38,21 @@ export async function generateMetadata({ params }: { params: { name: string } })
 export default async function CategoryPage({ params }: { params: { name: string } }) {
   const name = decodeURIComponent(params.name);
   const initialProducts = await getProducts(name);
-  return <CategoryClient name={name} initialProducts={initialProducts} />;
+  const count = initialProducts.length;
+  const minPrice = count > 0 ? Math.min(...initialProducts.map((p: any) => Number(p.minPrice)).filter(Boolean)) : null;
+
+  return (
+    <>
+      <div className="sr-only">
+        <h1>{name} | השוואת מחירים בסופרמרקט | Savy</h1>
+        <p>
+          השווה מחירי {name} ב-25+ רשתות סופרמרקט בישראל כולל שופרסל, רמי לוי, ויקטורי, אושר עד וקרפור.
+          {count > 0 && ` נמצאו ${count}+ מוצרים בקטגוריית ${name}.`}
+          {minPrice && ` המחיר הזול ביותר החל מ-₪${minPrice.toFixed(2)}.`}
+          {" "}נתונים מתעדכנים יומית מכל הסופרמרקטים בישראל.
+        </p>
+      </div>
+      <CategoryClient name={name} initialProducts={initialProducts} />
+    </>
+  );
 }
