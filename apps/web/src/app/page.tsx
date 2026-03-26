@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { api, dealsApi } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { DealModal, HotDealsSlider } from "@/components/DealModal";
+import HowItWorks from "@/components/HowItWorks";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
