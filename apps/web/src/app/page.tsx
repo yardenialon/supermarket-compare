@@ -468,6 +468,8 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <HowItWorks />
       {/* Logo Marquee */}
       <LogoMarquee />
 
