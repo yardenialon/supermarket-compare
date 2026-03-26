@@ -193,7 +193,6 @@ export default function HamburgerMenu({ listCount = 0 }: { listCount?: number })
 
               {/* Smart tools */}
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-3 pt-4 pb-1.5">כלים חכמים</p>
-              <NavItem icon={<IconReceipt />} label="סריקת קבלה" sublabel="AI מנתח את הקבלה שלך" href="/receipt" onClick={close} highlight />
               <NavItem
                 icon={<IconTag />}
                 label="מבצעים"
