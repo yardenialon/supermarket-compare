@@ -202,6 +202,7 @@ export default function HamburgerMenu({ listCount = 0 }: { listCount?: number })
                 badge={<span className="text-xs px-1.5 py-0.5 rounded-full bg-red-100 text-red-500 font-semibold">🔥</span>}
               />
               <NavItem icon={<IconBasket />} label="סל ירקות ופירות" sublabel="השווה מחירי תוצרת טרייה" href="/produce" onClick={close} />
+              <NavItem icon={<IconSearch />} label="השוואת סל קניות אונליין" sublabel="השווה סל קניות בין כל הרשתות" href="/online" onClick={close} />
 
               {/* Info */}
               <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-3 pt-4 pb-1.5">מידע</p>
