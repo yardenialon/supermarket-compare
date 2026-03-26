@@ -1,7 +1,20 @@
-'use client';
+{
+    href: '/receipt',
+    label: 'סריקה',
+    icon: (_active: boolean) => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 7V5C4 4.45 4.45 4 5 4H7M17 4H19C19.55 4 20 4.45 20 5V7M20 17V19C20 19.55 19.55 20 19 20H17M7 20H5C4.45 20 4 19.55 4 19V17"
+          stroke="white" strokeWidth="2" strokeLinecap="round" />
+        <rect x="7" y="9" width="2" height="6" rx="1" fill="white" />
+        <rect x="11" y="7" width="2" height="10" rx="1" fill="white" />
+        <rect x="15" y="10" width="2" height="4" rx="1" fill="white" />
+      </svg>
+    ),
+    isFab: true,
+  },'use client';
 import { usePathname } from 'next/navigation';
 
-const tabs = [
+const tabs = [git add -A && git commit -m "fix: remove receipt from BottomNav" && git pull --rebase && git push
   {
     href: '/',
     label: 'בית',
@@ -26,20 +39,7 @@ const tabs = [
       </svg>
     ),
   },
-  {
-    href: '/receipt',
-    label: 'סריקה',
-    icon: (_active: boolean) => (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M4 7V5C4 4.45 4.45 4 5 4H7M17 4H19C19.55 4 20 4.45 20 5V7M20 17V19C20 19.55 19.55 20 19 20H17M7 20H5C4.45 20 4 19.55 4 19V17"
-          stroke="white" strokeWidth="2" strokeLinecap="round" />
-        <rect x="7" y="9" width="2" height="6" rx="1" fill="white" />
-        <rect x="11" y="7" width="2" height="10" rx="1" fill="white" />
-        <rect x="15" y="10" width="2" height="4" rx="1" fill="white" />
-      </svg>
-    ),
-    isFab: true,
-  },
+
   {
     href: '/deals',
     label: 'מבצעים',
