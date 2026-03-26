@@ -134,9 +134,12 @@ export default function HowItWorks() {
       </div>
 
       <div className="text-center">
-        <a href="/" className="block w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium text-sm rounded-xl transition-colors mb-2">
-          התחילו עכשיו — זה חינמי ←
-        </a>
+        <button
+          onClick={() => document.querySelector<HTMLInputElement>('input[placeholder*="חלב"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+          className="block w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-medium text-sm rounded-xl transition-all mb-2"
+        >
+          חפשו מוצר עכשיו ←
+        </button>
         <p className="text-xs text-gray-400">מעל 1,200 משתמשים פעילים · ללא פרסומות · חינמי לתמיד</p>
       </div>
     </section>
