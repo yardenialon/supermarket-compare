@@ -119,7 +119,7 @@ export default function HowItWorks() {
 
       <div className="flex items-center gap-3 mb-5">
         <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-xs text-gray-400">למה Savy?</span>
+        <span className="text-sm font-semibold text-gray-700">למה Savy?</span>
         <div className="flex-1 h-px bg-gray-100" />
       </div>
 
