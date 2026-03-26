@@ -1,20 +1,7 @@
-{
-    href: '/receipt',
-    label: 'סריקה',
-    icon: (_active: boolean) => (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M4 7V5C4 4.45 4.45 4 5 4H7M17 4H19C19.55 4 20 4.45 20 5V7M20 17V19C20 19.55 19.55 20 19 20H17M7 20H5C4.45 20 4 19.55 4 19V17"
-          stroke="white" strokeWidth="2" strokeLinecap="round" />
-        <rect x="7" y="9" width="2" height="6" rx="1" fill="white" />
-        <rect x="11" y="7" width="2" height="10" rx="1" fill="white" />
-        <rect x="15" y="10" width="2" height="4" rx="1" fill="white" />
-      </svg>
-    ),
-    isFab: true,
-  },'use client';
+'use client';
 import { usePathname } from 'next/navigation';
 
-const tabs = [git add -A && git commit -m "fix: remove receipt from BottomNav" && git pull --rebase && git push
+const tabs = [
   {
     href: '/',
     label: 'בית',
@@ -39,7 +26,6 @@ const tabs = [git add -A && git commit -m "fix: remove receipt from BottomNav" &
       </svg>
     ),
   },
-
   {
     href: '/deals',
     label: 'מבצעים',
@@ -84,37 +70,16 @@ export default function BottomNav() {
 
         <div className="relative flex items-end justify-around px-1 pb-safe pt-2 h-16">
           {tabs.map((tab) => {
-            const isActive = tab.isFab
-              ? pathname === '/receipt'
-              : tab.href === '/'
+            const isActive =
+              tab.href === '/'
               ? pathname === '/' && !searchParams?.get('tab')
               : tab.href.includes('?tab=')
               ? pathname === '/' && searchParams?.get('tab') === tab.href.split('tab=')[1]
               : pathname.startsWith(tab.href.split('?')[0]) && tab.href !== '/';
 
-            if (tab.isFab) {
-              return (
-                <a key={tab.href} href={tab.href}
-                  className="flex flex-col items-center -mt-5 relative">
-                  {/* FAB */}
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center active:scale-95 transition-transform"
-                    style={{
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      boxShadow: '0 4px 16px rgba(16,185,129,0.4)',
-                    }}
-                  >
-                    {tab.icon(true)}
-                  </div>
-                  <span className="text-[10px] text-emerald-600 font-bold mt-1">{tab.label}</span>
-                </a>
-              );
-            }
-
             return (
               <a key={tab.href} href={tab.href}
                 className="flex flex-col items-center gap-0.5 flex-1 py-1 active:scale-95 transition-transform">
-                {/* Icon bubble — תואם ל-HamburgerMenu */}
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
                   isActive ? 'bg-emerald-50' : 'bg-transparent'
                 }`}>
