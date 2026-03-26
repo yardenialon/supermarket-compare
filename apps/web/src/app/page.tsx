@@ -449,16 +449,16 @@ export default function Home() {
               </svg>
             </span> משלמים?
           </h1>
-          <p className="text-stone-400 text-sm mt-1">25+ רשתות · 7.5 מיליון מחירים · מתעדכן יומיומית</p>
+          <p className="text-stone-400 text-sm mt-1">30+ רשתות · 8.5 מיליון מחירים · מתעדכן יומיומית · 2,000 חנויות</p>
 
           {/* סטטיסטיקות */}
           <div className="flex justify-center gap-4 mt-4">
             <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
-              <div className="font-black text-lg text-emerald-600 leading-none">25+</div>
+              <div className="font-black text-lg text-emerald-600 leading-none">30+</div>
               <div className="text-[10px] text-stone-400 mt-0.5">רשתות</div>
             </div>
             <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
-              <div className="font-black text-lg text-emerald-600 leading-none">7.5M</div>
+              <div className="font-black text-lg text-emerald-600 leading-none">8.5M</div>
               <div className="text-[10px] text-stone-400 mt-0.5">מחירים</div>
             </div>
             <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
@@ -1048,7 +1048,7 @@ export default function Home() {
           <div className="flex flex-col items-center gap-5">
             {/* Logo */}
             <div className="text-2xl font-black text-emerald-600 tracking-tight">savy</div>
-            <p className="text-xs text-stone-400 text-center">השוואת מחירי סופרמרקט בישראל · 25+ רשתות · 7.5 מיליון מחירים</p>
+            <p className="text-xs text-stone-400 text-center">השוואת מחירי סופרמרקט בישראל · 30+ רשתות · 8.5 מיליון מחירים</p>
 
             {/* Social Icons */}
             <div className="flex items-center gap-4">
