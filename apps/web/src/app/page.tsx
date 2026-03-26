@@ -504,16 +504,47 @@ export default function Home() {
         <HotDealsSlider userLat={userLoc?.lat} userLng={userLoc?.lng} onAddToList={(deal) => { try { const saved = localStorage.getItem("savy-list"); const list = saved ? JSON.parse(saved) : []; if (!list.find((i: any) => i.product?.id === deal.productId)) { list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 }); localStorage.setItem("savy-list", JSON.stringify(list)); } } catch {} }} />
         <div className="max-w-2xl mx-auto px-4">
           <div className="relative">
-    <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 sm:px-5 py-4 sm:py-5 pr-12 rounded-xl bg-white border border-stone-200 shadow-sm text-lg sm:text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all placeholder:text-stone-300" />
-    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 text-2xl sm:text-xl">🔍</span>
+    <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 py-4 pr-14 rounded-2xl bg-white border-2 border-gray-100 text-base focus:outline-none focus:ring-0 focus:border-emerald-400 transition-all placeholder:text-gray-300 shadow-sm hover:border-emerald-200" style={{boxShadow:'0 2px 12px rgba(16,185,129,0.08)'}} />
+    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center" style={{background:'linear-gradient(135deg,#10b981,#059669)'}}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2.5"/>
+        <path d="M21 21L16.65 16.65" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      </svg>
+    </div>
 
   </div>
-          <div className="mt-4 flex justify-center gap-2">
-            <button onClick={() => setLocMode('cheapest')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'cheapest' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>💰 הכי זול בארץ</button>
-            <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }); } }} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'nearby' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : locStatus === 'loading' ? "bg-amber-50 border border-amber-300 text-amber-600 animate-pulse" : "bg-white border-2 border-emerald-400 text-emerald-600 hover:bg-emerald-50 shadow-sm")}>
-              {locStatus === 'loading' ? '📍 מאתר...' : '📍 הכי זול ליד'}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <button onClick={() => setLocMode('bychain')} className={"flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all " + (locMode === 'bychain' ? "bg-emerald-500 border-emerald-500 shadow-lg" : "bg-white border-gray-100 hover:border-emerald-200")}>
+              <div className={"w-9 h-9 rounded-xl flex items-center justify-center transition-all " + (locMode === 'bychain' ? "bg-white/20" : "bg-gray-50")}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="7" height="7" rx="2" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2"/>
+                  <rect x="14" y="3" width="7" height="7" rx="2" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2"/>
+                  <rect x="3" y="14" width="7" height="7" rx="2" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2"/>
+                  <path d="M17.5 14v6M14.5 17h6" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <span className={"text-xs font-bold tracking-tight " + (locMode === 'bychain' ? "text-white" : "text-gray-700")}>לפי רשת</span>
+              <span className={"text-[10px] " + (locMode === 'bychain' ? "text-white/70" : "text-gray-400")}>השווה רשתות</span>
             </button>
-            <button onClick={() => setLocMode('bychain')} className={"flex-1 max-w-[180px] px-4 py-3 rounded-xl text-sm font-bold transition-all " + (locMode === 'bychain' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200" : "bg-white border border-stone-200 text-stone-400 hover:border-stone-300")}>🏪 לפי רשת</button>
+            <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }); } }} className={"flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all " + (locMode === 'nearby' ? "bg-emerald-500 border-emerald-500 shadow-lg" : locStatus === 'loading' ? "bg-amber-50 border-amber-300 animate-pulse" : "bg-white border-gray-100 hover:border-emerald-200")}>
+              <div className={"w-9 h-9 rounded-xl flex items-center justify-center " + (locMode === 'nearby' ? "bg-white/20" : "bg-gray-50")}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="10" r="3" stroke={locMode === 'nearby' ? 'white' : '#6b7280'} strokeWidth="2"/>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke={locMode === 'nearby' ? 'white' : '#6b7280'} strokeWidth="2"/>
+                </svg>
+              </div>
+              <span className={"text-xs font-bold tracking-tight " + (locMode === 'nearby' ? "text-white" : "text-gray-700")}>{locStatus === 'loading' ? 'מאתר...' : 'הכי זול ליד'}</span>
+              <span className={"text-[10px] " + (locMode === 'nearby' ? "text-white/70" : "text-gray-400")}>לפי מיקום</span>
+            </button>
+            <button onClick={() => setLocMode('cheapest')} className={"flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all " + (locMode === 'cheapest' ? "bg-emerald-500 border-emerald-500 shadow-lg" : "bg-white border-gray-100 hover:border-emerald-200")}>
+              <div className={"w-9 h-9 rounded-xl flex items-center justify-center " + (locMode === 'cheapest' ? "bg-white/20" : "bg-gray-50")}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke={locMode === 'cheapest' ? 'white' : '#6b7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className={"text-xs font-bold tracking-tight " + (locMode === 'cheapest' ? "text-white" : "text-gray-700")}>הכי זול בארץ</span>
+              <span className={"text-[10px] " + (locMode === 'cheapest' ? "text-white/70" : "text-gray-400")}>כל הסניפים</span>
+            </button>
           </div>
           {locMode === 'bychain' && list.length > 0 && (
             <div className="mt-4 space-y-2">
@@ -571,11 +602,20 @@ export default function Home() {
               </div>
             </div>
           )}
-          <div className="flex flex-wrap gap-2 mt-3 justify-center">
-            <button onClick={() => setShowCats(p => !p)} className={"px-4 py-2.5 sm:py-2 rounded-lg text-sm sm:text-xs font-bold transition border " + (showCats ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-500 hover:border-stone-300")}>📂 קטגוריות</button>
-            {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'}].map(qs => (
-              <button key={qs.q} onClick={() => { setQ(qs.q); search(qs.q); setSortBy('stores'); }} className="px-4 py-2.5 sm:py-2 rounded-lg bg-white border border-stone-200 text-sm sm:text-xs hover:border-emerald-400 hover:bg-emerald-50 transition">{qs.e} {qs.l}</button>
-            ))}
+          <div className="mt-4">
+            <p className="text-[11px] font-semibold text-gray-400 mb-2.5 px-1 uppercase tracking-wide">חיפושים פופולריים</p>
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{scrollbarWidth:'none'}}>
+              {[{e:'🥛',l:'חלב',q:'חלב'},{e:'🍞',l:'לחם',q:'לחם'},{e:'🥚',l:'ביצים',q:'ביצים'},{e:'🍫',l:'במבה',q:'במבה'},{e:'☕',l:'קפה',q:'קפה'},{e:'🧴',l:'שמפו',q:'שמפו'},{e:'🛢️',l:'שמן',q:'שמן'},{e:'🍚',l:'אורז',q:'אורז'},{e:'🍝',l:'פסטה',q:'פסטה'},{e:'🧀',l:'גבינה',q:'גבינה'},{e:'🥩',l:'עוף',q:'עוף'},{e:'🥤',l:'קולה',q:'קולה'}].map(qs => (
+                <button key={qs.q} onClick={() => { setQ(qs.q); search(qs.q); setSortBy('stores'); }} className="flex-shrink-0 flex flex-col items-center gap-1.5 bg-white border-2 border-gray-100 rounded-2xl px-3.5 py-2.5 hover:border-emerald-400 hover:bg-emerald-50 hover:-translate-y-0.5 transition-all">
+                  <span className="text-2xl leading-none">{qs.e}</span>
+                  <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">{qs.l}</span>
+                </button>
+              ))}
+              <button onClick={() => setShowCats(p => !p)} className={"flex-shrink-0 flex flex-col items-center gap-1.5 border-2 rounded-2xl px-3.5 py-2.5 transition-all " + (showCats ? "border-emerald-400 bg-emerald-50" : "bg-white border-gray-100 hover:border-emerald-400")}>
+                <span className="text-2xl leading-none">📂</span>
+                <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">קטגוריות</span>
+              </button>
+            </div>
           </div>
           {showCats && <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">{CATS.map(c => (<button key={c.label} onClick={() => { setQ(c.q); search(c.q); setShowCats(false); setSortBy('stores'); }} className="flex flex-col items-center gap-1.5 p-3.5 sm:p-3 rounded-xl bg-white border border-stone-100 hover:border-emerald-400 hover:bg-emerald-50 transition"><span className="text-2xl">{c.emoji}</span><span className="text-xs sm:text-[11px] font-semibold text-stone-500">{c.label}</span></button>))}</div>}
         </div>
