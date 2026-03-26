@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import AuthModal from './AuthModal';
 import dynamic from 'next/dynamic';
@@ -7,6 +7,12 @@ const HamburgerMenu = dynamic(() => import('./HamburgerMenu'), { ssr: false });
 
 export default function Header() {
   const [showAuth, setShowAuth] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 35);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const { user, setUser, logout } = useAuth();
 
   const initials = (user as any)?.name
@@ -15,8 +21,8 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl"
-        style={{ borderBottom: '1px solid rgba(16,185,129,0.12)' }}>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl transition-all duration-300"
+        style={{ borderBottom: scrolled ? '1px solid rgba(16,185,129,0.12)' : 'none' }}>
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
 
           {/* שמאל — פרופיל / כניסה */}
@@ -65,7 +71,7 @@ export default function Header() {
           </div>
 
           {/* מרכז — לוגו */}
-          <a href="/" className="absolute left-1/2 -translate-x-1/2">
+          <a href="/" className={`absolute left-1/2 -translate-x-1/2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <img src="/icons/savy-logo.png" alt="Savy" className="h-9 object-contain" />
           </a>
 
