@@ -117,21 +117,7 @@ export default function HowItWorks() {
         ))}
       </div>
 
-      <div className="flex items-center gap-3 mb-5">
-        <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-sm font-semibold text-gray-700">למה Savy?</span>
-        <div className="flex-1 h-px bg-gray-100" />
-      </div>
 
-      <div className="grid grid-cols-2 gap-2.5 mb-7">
-        {benefits.map((b) => (
-          <div key={b.name} className="bg-gray-50 rounded-xl p-3.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 block mb-2.5" />
-            <p className="text-xs font-medium text-gray-900 mb-0.5">{b.name}</p>
-            <p className="text-[11px] text-gray-500 leading-relaxed">{b.desc}</p>
-          </div>
-        ))}
-      </div>
 
       <div className="text-center">
         <button
