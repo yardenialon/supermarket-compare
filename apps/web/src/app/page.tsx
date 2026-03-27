@@ -792,7 +792,7 @@ export default function Home() {
       </div>)}
 
       {/* ==================== LIST TAB ==================== */}
-      {tab === 'list' && (<div className="fixed inset-0 z-40 bg-gray-50 overflow-y-auto pb-24" dir="rtl"><div className="max-w-xl mx-auto px-4 pt-4">
+      {tab === 'list' && (<div className="fixed inset-x-0 bottom-0 top-14 z-40 bg-gray-50 overflow-y-auto pb-24" dir="rtl"><div className="max-w-xl mx-auto px-4 pt-4">
         {/* Header */}
         <div className="sticky top-0 bg-gray-50 pt-2 pb-3 z-10">
           <div className="flex items-center justify-between mb-3">
