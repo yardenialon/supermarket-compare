@@ -1,41 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
-<meta charset="utf-8">
-<title>Wikimedia Error</title>
-<style>
-* { margin: 0; padding: 0; }
-body { background: #fff; font: 15px/1.6 sans-serif; color: #333; }
-.content { margin: 7% auto 0; padding: 2em 1em 1em; max-width: 640px; display: flex; flex-direction: row; flex-wrap: wrap; }
-.footer { clear: both; margin-top: 14%; border-top: 1px solid #e5e5e5; background: #f9f9f9; padding: 2em 0; font-size: 0.8em; text-align: center; }
-img { margin: 0 2em 2em 0; }
-a img { border: 0; }
-h1 { margin-top: 1em; font-size: 1.2em; }
-.content-text { flex: 1; }
-p { margin: 0.7em 0 1em 0; }
-a { color: #0645ad; text-decoration: none; }
-a:hover { text-decoration: underline; }
-code { font-family: sans-serif; }
-summary { font-weight: bold; cursor: pointer; }
-details[open] { background: #970302; color: #dfdedd; }
-.text-muted { color: #777; }
-@media (prefers-color-scheme: dark) {
-  a { color: #9e9eff; }
-  body { background: transparent; color: #ddd; }
-  .footer { border-top: 1px solid #444; background: #060606; }
-  #logo { filter: invert(1) hue-rotate(180deg); }
-  .text-muted { color: #888; }
-}
-</style>
-<meta name="color-scheme" content="light dark">
-<div class="content" role="main">
-<a href="https://www.wikimedia.org"><img id="logo" src="https://www.wikimedia.org/static/images/wmf-logo.png" srcset="https://www.wikimedia.org/static/images/wmf-logo-2x.png 2x" alt="Wikimedia" width="135" height="101">
-</a>
-<div class="content-text">
-<h1>Error</h1>
+<!--[if lte IE 8]>
+<html>
+<head>
+    <script>window.location.href = '/frontend/notsupported';</script>
+</head>
+<![endif]-->
+<!--[if IE 9]>
+<html xmlns:ng="http://angularjs.org" ng-controller="MainCtrl" ng-app="ZuZ"
+    class="ie ie9 {{config.language.direction}}" lang="{{config.language.culture}}"
+    ng-class="{'hub-child': !!config.hubRetailer.id && !backwardsHubId}">
+<![endif]-->
+<!--[if !IE]><!-->
+<html ng-controller="MainCtrl" ng-app="ZuZ"
+      class="{{config.language.direction}}" lang="{{config.language.culture}}"
+      ng-class="{'hub-child': !!config.hubRetailer.id && !backwardsHubId}">
+<!--<![endif]-->
+<!--[if gte IE 9]><!-->
 
-<p>Not Found</p>
-</div>
-</div>
-<div class="footer"><p>If you report this error to the Wikimedia System Administrators, please include the details below.</p><p class="text-muted"><code>Request served via cp3078 cp3078, Varnish XID 369720542<br>Upstream caches: cp3078 int<br>Error: 404, Not Found at Fri, 27 Mar 2026 22:19:03 GMT<br><details><summary>Sensitive client information</summary>IP address: 4.210.177.137</details></code></p>
-</div>
+<head>
+    <!-- canonical -->
+    <link rel="canonical" ng-if="MetaTags.productCanonical || MetaTags.canonical" ng-href="{{MetaTags.productCanonical || MetaTags.canonical}}">
+
+    <!-- alternate -->
+    <link rel="alternate" ng-repeat="alternateUrl in MetaTags.alternateUrls" 
+        ng-href="{{alternateUrl.url}}" 
+        hreflang="{{alternateUrl.culture}}" />
+
+    
+
+    <!-- Open graph tags (Facebook) -->
+    <meta property="og:title" content="{{MetaTags.productTitle || MetaTags.title}}"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:description" content="{{MetaTags.productDescription || MetaTags.description}}"/>
+    <meta property="og:image" ng-if="MetaTags.productImage || MetaTags.image" content="{{MetaTags.productImage || MetaTags.image}}"/>
+    <meta property="og:url" ng-if="MetaTags.productCanonical || MetaTags.canonical" content="{{MetaTags.productCanonical || MetaTags.canonical}}"/>
+
+    <!--manifest-->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="msapplication-starturl" content="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="keywords" content="{{MetaTags.productKeywords || MetaTags.keywords}}">
+    <meta name="description" content="{{MetaTags.productDescription || MetaTags.description}}">
+
+    
+
+    <title ng-bind="(MetaTags.productTitle || MetaTags.title) | title:config.language.culture">quik</title>
+
+    <!-- Set favicon -->
+    <!--TODO: need to remove siteIcon from settings-->
+    <link rel="shortcut icon"
+          href="https://d226b0iufwcjmj.cloudfront.net/retailers/1541/favIcon/1706693956235.ico"/>
+
+    <!-- add script for retailer data (_data.ejs) -->
+    <script type="text/javascript" src="https://htmlcache.blob.core.windows.net/html-production-env/r-1541/desktop/multi-true/data.js?c=1774640286979" defer></script>
+
+    <!-- set PleaseRotateOptions -->
+    <script type="text/javascript">
+        (function() {
+			var landscape = window.innerWidth > window.innerHeight;
+			window.PleaseRotateOptions = {
+				onlyMobile: true,
+				forceLandscape: !landscape
+			};
+			window.prerenderReady = false;
+        })();
+    </script>
+
+    
+    
+
+    
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            
+        </script>
+
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-53W7TN"
+                          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-53W7TN');</script>
+
+        
+            <!-- Google Tag Manager -->
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W4T6JXTW"
+                              height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+            <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                })(window,document,'script','dataLayer','GTM-W4T6JXTW');</script>
+            <!-- End Google Tag Manager -->
+        
+    
+
+    <link rel="stylesheet" href="https://d226b0iufwcjmj.cloudfront.net/frontend/0.1.953/style.css">
+
+    <link rel="stylesheet" href="https://d226b0iufwcjmj.cloudfront.net/frontend/Kikar/0.1.1035/style.css">
+
+    <!-- Theme css -->
+    <style id="theme_css" type="text/css"></style>
+
+    <!-- Overwrite style -->
+    
+    <link id="override" rel="stylesheet" href="https://d226b0iufwcjmj.cloudfront.net/retailers/1541/styleOverride/1714638126974.css"/>
+    
+
+    <script src="https://d226b0iufwcjmj.cloudfront.net/frontend/0.1.953/vendors.js" defer></script>
+
+    <script src="https://d226b0iufwcjmj.cloudfront.net/frontend/Kikar/0.1.1035/app.js" defer></script>
+
+    <script src="https://d226b0iufwcjmj.cloudfront.net/frontend/0.1.953/app.js" defer></script>
+
+    <!-- ************************************************ SCRIPTS ************************************************ -->
+    
+
+
+    
+
+    <!-- ************************************************ SCRIPTS ************************************************-->
+</head>
+
+<body tabindex="0">
+<header ui-view="header"></header>
+<section class="main" ng-controller="MainKikarCtrl" id="main_content" tabindex="-1">
+    <section class="view" tabindex="0" aria-labelledby="page_title">
+        <div ui-view endless-scroll="endlessScrollOptions"></div>
+    </section>
+    <div class="sidenav" ui-view="sidenav"></div>
+</section>
+<footer ui-view="footer" role="contentinfo" id="footer" tabindex="-1"></footer>
+<ng-include src="'template/icons.svg'"></ng-include>
+
+
+    <script>window.nl_dir = 'https://d226b0iufwcjmj.cloudfront.net/nagishli/nl-files/';</script>
+    <script src="https://d226b0iufwcjmj.cloudfront.net/nagishli/nagishli.js?v=1" defer></script>
+
+
+
+
+</body>
+<!--<![endif]-->
 </html>
