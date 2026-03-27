@@ -16,6 +16,7 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Mahsani Ashuk':{ he: 'מחסני השוק',  color: '#f97316', logo: '/logos/mahsani-ashuk.png' },
   'Dor Alon':     { he: 'דור אלון',    color: '#0d9488', logo: '/logos/alunit.png' },
   'Carrefour':    { he: 'קרפור',       color: '#004e9f', logo: '/logos/Carrefour.png' },
+  'Quik':         { he: 'קוויק',       color: '#84cc16', logo: '/logos/quik.png' },
   'Shuk Ahir':    { he: 'שוק העיר',    color: '#dc2626', logo: '/logos/shuk-haeir.png' },
   'Wolt':         { he: 'וולט',        color: '#00c2e8', logo: '/logos/wolt.png' },
 };
@@ -35,6 +36,7 @@ const chainUrl = (chainName: string): string | null => {
   if (n.includes('mega')) return 'https://www.mega.co.il';
   if (n.includes('wolt')) return 'https://wolt.com/he/isr';
   if (n.includes('carrefour')) return 'https://www.carrefour.co.il';
+  if (n.includes('quik')) return 'https://www.quik.co.il';
   if (n.includes('shuk') || n.includes('ahir')) return 'https://www.shukcity.co.il';
   return null;
 };
@@ -208,7 +210,7 @@ export default function OnlinePage() {
         </div>
 
         <div className="flex flex-wrap gap-3 justify-center">
-          {['Shufersal','Rami Levy','Hazi Hinam','Victory','Mahsani Ashuk','Dor Alon','Carrefour','Shuk Ahir','Wolt'].map(chain => (
+          {['Shufersal','Rami Levy','Hazi Hinam','Victory','Mahsani Ashuk','Dor Alon','Carrefour','Quik','Shuk Ahir','Wolt'].map(chain => (
             <div key={chain} className="flex items-center justify-center bg-white rounded-2xl p-2 shadow-sm border border-stone-100">
               <CLogo name={chain} size={56} />
             </div>
