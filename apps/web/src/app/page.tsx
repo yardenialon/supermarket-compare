@@ -1052,7 +1052,7 @@ export default function Home() {
             </a>
           ))}
         </div>
-      </div>
+      </div></div>)}
 
       {/* Footer */}
       <footer className="mt-12 border-t border-stone-100 bg-white/80 backdrop-blur-sm">
