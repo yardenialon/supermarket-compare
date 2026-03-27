@@ -792,52 +792,58 @@ export default function Home() {
       </div>)}
 
       {/* ==================== LIST TAB ==================== */}
-      {tab === 'list' && (<div className="fixed inset-0 z-40 bg-gray-50 overflow-y-auto pb-24" dir="rtl"><div className="max-w-2xl mx-auto px-4 pt-4">
-        {/* List page header */}
-        <div className="flex items-center justify-between mb-5">
-          <button onClick={() => setTab('search')} className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            חזרה
-          </button>
-          <h1 className="text-base font-bold text-gray-900">רשימת קניות</h1>
-          <button onClick={() => setTab('search')} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2.5"/><path d="M21 21L16.65 16.65" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
-            + הוסף מוצר
-          </button>
+      {tab === 'list' && (<div className="fixed inset-0 z-40 bg-gray-50 overflow-y-auto pb-24" dir="rtl"><div className="max-w-xl mx-auto px-4 pt-4">
+        {/* Header */}
+        <div className="sticky top-0 bg-gray-50 pt-2 pb-3 z-10">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => setTab('search')} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-500 hover:text-gray-800 transition">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <div className="text-center">
+              <h1 className="text-base font-bold text-gray-900">רשימת קניות</h1>
+              {list.length > 0 && <p className="text-xs text-gray-400">{list.length} פריטים</p>}
+            </div>
+            <button onClick={() => setTab('search')} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              הוסף
+            </button>
+          </div>
         </div>
         {!list.length ? (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-stone-100 flex items-center justify-center text-3xl mb-4">📋</div>
-            <div className="text-lg font-bold text-stone-700">הרשימה ריקה</div>
-            <div className="text-sm text-stone-400 mt-1">חפשו מוצרים והוסיפו לרשימה</div>
-            <button onClick={() => setTab('search')} className="mt-5 px-6 py-3 rounded-xl bg-stone-900 text-white text-sm font-bold hover:bg-stone-800 transition shadow-lg">🔍 חיפוש מוצרים</button>
+          <div className="text-center py-24">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-3xl mb-4 shadow-sm">📋</div>
+            <div className="text-lg font-bold text-gray-700 mb-1">הרשימה ריקה</div>
+            <div className="text-sm text-gray-400 mb-6">חפשו מוצרים והוסיפו לרשימה</div>
+            <button onClick={() => setTab('search')} className="px-6 py-3 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition shadow-lg shadow-emerald-100">
+              🔍 חפשו מוצרים
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-            {/* My list - 2 cols */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-black text-lg text-stone-800">הרשימה שלי <span className="text-stone-300 font-medium text-sm">({list.length})</span></h3>
+          <div className="flex flex-col gap-4">
+            {/* רשימת מוצרים */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
+                <span className="font-bold text-sm text-gray-900">הרשימה שלי</span>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => { setList([]); setListResults([]); }} className="text-xs px-3 py-2 rounded-lg border border-stone-200 text-stone-400 font-semibold hover:text-red-500 hover:border-red-200 transition whitespace-nowrap">🗑 נקה</button>
-                  <button onClick={() => setTab('search')} className="text-xs px-3 py-2 rounded-lg bg-stone-900 text-white font-bold hover:bg-stone-700 transition whitespace-nowrap">+ הוסף</button>
-                  <button onClick={shareList} disabled={sharing} className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-[#25D366] text-white font-bold hover:bg-[#1fb855] transition-all shadow-md shadow-green-200 disabled:opacity-50 whitespace-nowrap">
-                    {sharing ? "שולח..." : <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="white" className="shrink-0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                      <span>שתף בוואטסאפ</span>
-                    </>}
+                  <button onClick={shareList} disabled={sharing} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#25D366] text-white hover:bg-[#1fb855] transition disabled:opacity-50">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    {sharing ? "שולח..." : "שתף"}
+                  </button>
+                  <button onClick={() => { setList([]); setListResults([]); }} className="text-xs px-3 py-1.5 rounded-lg border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-100 transition">
+                    נקה
                   </button>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="divide-y divide-gray-50">
                 {list.map(item => (
-                  <div key={item.product.id} className="bg-white rounded-xl p-3.5 border border-stone-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <ProductImg barcode={item.product.barcode} name={item.product.name} size={44} imageUrl={productImages[item.product.id] || item.product.imageUrl} />
-                      <div className="min-w-0"><div className="font-bold text-sm text-stone-800 leading-snug">{item.product.name}</div><div className="text-xs text-stone-400">{item.product.minPrice ? `מ-₪${Number(item.product.minPrice).toFixed(2)}` : ''}{item.product.brand && ` · ${item.product.brand}`}</div></div>
+                  <div key={item.product.id} className="flex items-center gap-3 px-4 py-3">
+                    <ProductImg barcode={item.product.barcode} name={item.product.name} size={40} imageUrl={productImages[item.product.id] || item.product.imageUrl} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-gray-900 truncate">{item.product.name}</div>
+                      <div className="text-xs text-gray-400 truncate">{item.product.minPrice ? `מ-₪${Number(item.product.minPrice).toFixed(2)}` : ''}{item.product.brand ? ` · ${item.product.brand}` : ''}</div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 mr-2">
-                      <button onClick={() => updateQty(item.product.id, item.qty - 1)} className="w-9 h-9 sm:w-7 sm:h-7 rounded-lg bg-stone-100 flex items-center justify-center text-stone-500 font-bold text-base sm:text-sm hover:bg-stone-200 transition">−</button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button onClick={() => updateQty(item.product.id, item.qty - 1)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200 transition">−</button>
                       <span className="w-6 text-center font-bold text-sm">{item.qty}</span>
                       <button onClick={() => updateQty(item.product.id, item.qty + 1)} className="w-9 h-9 sm:w-7 sm:h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-base sm:text-sm hover:bg-emerald-200 transition">+</button>
                       <button onClick={() => removeFromList(item.product.id)} className="w-9 h-9 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-red-500 hover:bg-red-50 transition text-base sm:text-sm">✕</button>
@@ -847,12 +853,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Store comparison - 3 cols */}
-            <div className="lg:col-span-3">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-black text-lg text-stone-800">השוואת סלים</h3>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setLocMode('cheapest')} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (locMode === 'cheapest' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>💰 זול</button>
+            {/* השוואת סלים */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
+                <span className="font-bold text-sm text-gray-900">השוואת סלים</span>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => setLocMode('cheapest')} className={"text-xs font-bold px-2.5 py-1.5 rounded-lg transition border " + (locMode === 'cheapest' ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-gray-100 bg-gray-50 text-gray-400")}>💰 זול</button>
                   {locStatus === 'granted' ? (
                     <button onClick={() => setLocMode('nearby')} className={"px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-[10px] font-bold transition border " + (locMode === 'nearby' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-stone-200 bg-white text-stone-400")}>📍 קרוב אליי</button>
                   ) : locStatus === 'loading' ? (
