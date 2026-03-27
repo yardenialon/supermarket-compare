@@ -470,6 +470,8 @@ export default function Home() {
       </section>
 
 
+      {/* How It Works */}
+      <HowItWorks />
       {/* Logo Marquee */}
       <LogoMarquee />
 
