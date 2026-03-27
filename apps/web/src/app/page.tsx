@@ -804,10 +804,39 @@ export default function Home() {
               <h1 className="text-base font-bold text-gray-900">רשימת קניות</h1>
               {list.length > 0 && <p className="text-xs text-gray-400">{list.length} פריטים</p>}
             </div>
-            <button onClick={() => setTab('search')} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
-              הוסף
-            </button>
+            <div className="w-9" />
+          </div>
+          {/* חיפוש inline */}
+          <div className="relative">
+            <div className="flex items-center bg-white border-2 border-gray-100 rounded-2xl px-3 py-2.5 gap-2 focus-within:border-emerald-400 transition-all">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:'linear-gradient(135deg,#10b981,#059669)'}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2.5"/><path d="M21 21L16.65 16.65" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>
+              </div>
+              <input
+                value={q}
+                onChange={e => onInput(e.target.value)}
+                placeholder="הוסיפו מוצר לרשימה..."
+                className="flex-1 outline-none text-sm text-gray-800 placeholder-gray-300 bg-transparent"
+                autoComplete="off"
+              />
+              {q && <button onClick={() => { setQ(''); setResults([]); }} className="text-gray-300 hover:text-gray-500 transition text-lg leading-none">×</button>}
+            </div>
+            {/* תוצאות חיפוש */}
+            {results && results.length > 0 && q && (
+              <div className="absolute top-full right-0 left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden max-h-72 overflow-y-auto">
+                {results.slice(0, 6).map((p: any) => (
+                  <button key={p.id} onClick={() => { addToList(p); setQ(''); setResults([]); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 active:bg-emerald-100 transition text-right border-b border-gray-50 last:border-0">
+                    <ProductImg barcode={p.barcode} name={p.name} size={36} imageUrl={productImages[p.id] || p.imageUrl} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 text-sm truncate">{p.name}</div>
+                      <div className="text-xs text-gray-400">{p.minPrice ? `מ-₪${Number(p.minPrice).toFixed(2)}` : ''}{p.brand ? ` · ${p.brand}` : ''}</div>
+                    </div>
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">+</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {!list.length ? (
