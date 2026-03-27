@@ -473,32 +473,37 @@ export default function Home() {
       {/* How It Works */}
       <HowItWorks />
       {/* Logo Marquee */}
-      <LogoMarquee />
-
       {/* Tabs */}
-      <div className="flex justify-center px-4 mb-5 mt-2">
-        <div className="flex bg-stone-100 rounded-2xl p-1 gap-1 w-full max-w-sm">
+      <div className="flex justify-center px-4 mb-4 mt-1">
+        <div className="flex bg-gray-100 rounded-2xl p-1 gap-1 w-full max-w-sm">
           <button onClick={() => setTab('search')}
-            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 " +
-              (tab === 'search' ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600")}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2.5"/>
-              <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
+            className={"flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 " +
+              (tab === 'search' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600")}>
+            <div className={"w-6 h-6 rounded-lg flex items-center justify-center " + (tab === 'search' ? "bg-emerald-500" : "bg-transparent")}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke={tab === 'search' ? 'white' : 'currentColor'} strokeWidth="2.5"/>
+                <path d="M21 21L16.65 16.65" stroke={tab === 'search' ? 'white' : 'currentColor'} strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+            </div>
             חיפוש מוצר
           </button>
           <button onClick={() => setTab('list')}
-            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 relative " +
-              (tab === 'list' ? "bg-white text-stone-800 shadow-sm" : "text-stone-400 hover:text-stone-600")}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M6 2L3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6L18 2H6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3 6H21M16 10C16 11.1 15.6 12.2 14.8 13C14.1 13.8 13 14 12 14C11 14 9.9 13.8 9.2 13C8.4 12.2 8 11.1 8 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+            className={"flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 relative " +
+              (tab === 'list' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600")}>
+            <div className={"w-6 h-6 rounded-lg flex items-center justify-center " + (tab === 'list' ? "bg-emerald-500" : "bg-transparent")}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M9 6h11M9 12h11M9 18h11" stroke={tab === 'list' ? 'white' : 'currentColor'} strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="4" cy="6" r="1.5" fill={tab === 'list' ? 'white' : 'currentColor'}/>
+                <circle cx="4" cy="12" r="1.5" fill={tab === 'list' ? 'white' : 'currentColor'}/>
+                <circle cx="4" cy="18" r="1.5" fill={tab === 'list' ? 'white' : 'currentColor'}/>
+              </svg>
+            </div>
             רשימת קניות
             {list.length > 0 && <span className="absolute -top-1.5 -left-1.5 bg-emerald-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black shadow">{list.length}</span>}
           </button>
         </div>
       </div>
+      <LogoMarquee />
 
       {/* ==================== SEARCH TAB ==================== */}
       {tab === 'search' && (<div>
