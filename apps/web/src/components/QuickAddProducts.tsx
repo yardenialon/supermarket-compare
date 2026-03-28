@@ -61,7 +61,7 @@ export default function QuickAddProducts({ onAdd }: { onAdd: (p: Product) => voi
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   const fetchCategory = useCallback(async (idx: number) => {
-    if (cache[idx]) return;
+    if (cache[idx] && cache[idx].length > 1) return; // טוען רק אם יש יותר ממוצר ברירת מחדל אחד
     const cat = CATEGORIES[idx];
     try {
       const res = await fetch(`${API}/search?q=${encodeURIComponent(cat.q)}&limit=20`);
