@@ -3,6 +3,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+const DEFAULT_PRODUCTS: Record<number, Product[]> = {
+  0: [{ id: 245, name: 'חלב תנובה טרי 1 ליטר', barcode: '7290004131074', brand: 'תנובה', minPrice: 5.9, storeCount: 1447, imageUrl: 'https://img.rami-levy.co.il/product/7290004131074/small.jpg' }],
+  1: [{ id: 366, name: 'לחם אחיד פרוס אנגל', barcode: '7290018500361', brand: 'אנגל', minPrice: 5.2, storeCount: 1200, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/1107/large/7290018500361-878035/7290018500361/2024-12-26T09-44-33-106Z.jpg' }],
+  2: [{ id: 181921, name: 'עוף שלם טרי', barcode: '7290000922591', brand: '', minPrice: 18.9, storeCount: 127, imageUrl: 'https://superpharmstorage.blob.core.windows.net/hybris/products/mobile/medium/7290104343292.jpg' }],
+  3: [{ id: 434, name: 'שמן זית קלאסי 750 מ"ל', barcode: '7290010429554', brand: '', minPrice: 28.9, storeCount: 1082, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290010429554-922224/7290010429554/2025-02-18T11-24-54-507Z.jpg' }],
+  4: [{ id: 629, name: 'אורז פרסי סוגת 1 ק"ג', barcode: '7290000211442', brand: 'סוגת', minPrice: 9.9, storeCount: 1412, imageUrl: 'https://www.carmella.co.il/wp-content/uploads/2019/05/7290000211442.jpg' }],
+  5: [{ id: 128, name: 'קוקה קולה פחית 330 מל', barcode: '7290011017866', brand: 'קוקה קולה', minPrice: 4.9, storeCount: 1413, imageUrl: 'https://www.pizohaizion.co.il/wp-content/uploads/2021/02/7290011017866.jpg' }],
+  6: [{ id: 5607, name: 'במבה 60 גרם', barcode: '7290100687109', brand: 'אסם', minPrice: 3.9, storeCount: 1599, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/30/large/7290100687109-1004820/7290100687109/2025-08-15T11-13-41-414Z.jpg' }],
+  7: [{ id: 2422, name: 'גבינה צהובה מגורדת 28%', barcode: '7290000474830', brand: 'נעם', minPrice: 9.9, storeCount: 887, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290000474830-899667/7290000474830/2025-03-27T13-01-01-555Z.jpg' }],
+  8: [{ id: 182814, name: 'ביצים L 12 יחידות', barcode: '7296073224709', brand: 'שופרסל', minPrice: 14.9, storeCount: 176, imageUrl: 'https://m.pricez.co.il/ProductPictures/200x/7296073224709.jpg' }],
+  9: [{ id: 1535, name: 'נס קפה רד מאג 200 גרם', barcode: '7290000061764', brand: 'נסטלה', minPrice: 29.9, storeCount: 1191, imageUrl: 'https://shop.nestle-coffee.co.il/cdn/shop/files/12329674_7290000061764_1200x1200_crop_center.png?v=1718712228' }],
+};
+
 const CATEGORIES = [
   { label: 'חלב וביצים', emoji: '🥛', q: 'חלב' },
   { label: 'לחם ואפייה', emoji: '🍞', q: 'לחם' },
@@ -40,7 +53,7 @@ function ProductImg({ name, imageUrl, size = 52 }: { name: string; imageUrl?: st
 
 export default function QuickAddProducts({ onAdd }: { onAdd: (p: Product) => void }) {
   const [activeCat, setActiveCat] = useState(0);
-  const [cache, setCache] = useState<Record<number, Product[]>>({});
+  const [cache, setCache] = useState<Record<number, Product[]>>(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState<Set<number>>(new Set());
   const sliderRef = useRef<HTMLDivElement>(null);
