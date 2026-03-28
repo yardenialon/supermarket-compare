@@ -1868,6 +1868,7 @@ export default function QuickAddProducts({ onAdd }: { onAdd: (p: Product) => voi
   const [cache, setCache] = useState<Record<number, Product[]>>(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState<Set<number>>(new Set());
+  const [preview, setPreview] = useState<Product | null>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -1951,13 +1952,15 @@ export default function QuickAddProducts({ onAdd }: { onAdd: (p: Product) => voi
           className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
           {products.map(p => (
             <div key={p.id} dir="rtl"
-              className="flex-shrink-0 bg-white rounded-2xl border-2 border-gray-100 p-2.5 flex flex-col items-center gap-1.5 hover:border-emerald-200 transition-all"
-              style={{ width: 120 }}>
-              <ProductImg name={p.name} imageUrl={p.imageUrl} size={52} />
-              <p className="text-[11px] font-medium text-gray-800 text-center leading-tight line-clamp-2 w-full flex-1">{p.name}</p>
-              {p.minPrice && <p className="text-[10px] text-emerald-600 font-bold">מ-₪{Number(p.minPrice).toFixed(2)}</p>}
+              className="flex-shrink-0 bg-white rounded-2xl border-2 border-gray-100 p-3 flex flex-col items-center gap-2 hover:border-emerald-300 transition-all"
+              style={{ width: 150 }}>
+              <button onClick={() => setPreview(p)} className="w-full flex justify-center active:scale-95 transition-all">
+                <ProductImg name={p.name} imageUrl={p.imageUrl} size={80} />
+              </button>
+              <p className="text-xs font-medium text-gray-800 text-center leading-tight line-clamp-2 w-full flex-1">{p.name}</p>
+              {p.minPrice && <p className="text-xs text-emerald-600 font-bold">מ-₪{Number(p.minPrice).toFixed(2)}</p>}
               <button onClick={() => handleAdd(p)}
-                className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                   added.has(p.id) ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-emerald-500 hover:text-white'
                 }`}>
                 {added.has(p.id) ? '✓ נוסף' : '+ לסל'}
@@ -1966,6 +1969,24 @@ export default function QuickAddProducts({ onAdd }: { onAdd: (p: Product) => voi
           ))}
         </div>
       </div>
+
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setPreview(null)}>
+          <div className="bg-white rounded-3xl p-6 max-w-xs w-full flex flex-col items-center gap-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setPreview(null)} className="self-end text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+            <ProductImg name={preview.name} imageUrl={preview.imageUrl} size={180} />
+            <div className="text-center w-full">
+              <p className="font-bold text-gray-900 text-sm leading-snug mb-1">{preview.name}</p>
+              {preview.minPrice && <p className="text-emerald-600 font-bold text-xl">מ-₪{Number(preview.minPrice).toFixed(2)}</p>}
+              <p className="text-xs text-gray-400 mt-1">{preview.storeCount} חנויות</p>
+            </div>
+            <button onClick={() => { handleAdd(preview); setPreview(null); }}
+              className="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 active:scale-95 transition-all">
+              + הוסף לסל
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
