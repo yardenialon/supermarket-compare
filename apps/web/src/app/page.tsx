@@ -470,8 +470,6 @@ export default function Home() {
       </section>
 
 
-      {/* How It Works */}
-      <HowItWorks />
       {/* Logo Marquee */}
       {/* Tabs */}
       <div className="flex justify-center px-4 mb-4 mt-1">
@@ -503,6 +501,8 @@ export default function Home() {
           </button>
         </div>
       </div>
+      {/* How It Works */}
+      <HowItWorks />
       {/* ==================== SEARCH TAB ==================== */}
       <div>
         <HotDealsSlider userLat={userLoc?.lat} userLng={userLoc?.lng} onAddToList={(deal) => { try { const saved = localStorage.getItem("savy-list"); const list = saved ? JSON.parse(saved) : []; if (!list.find((i: any) => i.product?.id === deal.productId)) { list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 }); localStorage.setItem("savy-list", JSON.stringify(list)); } } catch {} }} />
