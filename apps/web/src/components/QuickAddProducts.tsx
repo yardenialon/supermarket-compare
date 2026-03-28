@@ -103,7 +103,8 @@ export default function QuickAddProducts({ onAdd }: { onAdd: (p: Product) => voi
 
   const scroll = (dir: 'left' | 'right') => {
     if (!sliderRef.current) return;
-    sliderRef.current.scrollBy({ left: dir === 'left' ? -240 : 240, behavior: 'smooth' });
+    // ב-RTL: שמאל = קדימה (מספרים חיוביים), ימין = אחורה (מספרים שליליים)
+    sliderRef.current.scrollBy({ left: dir === 'left' ? 240 : -240, behavior: 'smooth' });
   };
 
   const handleAdd = (p: Product) => {
