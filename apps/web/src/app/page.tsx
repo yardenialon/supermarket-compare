@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { api, dealsApi } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { DealModal, HotDealsSlider } from "@/components/DealModal";
+import QuickAddProducts from "@/components/QuickAddProducts";
 import HowItWorks from "@/components/HowItWorks";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
@@ -503,7 +504,7 @@ export default function Home() {
       </div>
       {/* ==================== SEARCH TAB ==================== */}
       <div>
-        <HotDealsSlider userLat={userLoc?.lat} userLng={userLoc?.lng} onAddToList={(deal) => { try { const saved = localStorage.getItem("savy-list"); const list = saved ? JSON.parse(saved) : []; if (!list.find((i: any) => i.product?.id === deal.productId)) { list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 }); localStorage.setItem("savy-list", JSON.stringify(list)); } } catch {} }} />
+        <QuickAddProducts onAdd={(p) => addToList(p)} />
         <div className="max-w-2xl mx-auto px-4">
           <div className="relative">
     <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 py-4 pr-14 rounded-2xl bg-white border-2 border-gray-100 text-base focus:outline-none focus:ring-0 focus:border-emerald-400 transition-all placeholder:text-gray-300 shadow-sm hover:border-emerald-200" style={{boxShadow:'0 2px 12px rgba(16,185,129,0.08)'}} />
