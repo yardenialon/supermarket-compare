@@ -470,9 +470,7 @@ export default function Home() {
       </section>
 
 
-      {/* How It Works */}
-      <HowItWorks />
-      {/* Logo Marquee */}
+      {/* Tabs + חיפוש — מיד אחרי Hero */}
       {/* Tabs */}
       <div className="flex justify-center px-4 mb-4 mt-1">
         <div className="flex bg-gray-100 rounded-2xl p-1 gap-1 w-full max-w-sm">
@@ -504,6 +502,8 @@ export default function Home() {
         </div>
       </div>
       <LogoMarquee />
+      {/* How It Works */}
+      <HowItWorks />
 
       {/* ==================== SEARCH TAB ==================== */}
       {tab === 'search' && (<div>
