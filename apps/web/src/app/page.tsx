@@ -501,8 +501,6 @@ export default function Home() {
           </button>
         </div>
       </div>
-      {/* How It Works */}
-      <HowItWorks />
       {/* ==================== SEARCH TAB ==================== */}
       <div>
         <HotDealsSlider userLat={userLoc?.lat} userLng={userLoc?.lng} onAddToList={(deal) => { try { const saved = localStorage.getItem("savy-list"); const list = saved ? JSON.parse(saved) : []; if (!list.find((i: any) => i.product?.id === deal.productId)) { list.push({ product: { id: deal.productId, name: deal.productName, barcode: deal.barcode }, qty: deal.minQty || 1 }); localStorage.setItem("savy-list", JSON.stringify(list)); } } catch {} }} />
@@ -797,6 +795,8 @@ export default function Home() {
 
       <LogoMarquee />
 
+      {/* How It Works */}
+      <HowItWorks />
       {/* ==================== LIST TAB ==================== */}
       {tab === 'list' && (<div className="fixed inset-x-0 bottom-0 top-14 z-40 bg-gray-50 overflow-y-auto pb-24" dir="rtl"><div className="max-w-xl mx-auto px-4 pt-4">
         {/* Header */}
