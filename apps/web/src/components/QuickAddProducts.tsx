@@ -4,16 +4,377 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 const DEFAULT_PRODUCTS: Record<number, Product[]> = {
-  0: [{ id: 245, name: 'חלב תנובה טרי 1 ליטר', barcode: '7290004131074', brand: 'תנובה', minPrice: 5.9, storeCount: 1447, imageUrl: 'https://img.rami-levy.co.il/product/7290004131074/small.jpg' }],
-  1: [{ id: 366, name: 'לחם אחיד פרוס אנגל', barcode: '7290018500361', brand: 'אנגל', minPrice: 5.2, storeCount: 1200, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/1107/large/7290018500361-878035/7290018500361/2024-12-26T09-44-33-106Z.jpg' }],
-  2: [{ id: 181921, name: 'עוף שלם טרי', barcode: '7290000922591', brand: '', minPrice: 18.9, storeCount: 127, imageUrl: 'https://superpharmstorage.blob.core.windows.net/hybris/products/mobile/medium/7290104343292.jpg' }],
-  3: [{ id: 434, name: 'שמן זית קלאסי 750 מ"ל', barcode: '7290010429554', brand: '', minPrice: 28.9, storeCount: 1082, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290010429554-922224/7290010429554/2025-02-18T11-24-54-507Z.jpg' }],
-  4: [{ id: 629, name: 'אורז פרסי סוגת 1 ק"ג', barcode: '7290000211442', brand: 'סוגת', minPrice: 9.9, storeCount: 1412, imageUrl: 'https://www.carmella.co.il/wp-content/uploads/2019/05/7290000211442.jpg' }],
-  5: [{ id: 128, name: 'קוקה קולה פחית 330 מל', barcode: '7290011017866', brand: 'קוקה קולה', minPrice: 4.9, storeCount: 1413, imageUrl: 'https://www.pizohaizion.co.il/wp-content/uploads/2021/02/7290011017866.jpg' }],
-  6: [{ id: 5607, name: 'במבה 60 גרם', barcode: '7290100687109', brand: 'אסם', minPrice: 3.9, storeCount: 1599, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/30/large/7290100687109-1004820/7290100687109/2025-08-15T11-13-41-414Z.jpg' }],
-  7: [{ id: 2422, name: 'גבינה צהובה מגורדת 28%', barcode: '7290000474830', brand: 'נעם', minPrice: 9.9, storeCount: 887, imageUrl: 'https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290000474830-899667/7290000474830/2025-03-27T13-01-01-555Z.jpg' }],
-  8: [{ id: 182814, name: 'ביצים L 12 יחידות', barcode: '7296073224709', brand: 'שופרסל', minPrice: 14.9, storeCount: 176, imageUrl: 'https://m.pricez.co.il/ProductPictures/200x/7296073224709.jpg' }],
-  9: [{ id: 1535, name: 'נס קפה רד מאג 200 גרם', barcode: '7290000061764', brand: 'נסטלה', minPrice: 29.9, storeCount: 1191, imageUrl: 'https://shop.nestle-coffee.co.il/cdn/shop/files/12329674_7290000061764_1200x1200_crop_center.png?v=1718712228' }],
+  "0": [
+    {
+      "id": 422,
+      "name": "חלב",
+      "barcode": "7290000181103",
+      "storeCount": 1553,
+      "imageUrl": "https://m.pricez.co.il/ProductPictures/7290000181103.jpg",
+      "minPrice": 11.9,
+      "brand": ""
+    },
+    {
+      "id": 449,
+      "name": "פרה קראנצ שוקולד חלב",
+      "barcode": "7290105363572",
+      "storeCount": 1545,
+      "imageUrl": "https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551800922/prod/product_images/products_zoom/UWR50_Z_P_7290105363572_1.png",
+      "minPrice": 4.9,
+      "brand": ""
+    },
+    {
+      "id": 245,
+      "name": "חלב תנובה טרי 1 ליטר",
+      "barcode": "7290004131074",
+      "storeCount": 1447,
+      "imageUrl": "https://img.rami-levy.co.il/product/7290004131074/small.jpg",
+      "minPrice": 5.9,
+      "brand": ""
+    },
+    {
+      "id": 456,
+      "name": "פריכיות שוקולד חלב",
+      "barcode": "7290106526822",
+      "storeCount": 1470,
+      "imageUrl": "https://noyhasade.b-cdn.net/wp-content/uploads/2020/09/7290106526822-600.jpg",
+      "minPrice": 6.9,
+      "brand": ""
+    },
+    {
+      "id": 427,
+      "name": "שוקולד קרם חלב מגדים",
+      "barcode": "7290003903955",
+      "storeCount": 1402,
+      "imageUrl": "https://img.rami-levy.co.il/product/7290003903955/small.jpg",
+      "minPrice": 4.9,
+      "brand": ""
+    }
+  ],
+  "1": [
+    {
+      "id": 366,
+      "name": "לחם אחיד פרוס אנגל",
+      "barcode": "7290018500361",
+      "storeCount": 1200,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1107/large/7290018500361-878035/7290018500361/2024-12-26T09-44-33-106Z.jpg",
+      "minPrice": 5.2,
+      "brand": ""
+    }
+  ],
+  "2": [
+    {
+      "id": 181921,
+      "name": "עוף שלם טרי",
+      "barcode": "7290000922591",
+      "storeCount": 127,
+      "imageUrl": "https://superpharmstorage.blob.core.windows.net/hybris/products/mobile/medium/7290104343292.jpg",
+      "minPrice": 18.9,
+      "brand": ""
+    }
+  ],
+  "3": [
+    {
+      "id": 434,
+      "name": "שמן זית קלאסי 750 מל",
+      "barcode": "7290010429554",
+      "storeCount": 1082,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290010429554-922224/7290010429554/2025-02-18T11-24-54-507Z.jpg",
+      "minPrice": 28.9,
+      "brand": ""
+    }
+  ],
+  "4": [
+    {
+      "id": 629,
+      "name": "אורז פרסי סוגת 1 קג",
+      "barcode": "7290000211442",
+      "storeCount": 1412,
+      "imageUrl": "https://www.carmella.co.il/wp-content/uploads/2019/05/7290000211442.jpg",
+      "minPrice": 9.9,
+      "brand": ""
+    },
+    {
+      "id": 486,
+      "name": "פריכיות חומוס אורז",
+      "barcode": "7290112335500",
+      "storeCount": 1126,
+      "imageUrl": "https://images.openfoodfacts.org/images/products/729/011/233/5500/front_en.3.400.jpg",
+      "minPrice": 9.3,
+      "brand": ""
+    },
+    {
+      "id": 822,
+      "name": "אורז פרסי דוו",
+      "barcode": "7290108509700",
+      "storeCount": 962,
+      "imageUrl": "https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551800922/prod/product_images/products_zoom/UXP48_Z_P_7290108509700_1.png",
+      "minPrice": 8.4,
+      "brand": ""
+    },
+    {
+      "id": 5904,
+      "name": "אורז סושי 1 קג",
+      "barcode": "7290100701157",
+      "storeCount": 825,
+      "imageUrl": "https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551800922/prod/product_images/products_zoom/NVA40_Z_P_7290100701157_1.png",
+      "minPrice": 9.9,
+      "brand": ""
+    },
+    {
+      "id": 628,
+      "name": "אורז מלא 1 קג",
+      "barcode": "7290000211312",
+      "storeCount": 796,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1540/large/7290000211312-200668/7290000211312/2024-02-16T22-17-08-362Z.jpg",
+      "minPrice": 7.6,
+      "brand": ""
+    }
+  ],
+  "5": [
+    {
+      "id": 128,
+      "name": "קוקה קולה פחית 330 מל",
+      "barcode": "7290011017866",
+      "storeCount": 1413,
+      "imageUrl": "https://www.pizohaizion.co.il/wp-content/uploads/2021/02/7290011017866.jpg",
+      "minPrice": 3.4,
+      "brand": ""
+    },
+    {
+      "id": 126,
+      "name": "קולה ZERO בקבוק 0.5",
+      "barcode": "7290008909853",
+      "storeCount": 1390,
+      "imageUrl": "https://www.pizohaizion.co.il/wp-content/uploads/2021/02/7290008909853.jpg",
+      "minPrice": 2.9,
+      "brand": ""
+    },
+    {
+      "id": 123,
+      "name": "קולה 0.5 ליטר",
+      "barcode": "7290001594155",
+      "storeCount": 1331,
+      "imageUrl": "https://www.pizohaizion.co.il/wp-content/uploads/2021/02/7290001594155.jpg",
+      "minPrice": 2.9,
+      "brand": ""
+    },
+    {
+      "id": 130,
+      "name": "קוקה קולה מארז שישיה",
+      "barcode": "7290011018832",
+      "storeCount": 1310,
+      "imageUrl": "https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551800922/prod/product_images/products_zoom/ZQV42_Z_P_7290011018832_1.png",
+      "minPrice": 17.8,
+      "brand": ""
+    },
+    {
+      "id": 4885,
+      "name": "פפסי קולה 1.5 ליטר",
+      "barcode": "7290000136141",
+      "storeCount": 944,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290000136141-947805/7290000136141/2025-10-05T11-05-44-843Z.jpg",
+      "minPrice": 5.3,
+      "brand": ""
+    }
+  ],
+  "6": [
+    {
+      "id": 5607,
+      "name": "במבה במילוי נוגט 60 גרם",
+      "barcode": "7290100687109",
+      "storeCount": 1599,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/30/large/7290100687109-1004820/7290100687109/2025-08-15T11-13-41-414Z.jpg",
+      "minPrice": 3.5,
+      "brand": ""
+    },
+    {
+      "id": 5462,
+      "name": "במבה מתוקה",
+      "barcode": "7290000066295",
+      "storeCount": 1364,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1470/large/7290000066295-1003643/7290000066295/2025-08-14T07-25-29-545Z.jpg",
+      "minPrice": 2.1,
+      "brand": ""
+    },
+    {
+      "id": 1843,
+      "name": "במבה מאנצ ברביקיו 60 גרם",
+      "barcode": "7290118427223",
+      "storeCount": 1277,
+      "imageUrl": "https://m.pricez.co.il/ProductPictures/7290118427223.jpg",
+      "minPrice": 3.5,
+      "brand": ""
+    },
+    {
+      "id": 7571,
+      "name": "במבה מארז 10x25 גרם",
+      "barcode": "7290105693341",
+      "storeCount": 1246,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290105693341-1003805/7290105693341/2025-08-14T22-12-24-726Z.jpg",
+      "minPrice": 12.1,
+      "brand": ""
+    },
+    {
+      "id": 1552,
+      "name": "במבה קלאסי 200 גרם",
+      "barcode": "7290104508943",
+      "storeCount": 1227,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290104508943-998788/7290104508943/2025-08-03T18-21-43-635Z.jpg",
+      "minPrice": 7.5,
+      "brand": ""
+    },
+    {
+      "id": 5463,
+      "name": "במבה 80 גרם",
+      "barcode": "7290000066318",
+      "storeCount": 1119,
+      "imageUrl": "https://guluten.b1.market/wp-content/uploads/sites/2/2022/11/7290000066318.jpg",
+      "minPrice": 3.1,
+      "brand": ""
+    }
+  ],
+  "7": [
+    {
+      "id": 237,
+      "name": "גבינה לבנה 5% 500 גרם",
+      "barcode": "7290004127800",
+      "storeCount": 1362,
+      "imageUrl": "https://m.pricez.co.il/ProductPictures/7290004127800.jpg",
+      "minPrice": 9.5,
+      "brand": ""
+    },
+    {
+      "id": 71,
+      "name": "גבינה לבנה 250 גרם 5%",
+      "barcode": "7290000474502",
+      "storeCount": 1299,
+      "imageUrl": "https://schnellers.co.il/wp-content/uploads/2025/03/7290000474502.jpg",
+      "minPrice": 4.7,
+      "brand": ""
+    },
+    {
+      "id": 194,
+      "name": "גבינה לבנה 5% 250 גרם",
+      "barcode": "7290000048185",
+      "storeCount": 1287,
+      "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsscv8a2UVg5IMS_8WE30Kv64fToQ7nPaYyw&s",
+      "minPrice": 4.75,
+      "brand": ""
+    },
+    {
+      "id": 195,
+      "name": "גבינה לבנה 9% 250 גרם",
+      "barcode": "7290000048192",
+      "storeCount": 1233,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290000048192-828994/7290000048192/2023-08-16T18-03-06-264Z.jpg",
+      "minPrice": 4.8,
+      "brand": ""
+    },
+    {
+      "id": 99,
+      "name": "גבינה מותכת 100 גרם",
+      "barcode": "7290102397891",
+      "storeCount": 1123,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1062/large/7290102397891-1013766/7290102397891/2026-02-13T02-57-15-444Z.jpg",
+      "minPrice": 7.0,
+      "brand": ""
+    }
+  ],
+  "8": [
+    {
+      "id": 1448,
+      "name": "ביצים 12 יח גדול",
+      "barcode": "7290001201589",
+      "storeCount": 813,
+      "imageUrl": "https://img.rami-levy.co.il/product/7290001201589/361918/medium.jpg",
+      "minPrice": 11.3,
+      "brand": ""
+    },
+    {
+      "id": 1449,
+      "name": "ביצים 12 יח בינוני",
+      "barcode": "7290001201596",
+      "storeCount": 800,
+      "imageUrl": "https://img.rami-levy.co.il/product/7290001201596/361919/medium.jpg",
+      "minPrice": 10.4,
+      "brand": ""
+    },
+    {
+      "id": 5975,
+      "name": "ביצים 18 יח גדול",
+      "barcode": "7290001201602",
+      "storeCount": 452,
+      "imageUrl": "https://m.pricez.co.il/ProductPictures/7290001201602.jpg",
+      "minPrice": 16.95,
+      "brand": ""
+    },
+    {
+      "id": 1783,
+      "name": "ביצים אומגה 12 יח",
+      "barcode": "7290001201855",
+      "storeCount": 418,
+      "imageUrl": "https://m.pricez.co.il/ProductPictures/7290001201855.jpg",
+      "minPrice": 16.9,
+      "brand": ""
+    },
+    {
+      "id": 6019,
+      "name": "ביצים 18 יח בינוני",
+      "barcode": "7290001201619",
+      "storeCount": 409,
+      "imageUrl": "https://m.pricez.co.il/ProductPictures/7290001201619.jpg",
+      "minPrice": 15.6,
+      "brand": ""
+    }
+  ],
+  "9": [
+    {
+      "id": 440,
+      "name": "קפסולות קפה עשיר 14",
+      "barcode": "7290101551027",
+      "storeCount": 1468,
+      "imageUrl": "https://superpharmstorage.blob.core.windows.net/hybris/products/mobile/medium/7290101551027.jpg",
+      "minPrice": 11.0,
+      "brand": ""
+    },
+    {
+      "id": 419,
+      "name": "קפה נמס עלית 200 גרם",
+      "barcode": "7290000176420",
+      "storeCount": 1399,
+      "imageUrl": "https://price-api.additlist.com/images/catalog/carrefour/7290000176420.jpg",
+      "minPrice": 19.9,
+      "brand": ""
+    },
+    {
+      "id": 1134,
+      "name": "אייס קפה 1 ליטר",
+      "barcode": "7290003029907",
+      "storeCount": 1372,
+      "imageUrl": "https://d226b0iufwcjmj.cloudfront.net/gs1-products/1492/large/7290003029907-1017855/7290003029907/2025-12-17T06-38-35-814Z.jpg",
+      "minPrice": 10.2,
+      "brand": ""
+    },
+    {
+      "id": 14710,
+      "name": "קפה טורקי 200 גרם",
+      "barcode": "7290005201882",
+      "storeCount": 1264,
+      "imageUrl": "https://www.pizohaizion.co.il/wp-content/uploads/2020/12/7290005201882.jpg",
+      "minPrice": 13.6,
+      "brand": ""
+    },
+    {
+      "id": 1535,
+      "name": "נס קפה רד מאג 200 גרם",
+      "barcode": "7290000061764",
+      "storeCount": 1191,
+      "imageUrl": "https://shop.nestle-coffee.co.il/cdn/shop/files/12329674_7290000061764_1200x1200_crop_center.png?v=1718712228",
+      "minPrice": 16.2,
+      "brand": ""
+    }
+  ]
 };
 
 const CATEGORIES = [
