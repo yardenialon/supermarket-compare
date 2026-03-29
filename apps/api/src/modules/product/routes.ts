@@ -45,7 +45,14 @@ export async function productRoutes(app: any) {
     const result = await query(
       `SELECT id, barcode, name, brand, unit_qty as "unitQty", unit_measure as "unitMeasure",
               image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount",
-              category, subcategory
+              category, subcategory,
+              energy_kcal as "energyKcal", protein_g as "proteinG", carbs_g as "carbsG",
+              sugars_g as "sugarsG", fat_g as "fatG", saturated_fat_g as "saturatedFatG",
+              trans_fat_g as "transFatG", sodium_mg as "sodiumMg", fiber_g as "fiberG",
+              cholesterol_mg as "cholesterolMg", ingredients, allergens,
+              high_saturated_fat as "highSaturatedFat", high_sugars as "highSugars",
+              high_sodium as "highSodium", nutrition_source as "nutritionSource",
+              nutrition_updated_at as "nutritionUpdatedAt"
        FROM product WHERE id = $1`,
       [id]
     );
