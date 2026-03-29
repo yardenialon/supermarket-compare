@@ -511,6 +511,7 @@ export default function Home() {
         <QuickAddProducts onAdd={(p) => addToList(p)} />
         <div className="max-w-2xl mx-auto px-4">
           <div className="relative">
+    <p className="text-[11px] text-gray-400 text-center mb-2">📱 סרקו ברקוד מוצר עם הטלפון לחיפוש מהיר</p>
     <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 py-4 pr-14 pl-12 rounded-2xl bg-white border-2 border-gray-100 text-base focus:outline-none focus:ring-0 focus:border-emerald-400 transition-all placeholder:text-gray-300 shadow-sm hover:border-emerald-200" style={{boxShadow:'0 2px 12px rgba(16,185,129,0.08)'}} />
 
 <button onClick={openScanner} className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-emerald-500 transition-colors rounded-lg" aria-label="סרוק ברקוד"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 5h2v14H3zM7 5h1v14H7zM10 5h2v14h-2zM14 5h1v14h-1zM17 5h1v14h-1zM20 5h1v14h-1z"/><path d="M1 3h4v3" strokeWidth="2"/><path d="M23 3h-4v3" strokeWidth="2"/><path d="M1 21h4v-3" strokeWidth="2"/><path d="M23 21h-4v-3" strokeWidth="2"/></svg></button>
