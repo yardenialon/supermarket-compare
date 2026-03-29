@@ -44,6 +44,85 @@ const chainLogo = (n: string) => CHAINS[n]?.logo || "";
 const subchainLogo = (s?: string) => (s ? SUBCHAINS[s]?.logo || "" : "");
 const subchainHe = (s?: string) => (s ? SUBCHAINS[s]?.he || s : "");
 
+
+function NutritionCard({ product }: { product: any }) {
+  const { energyKcal, proteinG, carbsG, sugarsG, fatG, saturatedFatG,
+          transFatG, sodiumMg, fiberG, cholesterolMg, ingredients, allergens,
+          highSaturatedFat, highSugars, highSodium } = product;
+
+  if (!energyKcal && !ingredients) return null;
+
+  const RedFlag = ({ label }: { label: string }) => (
+    <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100">
+      🔴 {label}
+    </span>
+  );
+
+  const rows = [
+    { label: 'קלוריות', value: energyKcal, unit: 'קק"ל' },
+    { label: 'שומן', value: fatG, unit: 'גרם' },
+    { label: 'שומן רווי', value: saturatedFatG, unit: 'גרם', flag: highSaturatedFat },
+    { label: 'שומן טראנס', value: transFatG, unit: 'גרם' },
+    { label: 'פחמימות', value: carbsG, unit: 'גרם' },
+    { label: 'סוכרים', value: sugarsG, unit: 'גרם', flag: highSugars },
+    { label: 'חלבון', value: proteinG, unit: 'גרם' },
+    { label: 'נתרן', value: sodiumMg, unit: 'מ"ג', flag: highSodium },
+    { label: 'סיבים תזונתיים', value: fiberG, unit: 'גרם' },
+    { label: 'כולסטרול', value: cholesterolMg, unit: 'מ"ג' },
+  ].filter(r => r.value !== null && r.value !== undefined);
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+      <div className="px-5 py-4 border-b border-stone-100">
+        <h2 className="font-black text-base text-stone-800">ערכים תזונתיים</h2>
+        <p className="text-xs text-stone-400 mt-0.5">לכל 100 גרם</p>
+      </div>
+
+      {/* סימוני מזון אדומים */}
+      {(highSaturatedFat || highSugars || highSodium) && (
+        <div className="px-5 py-3 bg-red-50/60 border-b border-red-100 flex flex-wrap gap-2">
+          {highSaturatedFat && <RedFlag label="שומן רווי בכמות גבוהה" />}
+          {highSugars && <RedFlag label="סוכר בכמות גבוהה" />}
+          {highSodium && <RedFlag label="נתרן בכמות גבוהה" />}
+        </div>
+      )}
+
+      {/* טבלת ערכים */}
+      {rows.length > 0 && (
+        <div className="divide-y divide-stone-50">
+          {rows.map((row, i) => (
+            <div key={i} className={"flex items-center justify-between px-5 py-2.5 " + (i === 0 ? "bg-stone-50/50" : "")}>
+              <span className="text-sm text-stone-600 font-medium">{row.label}</span>
+              <div className="flex items-center gap-2">
+                {row.flag && <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />}
+                <span className={"font-mono font-bold text-sm " + (i === 0 ? "text-emerald-600 text-base" : "text-stone-800")}>
+                  {row.value} {row.unit}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* רכיבים */}
+      {ingredients && (
+        <div className="px-5 py-4 border-t border-stone-100">
+          <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-2">רכיבים</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{ingredients}</p>
+        </div>
+      )}
+
+      {/* אלרגנים */}
+      {allergens && (
+        <div className="px-5 py-3 bg-amber-50/50 border-t border-amber-100">
+          <p className="text-xs font-bold text-amber-700 mb-1">⚠️ אלרגנים</p>
+          <p className="text-xs text-amber-700 leading-relaxed">{allergens}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function distToKm(d: number) {
   return Math.sqrt(d) * 111;
 }
@@ -385,6 +464,7 @@ export default function ProductPageClient({
           </div>
         </div>
 
+        <NutritionCard product={product} />
         {/* Location mode toggle */}
         <div className="flex gap-2">
           <button
