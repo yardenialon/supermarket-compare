@@ -151,6 +151,13 @@ function NutritionCard({ product }: { product: any }) {
           <p className="text-xs text-amber-800 leading-relaxed">{allergens}</p>
         </div>
       )}
+
+      {/* דיסקליימר */}
+      <div className="px-5 py-3 border-t border-stone-100">
+        <p className="text-[10px] text-stone-400 leading-relaxed">
+          הנתונים המדויקים מופיעים על גבי המוצר. אין להסתמך על הפירוט המופיע באתר — יתכנו טעויות או אי התאמות. יש לקרוא את המופיע על גבי אריזת המוצר לפני השימוש. התמונות והתאריכים המופיעים הינם להמחשה בלבד ואין להסתמך עליהם.
+        </p>
+      </div>
     </div>
   );
 }
