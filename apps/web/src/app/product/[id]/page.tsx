@@ -7,7 +7,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-prod
 
 async function getProduct(id: string) {
   try {
-    const res = await fetch(`${API}/product/${id}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/product/${id}`, { next: { revalidate: 300 } });
     if (!res.ok) return null;
     return res.json();
   } catch { return null; }
@@ -15,7 +15,7 @@ async function getProduct(id: string) {
 
 async function getPrices(id: string) {
   try {
-    const res = await fetch(`${API}/product/${id}/prices?limit=60`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/product/${id}/prices?limit=60`, { next: { revalidate: 300 } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.prices ?? [];
