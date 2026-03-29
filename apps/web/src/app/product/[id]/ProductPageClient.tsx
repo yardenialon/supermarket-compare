@@ -73,7 +73,7 @@ function NutritionCard({ product }: { product: any }) {
       {/* hero קלוריות */}
       {energyKcal && (
         <div className="bg-stone-50/60 py-5 flex flex-col items-center border-b border-stone-100">
-          <span className="text-5xl font-bold text-emerald-600 leading-none">{energyKcal}</span>
+          <span className="text-5xl font-bold text-emerald-600 leading-none">{Math.round(Number(energyKcal))}</span>
           <span className="text-sm text-stone-400 mt-1.5">קילוקלוריות</span>
         </div>
       )}
@@ -87,7 +87,7 @@ function NutritionCard({ product }: { product: any }) {
             { label: 'חלבון', value: proteinG, unit: 'g' },
           ].map((m, i) => m.value != null && (
             <div key={i} className={"py-4 flex flex-col items-center " + (i < 2 ? "border-l border-stone-100" : "")}>
-              <span className="text-xl font-bold text-stone-800">{m.value}<span className="text-xs text-stone-400 font-normal mr-0.5">{m.unit}</span></span>
+              <span className="text-xl font-bold text-stone-800">{Math.round(Number(m.value) * 10) / 10}<span className="text-xs text-stone-400 font-normal mr-0.5">{m.unit}</span></span>
               <span className="text-xs text-stone-400 mt-1">{m.label}</span>
             </div>
           ))}
@@ -102,7 +102,7 @@ function NutritionCard({ product }: { product: any }) {
               <span className="text-sm text-stone-500">{row.label}</span>
               <div className="flex items-center gap-2">
                 {row.flag && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />}
-                <span className="text-sm font-medium text-stone-800">{row.value} {row.unit}</span>
+                <span className="text-sm font-medium text-stone-800">{Math.round(Number(row.value) * 10) / 10} {row.unit}</span>
               </div>
             </div>
           ))}
