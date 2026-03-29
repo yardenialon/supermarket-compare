@@ -52,27 +52,10 @@ function NutritionCard({ product }: { product: any }) {
 
   if (!energyKcal && !ingredients) return null;
 
-  const FLAG_ICONS: Record<string, string> = {
-    'שומן רווי בכמות גבוהה': '/icons/food-marking/shoman.png',
-    'סוכר בכמות גבוהה':      '/icons/food-marking/suger.png',
-    'נתרן בכמות גבוהה':      '/icons/food-marking/natran.png',
-  };
-
-  const RedFlag = ({ label }: { label: string }) => (
-    <div className="flex flex-col items-center gap-1">
-      <img src={FLAG_ICONS[label]} alt={label} className="w-14 h-14 object-contain" />
-      <span className="text-[10px] text-red-600 font-semibold text-center leading-tight max-w-[60px]">{label}</span>
-    </div>
-  );
-
-  const rows = [
-    { label: 'קלוריות', value: energyKcal, unit: 'קק"ל' },
-    { label: 'שומן', value: fatG, unit: 'גרם' },
+  const detailRows = [
     { label: 'שומן רווי', value: saturatedFatG, unit: 'גרם', flag: highSaturatedFat },
     { label: 'שומן טראנס', value: transFatG, unit: 'גרם' },
-    { label: 'פחמימות', value: carbsG, unit: 'גרם' },
     { label: 'סוכרים', value: sugarsG, unit: 'גרם', flag: highSugars },
-    { label: 'חלבון', value: proteinG, unit: 'גרם' },
     { label: 'נתרן', value: sodiumMg, unit: 'מ"ג', flag: highSodium },
     { label: 'סיבים תזונתיים', value: fiberG, unit: 'גרם' },
     { label: 'כולסטרול', value: cholesterolMg, unit: 'מ"ג' },
@@ -80,50 +63,92 @@ function NutritionCard({ product }: { product: any }) {
 
   return (
     <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+
+      {/* כותרת */}
       <div className="px-5 py-4 border-b border-stone-100">
-        <h2 className="font-black text-base text-stone-800">ערכים תזונתיים</h2>
-        <p className="text-xs text-stone-400 mt-0.5">לכל 100 גרם</p>
+        <h2 className="font-bold text-base text-stone-800">ערכים תזונתיים</h2>
+        <p className="text-xs text-stone-400 mt-0.5">לכל 100 גרם מוצר</p>
       </div>
 
-      {/* סימוני מזון אדומים */}
-      {(highSaturatedFat || highSugars || highSodium) && (
-        <div className="px-5 py-4 bg-red-50/40 border-b border-red-100 flex gap-4 justify-center">
-          {highSaturatedFat && <RedFlag label="שומן רווי בכמות גבוהה" />}
-          {highSugars && <RedFlag label="סוכר בכמות גבוהה" />}
-          {highSodium && <RedFlag label="נתרן בכמות גבוהה" />}
+      {/* hero קלוריות */}
+      {energyKcal && (
+        <div className="bg-stone-50/60 py-5 flex flex-col items-center border-b border-stone-100">
+          <span className="text-5xl font-bold text-emerald-600 leading-none">{energyKcal}</span>
+          <span className="text-sm text-stone-400 mt-1.5">קילוקלוריות</span>
         </div>
       )}
 
-      {/* טבלת ערכים */}
-      {rows.length > 0 && (
+      {/* מאקרו גריד */}
+      {(fatG || carbsG || proteinG) && (
+        <div className="grid grid-cols-3 border-b border-stone-100" style={{borderTop:'none'}}>
+          {[
+            { label: 'שומן', value: fatG, unit: 'g' },
+            { label: 'פחמימות', value: carbsG, unit: 'g' },
+            { label: 'חלבון', value: proteinG, unit: 'g' },
+          ].map((m, i) => m.value != null && (
+            <div key={i} className={"py-4 flex flex-col items-center " + (i < 2 ? "border-l border-stone-100" : "")}>
+              <span className="text-xl font-bold text-stone-800">{m.value}<span className="text-xs text-stone-400 font-normal mr-0.5">{m.unit}</span></span>
+              <span className="text-xs text-stone-400 mt-1">{m.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* שורות פירוט */}
+      {detailRows.length > 0 && (
         <div className="divide-y divide-stone-50">
-          {rows.map((row, i) => (
-            <div key={i} className={"flex items-center justify-between px-5 py-2.5 " + (i === 0 ? "bg-stone-50/50" : "")}>
-              <span className="text-sm text-stone-600 font-medium">{row.label}</span>
+          {detailRows.map((row, i) => (
+            <div key={i} className="flex items-center justify-between px-5 py-3">
+              <span className="text-sm text-stone-500">{row.label}</span>
               <div className="flex items-center gap-2">
-                {row.flag && <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />}
-                <span className={"font-mono font-bold text-sm " + (i === 0 ? "text-emerald-600 text-base" : "text-stone-800")}>
-                  {row.value} {row.unit}
-                </span>
+                {row.flag && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />}
+                <span className="text-sm font-medium text-stone-800">{row.value} {row.unit}</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* סימוני מזון */}
+      {(highSaturatedFat || highSugars || highSodium) && (
+        <div className="flex gap-5 justify-center px-5 py-5 border-t border-red-100 bg-red-50/30">
+          {highSaturatedFat && (
+            <div className="flex flex-col items-center gap-1.5">
+              <img src="/icons/food-marking/shoman.png" alt="שומן רווי בכמות גבוהה" className="w-14 h-14 object-contain" />
+              <span className="text-[10px] text-red-700 font-medium text-center leading-tight max-w-[64px]">שומן רווי בכמות גבוהה</span>
+            </div>
+          )}
+          {highSugars && (
+            <div className="flex flex-col items-center gap-1.5">
+              <img src="/icons/food-marking/suger.png" alt="סוכר בכמות גבוהה" className="w-14 h-14 object-contain" />
+              <span className="text-[10px] text-red-700 font-medium text-center leading-tight max-w-[64px]">סוכר בכמות גבוהה</span>
+            </div>
+          )}
+          {highSodium && (
+            <div className="flex flex-col items-center gap-1.5">
+              <img src="/icons/food-marking/natran.png" alt="נתרן בכמות גבוהה" className="w-14 h-14 object-contain" />
+              <span className="text-[10px] text-red-700 font-medium text-center leading-tight max-w-[64px]">נתרן בכמות גבוהה</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* רכיבים */}
       {ingredients && (
         <div className="px-5 py-4 border-t border-stone-100">
-          <p className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-2">רכיבים</p>
+          <p className="text-[11px] font-medium text-stone-400 uppercase tracking-wider mb-2">רכיבים</p>
           <p className="text-xs text-stone-600 leading-relaxed">{ingredients}</p>
         </div>
       )}
 
       {/* אלרגנים */}
       {allergens && (
-        <div className="px-5 py-3 bg-amber-50/50 border-t border-amber-100">
-          <p className="text-xs font-bold text-amber-700 mb-1">⚠️ אלרגנים</p>
-          <p className="text-xs text-amber-700 leading-relaxed">{allergens}</p>
+        <div className="px-5 py-4 border-t border-amber-100 bg-amber-50/40">
+          <p className="text-[11px] font-medium text-amber-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            אלרגנים
+          </p>
+          <p className="text-xs text-amber-800 leading-relaxed">{allergens}</p>
         </div>
       )}
     </div>
