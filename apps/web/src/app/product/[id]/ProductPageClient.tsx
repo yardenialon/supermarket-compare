@@ -52,10 +52,17 @@ function NutritionCard({ product }: { product: any }) {
 
   if (!energyKcal && !ingredients) return null;
 
+  const FLAG_ICONS: Record<string, string> = {
+    'שומן רווי בכמות גבוהה': '/icons/food-marking/shoman.png',
+    'סוכר בכמות גבוהה':      '/icons/food-marking/suger.png',
+    'נתרן בכמות גבוהה':      '/icons/food-marking/natran.png',
+  };
+
   const RedFlag = ({ label }: { label: string }) => (
-    <span className="inline-flex items-center gap-1 bg-red-50 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-100">
-      🔴 {label}
-    </span>
+    <div className="flex flex-col items-center gap-1">
+      <img src={FLAG_ICONS[label]} alt={label} className="w-14 h-14 object-contain" />
+      <span className="text-[10px] text-red-600 font-semibold text-center leading-tight max-w-[60px]">{label}</span>
+    </div>
   );
 
   const rows = [
@@ -80,7 +87,7 @@ function NutritionCard({ product }: { product: any }) {
 
       {/* סימוני מזון אדומים */}
       {(highSaturatedFat || highSugars || highSodium) && (
-        <div className="px-5 py-3 bg-red-50/60 border-b border-red-100 flex flex-wrap gap-2">
+        <div className="px-5 py-4 bg-red-50/40 border-b border-red-100 flex gap-4 justify-center">
           {highSaturatedFat && <RedFlag label="שומן רווי בכמות גבוהה" />}
           {highSugars && <RedFlag label="סוכר בכמות גבוהה" />}
           {highSodium && <RedFlag label="נתרן בכמות גבוהה" />}
