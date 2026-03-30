@@ -80,7 +80,7 @@ function NutritionCard({ product }: { product: any }) {
       {energyKcal && (
         <div className="bg-stone-50/60 py-5 flex flex-col items-center border-b border-stone-100">
           <span className="text-5xl font-bold text-emerald-600 leading-none">{Math.round(Number(energyKcal))}</span>
-          <span className="text-sm text-stone-400 mt-1.5">קילוקלוריות</span>
+          <span className="text-sm text-stone-400 mt-1.5">קלוריות</span>
         </div>
       )}
 
