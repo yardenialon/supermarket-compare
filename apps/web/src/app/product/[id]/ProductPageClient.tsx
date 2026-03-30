@@ -75,22 +75,22 @@ function NutritionCard({ product }: { product: any }) {
     {
       label: 'קלוריות', value: energyKcal, unit: 'קק"ל', daily: 2000,
       color: '#059669', bg: '#ecfdf5',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#059669"><path d="M12.5 2C12.5 2 10 5.5 10 9c0 1.1.4 2 1 2.7C11 10 11.5 8.5 12.5 7c0 2 .5 4 2 5.5.3-1 .5-2 .5-3 1 1.5 1.5 3.2 1.5 5a4.5 4.5 0 01-9 0C7.5 9 12.5 2 12.5 2zm0 13c0 1.1-.9 2-2 2s-2-.9-2-2c0-1.5 2-4 2-4s2 2.5 2 4z"/></svg>
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 4 C18 4 12 12 12 20 C12 25.5 14.7 30 18 30 C21.3 30 24 25.5 24 20 C24 12 18 4 18 4Z" fill="#bbf7d0" stroke="#059669" strokeWidth="1.8" strokeLinejoin="round"/><path d="M18 30 C18 30 22 26 22 22 C22 19 20 17 18 16" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/><path d="M15 22 C15 20 16 18.5 18 18" stroke="#34d399" strokeWidth="1.3" strokeLinecap="round" opacity="0.7"/></svg>
     },
     {
       label: 'חלבון', value: proteinG, unit: 'g', daily: 50,
       color: '#2563eb', bg: '#eff6ff',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 3C9.5 3 7 5 7 8c0 2 1 3.5 2.5 4.5L8 18h8l-1.5-5.5C16 11.5 17 10 17 8c0-3-2.5-5-5-5zm-1 5.5c-.8 0-1.5-.7-1.5-1.5S10.2 5.5 11 5.5s1.5.7 1.5 1.5S11.8 8.5 11 8.5z"/></svg>
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><rect x="11" y="14" width="14" height="16" rx="4" stroke="#2563eb" strokeWidth="1.8"/><path d="M14 14 L14 11 C14 9.3 15.3 8 17 8 L19 8 C20.7 8 22 9.3 22 11 L22 14" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round"/><path d="M15 22 L21 22" stroke="#93c5fd" strokeWidth="1.5" strokeLinecap="round"/><path d="M15 25 L19 25" stroke="#93c5fd" strokeWidth="1.5" strokeLinecap="round"/></svg>
     },
     {
       label: 'פחמימות', value: carbsG, unit: 'g', daily: 260,
       color: '#ca8a04', bg: '#fefce8',
-      icon: <svg width="20" height="20" viewBox="0 0 32 32" fill="#ca8a04"><path d="M16 2c-1 0-2 .5-2 1.5 0 .7.3 1.3.7 1.8C13 6 12 7.5 12 9c0 1 .3 2 .8 2.7C11 12.5 10 14 10 16c0 1.2.4 2.3 1 3.2C9.5 20 9 21.3 9 22.7V28h2v-5.3c0-1 .5-2 1.3-2.6.5.8 1.1 1.5 1.7 2V28h4v-5.9c.6-.5 1.2-1.2 1.7-2 .8.6 1.3 1.6 1.3 2.6V28h2v-5.3c0-1.4-.5-2.7-1-3.5.6-.9 1-2 1-3.2 0-2-1-3.5-2.8-4.3.5-.7.8-1.7.8-2.7 0-1.5-1-3-2.5-3.7.4-.5.7-1.1.7-1.8C18 2.5 17 2 16 2zm0 3c.6 0 1 .4 1 .8 0 1.2-1 2.5-1 2.5S15 7 15 5.8c0-.4.4-.8 1-.8zm0 5c.8 0 1.5 1 1.5 2.2 0 1-.5 2-1.5 2s-1.5-1-1.5-2c0-1.2.7-2.2 1.5-2.2zm0 6c1 0 1.8 1.2 1.8 2.7 0 1.2-.5 2.2-1.3 2.7h-1c-.8-.5-1.3-1.5-1.3-2.7 0-1.5.8-2.7 1.8-2.7z"/></svg>
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 6 C18 6 18 12 18 14" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round"/><path d="M18 10 C18 10 13 7 12 4" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 10 C18 10 23 7 24 4" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 14 C18 14 13 11 12 8" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 14 C18 14 23 11 24 8" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 18 C18 18 13 15 12 12" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 18 C18 18 23 15 24 12" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 14 L18 30" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round"/><path d="M13 30 L23 30" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round"/></svg>
     },
     {
       label: 'שומן', value: fatG, unit: 'g', daily: 78,
       color: '#9333ea', bg: '#faf5ff',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#9333ea"><path d="M12 2C12 2 5 10 5 15a7 7 0 0014 0C19 10 12 2 12 2zm0 18a5 5 0 01-5-5c0-3.5 3.5-9 5-11.5 1.5 2.5 5 8 5 11.5a5 5 0 01-5 5z"/><path d="M9 15.5c0-1.5 1.5-4 1.5-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.4"/></svg>
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><ellipse cx="18" cy="22" rx="7" ry="9" fill="none" stroke="#9333ea" strokeWidth="1.8"/><path d="M18 4 C14 10 11 15 11 22" stroke="#9333ea" strokeWidth="1.8" strokeLinecap="round"/><path d="M18 4 C22 10 25 15 25 22" stroke="#9333ea" strokeWidth="1.8" strokeLinecap="round"/><path d="M14 20 C14 18 16 17 18 17" stroke="#c084fc" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/></svg>
     },
   ].filter(m => m.value != null);
 
@@ -132,11 +132,11 @@ function NutritionCard({ product }: { product: any }) {
                   {m.icon}
                 </div>
                 <div>
-                  <div className="text-2xl font-bold" style={{color: m.color, lineHeight:1}}>
+                  <div className="text-3xl font-black" style={{color: m.color, lineHeight:1}}>
                     {m.label === 'קלוריות' ? Math.round(Number(m.value)) : round(m.value)}
-                    <span className="text-xs font-normal text-stone-400 mr-1">{m.unit}</span>
+                    <span className="text-sm font-medium text-stone-400 mr-1">{m.unit}</span>
                   </div>
-                  <div className="text-[10px] text-stone-400 mt-0.5">{m.label}</div>
+                  <div className="text-sm font-bold mt-1" style={{color: m.color, opacity: 0.8}}>{m.label}</div>
                 </div>
                 <div>
                   <div className="h-1.5 rounded-full bg-white/60 overflow-hidden">
