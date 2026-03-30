@@ -1,5 +1,8 @@
 'use client';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import dynamic from 'next/dynamic';
+const BarcodeScanner = dynamic(() => import('./BarcodeScanner'), { ssr: false });
 
 const tabs = [
   {
@@ -57,7 +60,23 @@ const tabs = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [scannerOpen, setScannerOpen] = useState(false);
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+
+  const handleScan = (barcode: string) => {
+    setScannerOpen(false);
+    const API = process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api';
+    fetch(`${API}/search?q=${barcode}&limit=20`)
+      .then(r => r.json())
+      .then(d => {
+        const results = d.results || [];
+        const match = results.find((p: any) => p.barcode === barcode) || results[0];
+        if (match) router.push(`/product/${match.id}`);
+        else router.push(`/?q=${barcode}`);
+      })
+      .catch(() => router.push(`/?q=${barcode}`));
+  };
 
   return (
     <>
@@ -93,7 +112,25 @@ export default function BottomNav() {
               </a>
             );
           })}
+          {/* כפתור סריקה בולט — חמישי */}
+          <button
+            onClick={() => setScannerOpen(true)}
+            className="flex flex-col items-center gap-0.5 flex-1 py-1 active:scale-95 transition-transform"
+            style={{marginTop: '-20px'}}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-200 border-4 border-white">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M3 5h2v14H3zM7 5h1v14H7zM10 5h2v14h-2zM14 5h1v14h-1zM17 5h1v14h-1zM20 5h1v14h-1z"/>
+                <path d="M1 3h4v3" strokeWidth="2"/>
+                <path d="M23 3h-4v3" strokeWidth="2"/>
+                <path d="M1 21h4v-3" strokeWidth="2"/>
+                <path d="M23 21h-4v-3" strokeWidth="2"/>
+              </svg>
+            </div>
+            <span className="text-[10px] font-semibold text-emerald-600">סריקה</span>
+          </button>
         </div>
+        {scannerOpen && <BarcodeScanner onScan={handleScan} onClose={() => setScannerOpen(false)} />}
       </nav>
     </>
   );
