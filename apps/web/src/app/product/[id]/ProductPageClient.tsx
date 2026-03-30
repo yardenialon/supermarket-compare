@@ -65,17 +65,17 @@ function NutritionCard({ product }: { product: any }) {
     {
       label: 'קלוריות', value: energyKcal, unit: 'קק"ל', daily: 2000,
       color: '#059669', bg: '#ecfdf5',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="#059669"><path d="M12 2c0 0-5 5-5 10a5 5 0 0010 0c0-2-1-4-2-5 0 2-1 3-2 3-1 0-2-1-2-3 0 0-1 2-1 4a3 3 0 006 0c0-3-4-9-4-9z"/></svg>
     },
     {
       label: 'חלבון', value: proteinG, unit: 'g', daily: 50,
       color: '#2563eb', bg: '#eff6ff',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M6 4c0 4 2 6 6 6s6-2 6-6"/><path d="M4 20c0-4 3-7 8-7s8 3 8 7"/></svg>
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8"><path d="M4 12h2M18 12h2M6 12a3 3 0 003 3h6a3 3 0 003-3v-1a3 3 0 00-3-3H9a3 3 0 00-3 3v1z"/><path d="M9 9V7a1 1 0 012 0v2M13 9V7a1 1 0 012 0v2M9 15v2a1 1 0 002 0v-2M13 15v2a1 1 0 002 0v-2"/></svg>
     },
     {
       label: 'פחמימות', value: carbsG, unit: 'g', daily: 260,
       color: '#ca8a04', bg: '#fefce8',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="1.8"><path d="M12 22V10"/><path d="M12 10c0 0-3-3-3-6 0-2 1-3 3-3s3 1 3 3c0 3-3 6-3 6z"/><path d="M12 14c0 0-2-2-4-2"/><path d="M12 14c0 0 2-2 4-2"/><path d="M12 17c0 0-2-2-4-2"/><path d="M12 17c0 0 2-2 4-2"/></svg>
     },
     {
       label: 'שומן', value: fatG, unit: 'g', daily: 78,
