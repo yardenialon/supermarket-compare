@@ -1,1 +1,1 @@
-{"name":"supermarket-compare","private":true}
+{"name":"supermarket-compare","private":true,"dependencies":{"pg":"^8.20.0"}}

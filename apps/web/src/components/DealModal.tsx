@@ -164,12 +164,12 @@ export function DealModal({ deal, onClose, onAddToList }: { deal: any; onClose: 
               <p className="text-sm font-bold text-stone-700 text-right mb-2">מוצרים הכלולים במבצע ({items.length})</p>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {items.map((item: any) => (
-                  <div key={item.id} className="shrink-0 w-16 flex flex-col items-center gap-1">
-                    <div className="w-14 h-14 bg-stone-100 rounded-xl flex items-center justify-center overflow-hidden">
+                  <button key={item.id} onClick={() => { onClose(); window.location.href = `/product/${item.id}`; }} className="shrink-0 w-16 flex flex-col items-center gap-1 group">
+                    <div className="w-14 h-14 bg-stone-100 rounded-xl flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-emerald-400 transition-all">
                       {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="object-contain max-h-full p-1" /> : <span className="text-2xl">📦</span>}
                     </div>
-                    <p className="text-[10px] text-stone-500 text-center leading-tight line-clamp-2">{item.name}</p>
-                  </div>
+                    <p className="text-[10px] text-stone-500 text-center leading-tight line-clamp-2 group-hover:text-emerald-600 transition-colors">{item.name}</p>
+                  </button>
                 ))}
               </div>
             </div>
