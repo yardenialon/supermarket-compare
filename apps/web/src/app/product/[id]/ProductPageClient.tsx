@@ -65,22 +65,22 @@ function NutritionCard({ product }: { product: any }) {
     {
       label: 'קלוריות', value: energyKcal, unit: 'קק"ל', daily: 2000,
       color: '#059669', bg: '#ecfdf5',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="#059669"><path d="M12 2c0 0-5 5-5 10a5 5 0 0010 0c0-2-1-4-2-5 0 2-1 3-2 3-1 0-2-1-2-3 0 0-1 2-1 4a3 3 0 006 0c0-3-4-9-4-9z"/></svg>
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#059669"><path d="M12.5 2C12.5 2 10 5.5 10 9c0 1.1.4 2 1 2.7C11 10 11.5 8.5 12.5 7c0 2 .5 4 2 5.5.3-1 .5-2 .5-3 1 1.5 1.5 3.2 1.5 5a4.5 4.5 0 01-9 0C7.5 9 12.5 2 12.5 2zm0 13c0 1.1-.9 2-2 2s-2-.9-2-2c0-1.5 2-4 2-4s2 2.5 2 4z"/></svg>
     },
     {
       label: 'חלבון', value: proteinG, unit: 'g', daily: 50,
       color: '#2563eb', bg: '#eff6ff',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.8"><path d="M4 12h2M18 12h2M6 12a3 3 0 003 3h6a3 3 0 003-3v-1a3 3 0 00-3-3H9a3 3 0 00-3 3v1z"/><path d="M9 9V7a1 1 0 012 0v2M13 9V7a1 1 0 012 0v2M9 15v2a1 1 0 002 0v-2M13 15v2a1 1 0 002 0v-2"/></svg>
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#2563eb"><path d="M12 3C9.5 3 7 5 7 8c0 2 1 3.5 2.5 4.5L8 18h8l-1.5-5.5C16 11.5 17 10 17 8c0-3-2.5-5-5-5zm-1 5.5c-.8 0-1.5-.7-1.5-1.5S10.2 5.5 11 5.5s1.5.7 1.5 1.5S11.8 8.5 11 8.5z"/></svg>
     },
     {
       label: 'פחמימות', value: carbsG, unit: 'g', daily: 260,
       color: '#ca8a04', bg: '#fefce8',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="1.8"><path d="M12 22V10"/><path d="M12 10c0 0-3-3-3-6 0-2 1-3 3-3s3 1 3 3c0 3-3 6-3 6z"/><path d="M12 14c0 0-2-2-4-2"/><path d="M12 14c0 0 2-2 4-2"/><path d="M12 17c0 0-2-2-4-2"/><path d="M12 17c0 0 2-2 4-2"/></svg>
+      icon: <svg width="20" height="20" viewBox="0 0 32 32" fill="#ca8a04"><path d="M16 2c-1 0-2 .5-2 1.5 0 .7.3 1.3.7 1.8C13 6 12 7.5 12 9c0 1 .3 2 .8 2.7C11 12.5 10 14 10 16c0 1.2.4 2.3 1 3.2C9.5 20 9 21.3 9 22.7V28h2v-5.3c0-1 .5-2 1.3-2.6.5.8 1.1 1.5 1.7 2V28h4v-5.9c.6-.5 1.2-1.2 1.7-2 .8.6 1.3 1.6 1.3 2.6V28h2v-5.3c0-1.4-.5-2.7-1-3.5.6-.9 1-2 1-3.2 0-2-1-3.5-2.8-4.3.5-.7.8-1.7.8-2.7 0-1.5-1-3-2.5-3.7.4-.5.7-1.1.7-1.8C18 2.5 17 2 16 2zm0 3c.6 0 1 .4 1 .8 0 1.2-1 2.5-1 2.5S15 7 15 5.8c0-.4.4-.8 1-.8zm0 5c.8 0 1.5 1 1.5 2.2 0 1-.5 2-1.5 2s-1.5-1-1.5-2c0-1.2.7-2.2 1.5-2.2zm0 6c1 0 1.8 1.2 1.8 2.7 0 1.2-.5 2.2-1.3 2.7h-1c-.8-.5-1.3-1.5-1.3-2.7 0-1.5.8-2.7 1.8-2.7z"/></svg>
     },
     {
       label: 'שומן', value: fatG, unit: 'g', daily: 78,
       color: '#9333ea', bg: '#faf5ff',
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2"><path d="M12 2c-4 4-6 8-6 11a6 6 0 0012 0c0-3-2-7-6-11z"/></svg>
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#9333ea"><path d="M12 2C12 2 5 10 5 15a7 7 0 0014 0C19 10 12 2 12 2zm0 18a5 5 0 01-5-5c0-3.5 3.5-9 5-11.5 1.5 2.5 5 8 5 11.5a5 5 0 01-5 5z"/><path d="M9 15.5c0-1.5 1.5-4 1.5-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.4"/></svg>
     },
   ].filter(m => m.value != null);
 
