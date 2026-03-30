@@ -107,9 +107,18 @@ function NutritionCard({ product }: { product: any }) {
     <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
 
       {/* כותרת */}
-      <div className="px-5 py-5 border-b border-stone-100">
-        <h2 className="font-bold text-xl text-stone-800">ערכים תזונתיים</h2>
-        <p className="text-sm text-stone-400 mt-1">לכל 100 גרם מוצר</p>
+      <div className="px-5 py-5 border-b border-stone-100 flex items-center justify-between">
+        <div>
+          <h2 className="font-bold text-xl text-stone-800">ערכים תזונתיים</h2>
+          <p className="text-sm text-stone-400 mt-1">לכל 100 גרם מוצר</p>
+        </div>
+        {(highSaturatedFat || highSugars || highSodium) && (
+          <div className="flex items-center gap-2">
+            {highSaturatedFat && <img src="/icons/food-marking/shoman.png" alt="שומן רווי" className="w-10 h-10 object-contain" />}
+            {highSugars && <img src="/icons/food-marking/suger.png" alt="סוכר" className="w-10 h-10 object-contain" />}
+            {highSodium && <img src="/icons/food-marking/natran.png" alt="נתרן" className="w-10 h-10 object-contain" />}
+          </div>
+        )}
       </div>
 
       {/* מאקרו גריד */}
@@ -506,21 +515,8 @@ export default function ProductPageClient({
       <div className="max-w-3xl mx-auto px-4 pt-6 space-y-4">
 
         {/* Product header card */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5 relative">
-          {/* סימוני מזון — פינה שמאל עליון */}
-          {(product.highSaturatedFat || product.highSugars || product.highSodium) && (
-            <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-              {product.highSaturatedFat && (
-                <img src="/icons/food-marking/shoman.png" alt="שומן רווי בכמות גבוהה" className="w-12 h-12 object-contain" title="שומן רווי בכמות גבוהה" />
-              )}
-              {product.highSugars && (
-                <img src="/icons/food-marking/suger.png" alt="סוכר בכמות גבוהה" className="w-12 h-12 object-contain" title="סוכר בכמות גבוהה" />
-              )}
-              {product.highSodium && (
-                <img src="/icons/food-marking/natran.png" alt="נתרן בכמות גבוהה" className="w-12 h-12 object-contain" title="נתרן בכמות גבוהה" />
-              )}
-            </div>
-          )}
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
+
           <div className="flex items-start gap-4">
             <ProductImg name={name} imageUrl={imageUrl} size={96} />
             <div className="flex-1 min-w-0">
