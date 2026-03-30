@@ -1,7 +1,7 @@
 "use client";
 // apps/web/src/app/product/[id]/ProductPageClient.tsx
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 
@@ -349,6 +349,14 @@ export default function ProductPageClient({
   const [chainFilter, setChainFilter] = useState<string | null>(null);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [locMode, setLocMode] = useState<"cheapest" | "nearby">("cheapest");
+  const [radius, setRadius] = useState<number>(10);
+  const prevRadius = React.useRef(10);
+  React.useEffect(() => {
+    if (locMode === "nearby" && userLoc && radius !== prevRadius.current) {
+      prevRadius.current = radius;
+      fetchPrices(userLoc.lat, userLoc.lng);
+    }
+  }, [radius]);
   const [locLoading, setLocLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
@@ -410,7 +418,14 @@ export default function ProductPageClient({
   };
 
   const fp = prices
-    .filter((p) => !chainFilter || p.chainName === chainFilter)
+    .filter((p) => {
+      if (chainFilter && p.chainName !== chainFilter) return false;
+      if (locMode === "nearby" && p.dist !== undefined && p.dist !== null) {
+        const km = Math.sqrt(p.dist) * 111;
+        if (km > radius) return false;
+      }
+      return true;
+    })
     .sort((a, b) => a.price - b.price);
 
   const cheap = fp.length ? Math.min(...fp.map((p) => p.price)) : 0;
@@ -520,6 +535,34 @@ export default function ProductPageClient({
           </button>
         </div>
 
+        {/* Radius slider */}
+        {locMode === "nearby" && (
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-stone-400">📍 רדיוס חיפוש</span>
+              <span className="font-mono font-black text-lg text-emerald-600">{radius} <span className="text-xs font-semibold text-stone-400">ק״מ</span></span>
+            </div>
+            <div className="relative">
+              <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-300" style={{width: `${(([1,3,5,10,15,20,30,50].indexOf(radius) + 1) / 8) * 100}%`}} />
+              </div>
+              <input
+                type="range" min={0} max={7} dir="ltr"
+                value={[1,3,5,10,15,20,30,50].indexOf(radius)}
+                onChange={e => setRadius([1,3,5,10,15,20,30,50][7 - parseInt(e.target.value)])}
+                className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                style={{height: '36px', top: '-14px'}}
+              />
+              <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-emerald-500 rounded-full shadow-md transition-all duration-300 pointer-events-none"
+                style={{right: `calc(${([1,3,5,10,15,20,30,50].indexOf(radius) / 7) * 100}% - 10px)`, left: 'auto'}} />
+            </div>
+            <div className="flex justify-between mt-2 px-0.5">
+              {[1,3,5,10,15,20,30,50].map(v => (
+                <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold transition-colors " + (radius === v ? "text-emerald-600" : "text-stone-400 hover:text-stone-600")}>{v}</button>
+              ))}
+            </div>
+          </div>
+        )}
         {/* Chain filter */}
         {uChains.length > 1 && (
           <div className="bg-white rounded-xl border border-stone-100 px-4 py-3 flex flex-wrap gap-1.5">
