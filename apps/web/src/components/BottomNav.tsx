@@ -88,7 +88,7 @@ export default function BottomNav() {
         <div className="absolute inset-0 bg-white/92 backdrop-blur-xl border-t border-gray-100" />
 
         <div className="relative flex items-end justify-around px-1 pb-safe pt-2 h-16">
-          {tabs.map((tab) => {
+          {tabs.slice(0, 2).map((tab) => {
             const isActive =
               tab.href === '/'
               ? pathname === '/' && !searchParams?.get('tab')
