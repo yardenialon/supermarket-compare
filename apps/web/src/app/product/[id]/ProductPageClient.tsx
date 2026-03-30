@@ -533,6 +533,20 @@ export default function ProductPageClient({
             <ProductImg name={name} imageUrl={imageUrl} size={96} />
             <div className="flex-1 min-w-0">
               <h1 className="font-black text-2xl text-stone-800 leading-snug">{name}</h1>
+              {/* סימוני מזון מיני */}
+              {(product.highSaturatedFat || product.highSugars || product.highSodium) && (
+                <div className="flex gap-1.5 mt-2 flex-wrap">
+                  {product.highSaturatedFat && (
+                    <img src="/icons/food-marking/shoman.png" alt="שומן רווי" className="w-7 h-7 object-contain" title="שומן רווי בכמות גבוהה" />
+                  )}
+                  {product.highSugars && (
+                    <img src="/icons/food-marking/suger.png" alt="סוכר" className="w-7 h-7 object-contain" title="סוכר בכמות גבוהה" />
+                  )}
+                  {product.highSodium && (
+                    <img src="/icons/food-marking/natran.png" alt="נתרן" className="w-7 h-7 object-contain" title="נתרן בכמות גבוהה" />
+                  )}
+                </div>
+              )}
               <div className="text-sm text-stone-400 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
                 {brand && <span>{brand}</span>}
                 {unitQty && unitQty !== "0" && <span>{unitQty} {unitMeasure}</span>}
