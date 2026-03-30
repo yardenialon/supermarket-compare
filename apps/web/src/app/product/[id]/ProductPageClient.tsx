@@ -158,29 +158,7 @@ function NutritionCard({ product }: { product: any }) {
         </div>
       )}
 
-      {/* סימוני מזון */}
-      {(highSaturatedFat || highSugars || highSodium) && (
-        <div className="flex gap-5 justify-center px-5 py-5 border-b border-red-100 bg-red-50/30">
-          {highSaturatedFat && (
-            <div className="flex flex-col items-center gap-1.5">
-              <img src="/icons/food-marking/shoman.png" alt="שומן רווי בכמות גבוהה" className="w-14 h-14 object-contain" />
-              <span className="text-[10px] text-red-700 font-medium text-center leading-tight max-w-[64px]">שומן רווי בכמות גבוהה</span>
-            </div>
-          )}
-          {highSugars && (
-            <div className="flex flex-col items-center gap-1.5">
-              <img src="/icons/food-marking/suger.png" alt="סוכר בכמות גבוהה" className="w-14 h-14 object-contain" />
-              <span className="text-[10px] text-red-700 font-medium text-center leading-tight max-w-[64px]">סוכר בכמות גבוהה</span>
-            </div>
-          )}
-          {highSodium && (
-            <div className="flex flex-col items-center gap-1.5">
-              <img src="/icons/food-marking/natran.png" alt="נתרן בכמות גבוהה" className="w-14 h-14 object-contain" />
-              <span className="text-[10px] text-red-700 font-medium text-center leading-tight max-w-[64px]">נתרן בכמות גבוהה</span>
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* רכיבים */}
       {ingredients && (
@@ -528,25 +506,25 @@ export default function ProductPageClient({
       <div className="max-w-3xl mx-auto px-4 pt-6 space-y-4">
 
         {/* Product header card */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5 relative">
+          {/* סימוני מזון — פינה שמאל עליון */}
+          {(product.highSaturatedFat || product.highSugars || product.highSodium) && (
+            <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+              {product.highSaturatedFat && (
+                <img src="/icons/food-marking/shoman.png" alt="שומן רווי בכמות גבוהה" className="w-12 h-12 object-contain" title="שומן רווי בכמות גבוהה" />
+              )}
+              {product.highSugars && (
+                <img src="/icons/food-marking/suger.png" alt="סוכר בכמות גבוהה" className="w-12 h-12 object-contain" title="סוכר בכמות גבוהה" />
+              )}
+              {product.highSodium && (
+                <img src="/icons/food-marking/natran.png" alt="נתרן בכמות גבוהה" className="w-12 h-12 object-contain" title="נתרן בכמות גבוהה" />
+              )}
+            </div>
+          )}
           <div className="flex items-start gap-4">
             <ProductImg name={name} imageUrl={imageUrl} size={96} />
             <div className="flex-1 min-w-0">
               <h1 className="font-black text-2xl text-stone-800 leading-snug">{name}</h1>
-              {/* סימוני מזון מיני */}
-              {(product.highSaturatedFat || product.highSugars || product.highSodium) && (
-                <div className="flex gap-1.5 mt-2 flex-wrap">
-                  {product.highSaturatedFat && (
-                    <img src="/icons/food-marking/shoman.png" alt="שומן רווי" className="w-7 h-7 object-contain" title="שומן רווי בכמות גבוהה" />
-                  )}
-                  {product.highSugars && (
-                    <img src="/icons/food-marking/suger.png" alt="סוכר" className="w-7 h-7 object-contain" title="סוכר בכמות גבוהה" />
-                  )}
-                  {product.highSodium && (
-                    <img src="/icons/food-marking/natran.png" alt="נתרן" className="w-7 h-7 object-contain" title="נתרן בכמות גבוהה" />
-                  )}
-                </div>
-              )}
               <div className="text-sm text-stone-400 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
                 {brand && <span>{brand}</span>}
                 {unitQty && unitQty !== "0" && <span>{unitQty} {unitMeasure}</span>}
