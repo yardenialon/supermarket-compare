@@ -58,12 +58,38 @@ function NutritionCard({ product }: { product: any }) {
 
   if (!energyKcal && !ingredients) return null;
 
+  const round = (v: any) => Math.round(Number(v) * 10) / 10;
+  const pct = (v: any, daily: number) => Math.min(100, Math.round((Number(v) / daily) * 100));
+
+  const macros = [
+    {
+      label: 'קלוריות', value: energyKcal, unit: 'קק"ל', daily: 2000,
+      color: '#059669', bg: '#ecfdf5',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    },
+    {
+      label: 'חלבון', value: proteinG, unit: 'g', daily: 50,
+      color: '#2563eb', bg: '#eff6ff',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M6 4c0 4 2 6 6 6s6-2 6-6"/><path d="M4 20c0-4 3-7 8-7s8 3 8 7"/></svg>
+    },
+    {
+      label: 'פחמימות', value: carbsG, unit: 'g', daily: 260,
+      color: '#ca8a04', bg: '#fefce8',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" strokeWidth="2"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+    },
+    {
+      label: 'שומן', value: fatG, unit: 'g', daily: 78,
+      color: '#9333ea', bg: '#faf5ff',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2"><path d="M12 2c-4 4-6 8-6 11a6 6 0 0012 0c0-3-2-7-6-11z"/></svg>
+    },
+  ].filter(m => m.value != null);
+
   const detailRows = [
-    { label: 'שומן רווי', value: saturatedFatG, unit: 'גרם', flag: highSaturatedFat },
-    { label: 'שומן טראנס', value: transFatG, unit: 'גרם' },
-    { label: 'סוכרים', value: sugarsG, unit: 'גרם', flag: highSugars },
+    { label: 'שומן רווי', value: saturatedFatG, unit: 'g', flag: highSaturatedFat },
+    { label: 'שומן טראנס', value: transFatG, unit: 'g' },
+    { label: 'סוכרים', value: sugarsG, unit: 'g', flag: highSugars },
     { label: 'נתרן', value: sodiumMg, unit: 'מ"ג', flag: highSodium },
-    { label: 'סיבים תזונתיים', value: fiberG, unit: 'גרם' },
+    { label: 'סיבים', value: fiberG, unit: 'g' },
     { label: 'כולסטרול', value: cholesterolMg, unit: 'מ"ג' },
   ].filter(r => r.value !== null && r.value !== undefined);
 
@@ -71,44 +97,51 @@ function NutritionCard({ product }: { product: any }) {
     <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
 
       {/* כותרת */}
-      <div className="px-5 py-4 border-b border-stone-100">
-        <h2 className="font-bold text-base text-stone-800">ערכים תזונתיים</h2>
-        <p className="text-xs text-stone-400 mt-0.5">לכל 100 גרם מוצר</p>
+      <div className="px-5 py-5 border-b border-stone-100">
+        <h2 className="font-bold text-xl text-stone-800">ערכים תזונתיים</h2>
+        <p className="text-sm text-stone-400 mt-1">לכל 100 גרם מוצר</p>
       </div>
 
-      {/* hero קלוריות */}
-      {energyKcal && (
-        <div className="bg-stone-50/60 py-5 flex flex-col items-center border-b border-stone-100">
-          <span className="text-5xl font-bold text-emerald-600 leading-none">{Math.round(Number(energyKcal))}</span>
-          <span className="text-sm text-stone-400 mt-1.5">קלוריות</span>
-        </div>
-      )}
-
       {/* מאקרו גריד */}
-      {(fatG || carbsG || proteinG) && (
-        <div className="grid grid-cols-3 border-b border-stone-100" style={{borderTop:'none'}}>
-          {[
-            { label: 'שומן', value: fatG, unit: 'g' },
-            { label: 'פחמימות', value: carbsG, unit: 'g' },
-            { label: 'חלבון', value: proteinG, unit: 'g' },
-          ].map((m, i) => m.value != null && (
-            <div key={i} className={"py-4 flex flex-col items-center " + (i < 2 ? "border-l border-stone-100" : "")}>
-              <span className="text-xl font-bold text-stone-800">{Math.round(Number(m.value) * 10) / 10}<span className="text-xs text-stone-400 font-normal mr-0.5">{m.unit}</span></span>
-              <span className="text-xs text-stone-400 mt-1">{m.label}</span>
-            </div>
-          ))}
+      {macros.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 border-b border-stone-100">
+          {macros.map((m, i) => {
+            const p = pct(m.value, m.daily);
+            return (
+              <div key={i} className="rounded-2xl p-3.5 flex flex-col gap-2" style={{background: m.bg}}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{background: 'white'}}>
+                  {m.icon}
+                </div>
+                <div>
+                  <div className="text-2xl font-bold" style={{color: m.color, lineHeight:1}}>
+                    {m.label === 'קלוריות' ? Math.round(Number(m.value)) : round(m.value)}
+                    <span className="text-xs font-normal text-stone-400 mr-1">{m.unit}</span>
+                  </div>
+                  <div className="text-[10px] text-stone-400 mt-0.5">{m.label}</div>
+                </div>
+                <div>
+                  <div className="h-1.5 rounded-full bg-white/60 overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{width: `${p}%`, background: m.color}} />
+                  </div>
+                  <div className="text-[9px] mt-1" style={{color: m.color}}>{p}% מהצריכה היומית</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* שורות פירוט */}
+      {/* פירוט */}
       {detailRows.length > 0 && (
-        <div className="divide-y divide-stone-50">
+        <div className="grid grid-cols-3 gap-2 p-4 border-b border-stone-100">
           {detailRows.map((row, i) => (
-            <div key={i} className="flex items-center justify-between px-5 py-3">
-              <span className="text-sm text-stone-500">{row.label}</span>
-              <div className="flex items-center gap-2">
-                {row.flag && <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />}
-                <span className="text-sm font-medium text-stone-800">{Math.round(Number(row.value) * 10) / 10} {row.unit}</span>
+            <div key={i} className="bg-stone-50 rounded-xl p-3">
+              <div className="flex items-center gap-1 mb-1">
+                {row.flag && <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 inline-block" />}
+                <span className="text-[10px] text-stone-400 leading-tight">{row.label}</span>
+              </div>
+              <div className="text-base font-bold text-stone-800">
+                {round(row.value)}<span className="text-[10px] font-normal text-stone-400 mr-0.5">{row.unit}</span>
               </div>
             </div>
           ))}
@@ -117,7 +150,7 @@ function NutritionCard({ product }: { product: any }) {
 
       {/* סימוני מזון */}
       {(highSaturatedFat || highSugars || highSodium) && (
-        <div className="flex gap-5 justify-center px-5 py-5 border-t border-red-100 bg-red-50/30">
+        <div className="flex gap-5 justify-center px-5 py-5 border-b border-red-100 bg-red-50/30">
           {highSaturatedFat && (
             <div className="flex flex-col items-center gap-1.5">
               <img src="/icons/food-marking/shoman.png" alt="שומן רווי בכמות גבוהה" className="w-14 h-14 object-contain" />
@@ -141,18 +174,18 @@ function NutritionCard({ product }: { product: any }) {
 
       {/* רכיבים */}
       {ingredients && (
-        <div className="px-5 py-4 border-t border-stone-100">
+        <div className="px-5 py-4 border-b border-stone-100">
           <p className="text-[11px] font-medium text-stone-400 uppercase tracking-wider mb-2">רכיבים</p>
           <p className="text-xs text-stone-600 leading-relaxed">{ingredients}</p>
         </div>
       )}
 
-      {/* אלרגנים */}
+      {/* אזהרת אלרגנים */}
       {allergens && (
-        <div className="px-5 py-4 border-t border-amber-100 bg-amber-50/40">
+        <div className="px-5 py-4 border-b border-amber-100 bg-amber-50/40">
           <p className="text-[11px] font-medium text-amber-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            אלרגנים
+            אזהרת אלרגנים
           </p>
           <p className="text-xs text-amber-800 leading-relaxed">{allergens}</p>
         </div>
