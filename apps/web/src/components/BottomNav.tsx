@@ -112,7 +112,8 @@ export default function BottomNav() {
               </a>
             );
           })}
-          {/* כפתור סריקה בולט — חמישי */}
+
+          {/* כפתור סריקה — מרכזי */}
           <button
             onClick={() => setScannerOpen(true)}
             className="flex flex-col items-center gap-0.5 flex-1 py-1 active:scale-95 transition-transform"
@@ -129,6 +130,30 @@ export default function BottomNav() {
             </div>
             <span className="text-[10px] font-semibold text-emerald-600">סריקה</span>
           </button>
+
+          {tabs.slice(2).map((tab) => {
+            const isActive =
+              tab.href === '/'
+              ? pathname === '/' && !searchParams?.get('tab')
+              : tab.href.includes('?tab=')
+              ? pathname === '/' && searchParams?.get('tab') === tab.href.split('tab=')[1]
+              : pathname.startsWith(tab.href.split('?')[0]) && tab.href !== '/';
+            return (
+              <a key={tab.href} href={tab.href}
+                className="flex flex-col items-center gap-0.5 flex-1 py-1 active:scale-95 transition-transform">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                  isActive ? 'bg-emerald-50' : 'bg-transparent'
+                }`}>
+                  {tab.icon(isActive)}
+                </div>
+                <span className={`text-[10px] font-medium transition-colors ${
+                  isActive ? 'text-emerald-600 font-semibold' : 'text-gray-400'
+                }`}>
+                  {tab.label}
+                </span>
+              </a>
+            );
+          })}
         </div>
         {scannerOpen && <BarcodeScanner onScan={handleScan} onClose={() => setScannerOpen(false)} />}
       </nav>
