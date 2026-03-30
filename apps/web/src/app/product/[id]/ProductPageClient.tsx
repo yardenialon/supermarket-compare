@@ -26,6 +26,12 @@ const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   Yellow:       { he: "ילו (כרפור)", color: "#eab308", logo: "/logos/yellow.png" },
   Carrefour:    { he: "קרפור",       color: "#004e9f", logo: "/logos/Carrefour.png" },
   "Mahsani Ashuk": { he: "מחסני השוק", color: "#f97316", logo: "/logos/mahsani-ashuk.png" },
+  "Stop Market":   { he: "סטופ מרקט",   color: "#dc2626", logo: "/logos/stop-market.png" },
+  "Shuk Ahir":     { he: "שוק אחיר",    color: "#16a34a", logo: "/logos/shuk-ahir.png" },
+  "Shefa Barcart Ashem": { he: "שפע ברכת השם", color: "#7c3aed", logo: "/logos/shefa.png" },
+  "Wolt":          { he: "וולט",        color: "#00c2e0", logo: "/logos/wolt.png" },
+  "Super Pharm":   { he: "סופר-פארם",   color: "#e11d48", logo: "/logos/super-pharm.png" },
+  "Quik":          { he: "קוויק",       color: "#004e9f", logo: "/logos/Carrefour.png" },
 };
 const SUBCHAINS: Record<string, { he: string; logo: string }> = {
   "שופרסל שלי":    { he: "שופרסל שלי",    logo: "/logos/subchains/shufersal-sheli.png" },
@@ -579,7 +585,7 @@ export default function ProductPageClient({
                 className={"px-3 py-1 rounded text-xs font-semibold transition flex items-center gap-1.5 " + (chainFilter === ch ? "text-white" : "text-stone-400 hover:text-stone-600")}
                 style={chainFilter === ch ? { backgroundColor: chainClr(ch) } : {}}
               >
-                <CLogo name={ch} size={16} />
+                <CLogo name={ch} size={22} />
                 {chainHe(ch)}
               </button>
             ))}
@@ -603,7 +609,7 @@ export default function ProductPageClient({
                   className={"flex items-center justify-between px-5 py-4 transition hover:bg-stone-50 " + (i === 0 ? "bg-emerald-50/40" : "")}
                 >
                   <div className="flex items-center gap-3">
-                    <CLogo name={p.chainName} subchain={p.subchainName} size={44} />
+                    <CLogo name={p.chainName} subchain={p.subchainName} size={52} />
                     <div>
                       <div className="font-bold text-sm text-stone-700">
                         {p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}
