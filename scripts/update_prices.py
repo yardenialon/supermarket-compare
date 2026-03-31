@@ -227,7 +227,7 @@ def main():
     # Prices
     print("\n=== Prices ===", flush=True)
     total = 0
-    for f in sorted(data_path.glob("price_full_file_*.csv")):
+    for f in sorted(data_path.glob("price_full_file_*.csv"), key=lambda x: x.stat().st_size):
         chain_key = f.stem.replace('price_full_file_', '')
         chain_name = CHAIN_MAP.get(chain_key)
         if not chain_name: continue
@@ -239,7 +239,7 @@ def main():
         elapsed = time.time() - t0
         print(f"    -> {u} prices in {elapsed:.1f}s", flush=True)
         total += u
-        if time.time() - start > 5400:
+        if time.time() - start > 7200:
             print("  WARNING: Time limit", flush=True); break
 
     # Promos
