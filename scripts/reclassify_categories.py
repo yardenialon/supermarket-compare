@@ -54,7 +54,7 @@ def call_claude(products_batch):
 - החזר את ה-index של כל מוצר כמפתח"""
 
     payload = json.dumps({
-        "model": "claude-sonnet-4-20250514",
+        "model": "claude-sonnet-4-5",
         "max_tokens": 4096,
         "messages": [{"role": "user", "content": prompt}]
     }).encode("utf-8")
@@ -68,8 +68,12 @@ def call_claude(products_batch):
             "anthropic-version": "2023-06-01"
         }
     )
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        data = json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        print(f"HTTP {e.code}: {e.read().decode()}")
+        raise
 
     text = data["content"][0]["text"].strip()
     if text.startswith("```"):
