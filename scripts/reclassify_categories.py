@@ -10,7 +10,7 @@ import urllib.request
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 DB_URL = os.environ.get("DATABASE_URL")
-BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "150"))
+BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "100"))
 RECLASSIFY_ALL = os.environ.get("RECLASSIFY_ALL", "false").lower() == "true"
 
 CATEGORIES = {
@@ -80,7 +80,25 @@ def call_claude(products_batch):
         text = text.split("```")[1]
         if text.startswith("json"):
             text = text[4:]
-    return json.loads(text.strip())
+    text = text.strip()
+    # נסה לפרס, אם נכשל נסה לתקן
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # חתוך עד ל-} האחרון התקין
+        last_brace = text.rfind('}')
+        if last_brace > 0:
+            # מצא את ה-} הסוגר של ה-object הראשי
+            fixed = text[:last_brace+1]
+            # הסר entry אחרון שעלול להיות חצי
+            last_comma = fixed.rfind(',')
+            if last_comma > 0:
+                fixed = fixed[:last_comma] + '}'
+            try:
+                return json.loads(fixed)
+            except:
+                pass
+        return {}
 
 
 def main():
