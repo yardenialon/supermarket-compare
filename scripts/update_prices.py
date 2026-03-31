@@ -25,6 +25,9 @@ CHAIN_MAP = {
     'super_yuda': 'Super Yuda', 'super_dosh': 'Super Dosh', 'wolt': 'Wolt',
     'zol_vebegadol': 'Zol Vebegadol', 'yayno_bitan_and_carrefour': 'Carrefour',
     'yellow': None,
+    'super_pharm': 'Super Pharm',
+    'super_pharm': 'Super Pharm',
+    'super_pharm': 'Super Pharm',
 }
 
 def get_row_fields(row):

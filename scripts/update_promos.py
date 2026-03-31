@@ -22,7 +22,7 @@ CHAIN_MAP = {
     "hazi_hinam":"Hazi Hinam","tiv_taam":"Tiv Taam","yochananof":"Yochananof",
     "yohananof":"Yochananof","dor_alon":"Dor Alon","keshet":"Keshet Taamim",
     "stop_market":"Stop Market","polizer":"Polizer","salach_dabach":"Salach Dabach",
-    "super_sapir":"Super Sapir","meshmat_yosef":"Meshmat Yosef","shefa_barcart_ashem":"Shefa Barcart Ashem","shuk_ahir":"Shuk Ahir","super_yuda":"Super Yuda","yellow":"Yellow","zol_vebegadol":"Zol Vebegadol","wolt":"Wolt","carrefour":"Carrefour","yayno_bitan":"Yayno Bitan",
+    "super_sapir":"Super Sapir","meshmat_yosef":"Meshmat Yosef","shefa_barcart_ashem":"Shefa Barcart Ashem","shuk_ahir":"Shuk Ahir","super_yuda":"Super Yuda","yellow":None,"zol_vebegadol":"Zol Vebegadol","wolt":"Wolt","super_pharm":"Super Pharm","carrefour":"Carrefour","yayno_bitan":"Yayno Bitan",
 }
 KAGGLE_DATA_DIR = Path("kaggle_data")
 KAGGLE_DATASET  = "motib7/israeli-supermarket-prices"
