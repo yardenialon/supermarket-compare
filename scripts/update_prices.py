@@ -217,7 +217,7 @@ def main():
 
     # Stores
     print("\n=== Stores ===", flush=True)
-    for f in sorted(data_path.glob("store_file_*.csv")):
+    for f in sorted([Path(f) for f in store_files]):
         chain_key = f.stem.replace('store_file_', '')
         chain_name = CHAIN_MAP.get(chain_key)
         if not chain_name: continue
@@ -227,7 +227,7 @@ def main():
     # Prices
     print("\n=== Prices ===", flush=True)
     total = 0
-    for f in sorted(data_path.glob("price_full_file_*.csv"), key=lambda x: x.stat().st_size):
+    for f in sorted([Path(f) for f in price_full], key=lambda x: x.stat().st_size):
         chain_key = f.stem.replace('price_full_file_', '')
         chain_name = CHAIN_MAP.get(chain_key)
         if not chain_name: continue
@@ -245,9 +245,9 @@ def main():
     # Promos
     print("\n=== Promos ===", flush=True)
     promo_total = 0
-    promo_files = sorted(data_path.glob("promo_full_file_*.csv"))
+    promo_files = sorted([Path(f) for f in all_csvs if "promo_full_file" in f])
     if not promo_files:
-        promo_files = sorted(data_path.glob("promo_file_*.csv"))
+        promo_files = sorted([Path(f) for f in all_csvs if "promo_file" in f and "promo_full" not in f])
     print(f"  Found {len(promo_files)} promo files", flush=True)
     for f in promo_files:
         chain_key = f.stem.replace('promo_full_file_', '').replace('promo_file_', '')
