@@ -1,10 +1,15 @@
 name: Update Categories
 on:
   workflow_dispatch:
+    inputs:
+      reclassify_all:
+        description: 'סווג מחדש את כל המוצרים (כולל מסווגים)'
+        required: false
+        default: 'false'
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -12,8 +17,15 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: pip install psycopg2-binary
-      - name: Run categories update
+      - name: Run keyword categories update
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CATEGORY_BATCH_SIZE: "2000"
         run: python scripts/update_categories.py
+      - name: Run AI categories reclassification
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BATCH_SIZE: "150"
+          RECLASSIFY_ALL: ${{ github.event.inputs.reclassify_all }}
+        run: python scripts/reclassify_categories.py
