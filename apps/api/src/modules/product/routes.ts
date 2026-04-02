@@ -76,18 +76,44 @@ export async function productRoutes(app: any) {
     return result.rows;
   });
 
+
+  app.get('/category/:name/subcategories', async (req: any) => {
+    const { name } = req.params;
+    const result = await query(`
+      SELECT subcategory, COUNT(*) as count
+      FROM product
+      WHERE category = $1
+      AND subcategory IS NOT NULL AND subcategory != ''
+      GROUP BY subcategory
+      ORDER BY count DESC
+    `, [decodeURIComponent(name)]);
+    return result.rows;
+  });
+
   app.get('/category/:name/products', async (req: any) => {
     const { name } = req.params;
     const page = parseInt(req.query.page || '0');
+    const subcategory = req.query.subcategory;
     const limit = 48;
     const offset = page * limit;
-    const result = await query(`
-      SELECT id, name, brand, image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount"
-      FROM product 
-      WHERE category = $1
-      ORDER BY store_count DESC NULLS LAST
-      LIMIT $2 OFFSET $3
-    `, [decodeURIComponent(name), limit, offset]);
+    let result;
+    if (subcategory) {
+      result = await query(`
+        SELECT id, name, brand, image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount"
+        FROM product 
+        WHERE category = $1 AND subcategory = $2
+        ORDER BY store_count DESC NULLS LAST
+        LIMIT $3 OFFSET $4
+      `, [decodeURIComponent(name), decodeURIComponent(subcategory), limit, offset]);
+    } else {
+      result = await query(`
+        SELECT id, name, brand, image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount"
+        FROM product 
+        WHERE category = $1
+        ORDER BY store_count DESC NULLS LAST
+        LIMIT $2 OFFSET $3
+      `, [decodeURIComponent(name), limit, offset]);
+    }
     return { products: result.rows, page, limit };
   });
   // Sitemap endpoints
