@@ -6,7 +6,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-prod
 async function getProducts(name: string) {
   try {
     const res = await fetch(`${API}/category/${encodeURIComponent(name)}/products?page=0`, {
-      next: { revalidate: 3600 }
+      next: { revalidate: 0 }
     });
     if (!res.ok) return [];
     const data = await res.json();
