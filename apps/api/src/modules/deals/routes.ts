@@ -11,7 +11,7 @@ export async function dealsRoutes(app: any) {
     const conditions: string[] = [
       "(pr.end_date IS NULL OR pr.end_date > NOW())",
       "pr.description IS NOT NULL",
-      "pr.item_count > 0 AND pr.item_count <= 100"
+      "(pr.item_count IS NULL OR pr.item_count = 0 OR (pr.item_count > 0 AND pr.item_count <= 100))"
     ];
 
     if (category) {
