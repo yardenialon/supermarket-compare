@@ -10,7 +10,7 @@ import urllib.request
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 DB_URL = os.environ.get("DATABASE_URL")
-BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "200"))
+BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "100"))
 RECLASSIFY_ALL = os.environ.get("RECLASSIFY_ALL", "false").lower() == "true"
 
 CATEGORIES = {
@@ -61,7 +61,7 @@ def call_claude(batch):
 
     payload = json.dumps({
         "model": "claude-haiku-4-5-20251001",
-        "max_tokens": 2000,
+        "max_tokens": 4096,
         "messages": [{"role": "user", "content": prompt}]
     }).encode("utf-8")
 
