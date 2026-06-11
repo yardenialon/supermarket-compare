@@ -64,7 +64,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           gtag('js', new Date());
           gtag('config', 'G-67LW5LMRZF');
         `}</Script>
-      </head>
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5786695693273761" crossorigin="anonymous"></script>
+    </head>
       <body className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
         <Header />
         <main className="max-w-5xl mx-auto px-4 py-6">{children}</main>
