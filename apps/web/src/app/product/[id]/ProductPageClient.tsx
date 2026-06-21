@@ -227,7 +227,7 @@ function CLogo({ name, subchain, size = 40 }: { name: string; subchain?: string;
 
 function ProductImg({ name, imageUrl, size = 80 }: { name: string; imageUrl?: string | null; size?: number }) {
   const [err, setErr] = useState(false);
-  if (!imageUrl || err)
+  if (true || !imageUrl || err) // תמונות הוסרו מטעמי זכויות יוצרים
     return (
       <div className="rounded-2xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
         <span className="text-stone-300" style={{ fontSize: size * 0.45 }}>📦</span>
@@ -352,7 +352,7 @@ function RelatedProducts({ category, currentId }: { category: string; currentId:
           <a key={p.id} href={`/product/${p.id}`}
             className="flex flex-col gap-1.5 p-2 rounded-xl border border-stone-100 hover:border-emerald-300 hover:shadow-sm transition">
             <div className="w-full aspect-square bg-stone-50 rounded-lg flex items-center justify-center overflow-hidden">
-              {p.imageUrl
+              {false
                 ? <img src={p.imageUrl} alt={p.name} className="max-w-full max-h-full object-contain p-1" />
                 : <span className="text-2xl">📦</span>}
             </div>

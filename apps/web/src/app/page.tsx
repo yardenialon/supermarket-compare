@@ -106,7 +106,7 @@ function CLogo({ name, subchain, size = 40 }: { name: string; subchain?: string;
 function ProductImg({ barcode, name, size = 48, imageUrl, clickable = true }: { barcode: string; name: string; size?: number; imageUrl?: string | null; clickable?: boolean }) {
   const [err, setErr] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const url = imageUrl && !err ? imageUrl : '';
+  const url = ''; // תמונות מוצרים הוסרו מטעמי זכויות יוצרים
 
   if (!url) return (
     <div className="rounded-xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
