@@ -48,3 +48,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
+
+/* הגנת תמונות */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+.product-img-wrap {
+  position: relative;
+}
+.product-img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}

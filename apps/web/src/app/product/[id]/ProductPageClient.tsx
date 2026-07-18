@@ -227,7 +227,8 @@ function CLogo({ name, subchain, size = 40 }: { name: string; subchain?: string;
 
 function ProductImg({ name, imageUrl, size = 80 }: { name: string; imageUrl?: string | null; size?: number }) {
   const [err, setErr] = useState(false);
-  if (true || !imageUrl || err) // תמונות הוסרו מטעמי זכויות יוצרים
+  const url = imageUrl && !err ? '/api/img?u=' + btoa(imageUrl) : '';
+  if (!url)
     return (
       <div className="rounded-2xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
         <span className="text-stone-300" style={{ fontSize: size * 0.45 }}>📦</span>
@@ -235,7 +236,7 @@ function ProductImg({ name, imageUrl, size = 80 }: { name: string; imageUrl?: st
     );
   return (
     <div className="rounded-2xl bg-stone-50 shrink-0 overflow-hidden flex items-center justify-center border border-stone-100" style={{ width: size, height: size }}>
-      <img src={imageUrl} alt={name} onError={() => setErr(true)} className="max-w-full max-h-full object-contain p-2" />
+      <img src={url} alt={name} onError={() => setErr(true)} className="max-w-full max-h-full object-contain p-2" draggable="false" />
     </div>
   );
 }
@@ -687,4 +688,4 @@ export default function ProductPageClient({
             מחיר עדכני ב-{storeCount} חנויות ברחבי ישראל.
             {cheap > 0 && ` המחיר הזול ביותר כרגע הוא ₪${cheap.toFixed(2)}`}
             {cheap > 0 && expensive > 0 && cheapestChain ? ` ב${cheapestChain}.` : "."}
-            {cheap > 0 && expensive > 0 && priceDiff > 0 && ` הפרש המחיר בין הז�
+            {cheap > 0 && expensive > 0 && priceDiff > 0 && ` הפרש המחיר בין הז
