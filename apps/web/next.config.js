@@ -9,6 +9,17 @@ module.exports = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      { source: '/list', destination: '/?tab=list', permanent: true },
+      { source: '/product', destination: '/', permanent: false },
+      { source: '/profile', destination: '/', permanent: false },
+      { source: '/login', destination: '/', permanent: false },
+      { source: '/register', destination: '/', permanent: false },
+      { source: '/cart', destination: '/?tab=list', permanent: false },
+      { source: '/search', destination: '/?tab=search', permanent: false },
+    ];
+  },
   async rewrites() {
     return [
       {
