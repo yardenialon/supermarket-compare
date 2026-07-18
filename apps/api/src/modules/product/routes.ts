@@ -176,10 +176,6 @@ export async function productRoutes(app: any) {
     if (img) { await query('UPDATE product SET image_url=$1 WHERE id=$2', [img, id]); }
     return { imageUrl: img };
   });
-}
-// index hint - run once in DB:
-// CREATE INDEX IF NOT EXISTS idx_product_id ON product(id);
-
   // Image proxy — מסתיר URL מקורי
   app.get('/image-proxy', async (req: any, reply: any) => {
     const encoded = (req.query as any).u;
@@ -224,3 +220,7 @@ export async function productRoutes(app: any) {
       return reply.code(502).send('Failed to fetch image');
     }
   });
+}
+// index hint - run once in DB:
+// CREATE INDEX IF NOT EXISTS idx_product_id ON product(id);
+
