@@ -107,7 +107,7 @@ function ProductImg({ barcode, name, size = 48, imageUrl, clickable = true }: { 
   const [err, setErr] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const proxyUrl = imageUrl && !err
-    ? 'https://supermarket-compare-production.up.railway.app/api/image-proxy?u=' + btoa(imageUrl)
+    ? 'https://supermarket-compare-production.up.railway.app/api/image-proxy?u=' + encodeURIComponent(imageUrl)
     : '';
   const url = proxyUrl;
 

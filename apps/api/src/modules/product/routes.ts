@@ -183,7 +183,7 @@ export async function productRoutes(app: any) {
 
     let originalUrl: string;
     try {
-      originalUrl = Buffer.from(encoded, 'base64').toString('utf-8');
+      originalUrl = decodeURIComponent(encoded);
     } catch {
       return reply.code(400).send('Invalid parameter');
     }
