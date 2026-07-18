@@ -179,3 +179,48 @@ export async function productRoutes(app: any) {
 }
 // index hint - run once in DB:
 // CREATE INDEX IF NOT EXISTS idx_product_id ON product(id);
+
+  // Image proxy — מסתיר URL מקורי
+  app.get('/image-proxy', async (req: any, reply: any) => {
+    const encoded = (req.query as any).u;
+    if (!encoded) return reply.code(400).send('Missing parameter');
+
+    let originalUrl: string;
+    try {
+      originalUrl = Buffer.from(encoded, 'base64').toString('utf-8');
+    } catch {
+      return reply.code(400).send('Invalid parameter');
+    }
+
+    const allowedDomains = [
+      'img.rami-levy.co.il', 'res.cloudinary.com', 'superpharmstorage.blob.core.windows.net',
+      'm.pricez.co.il', 'd226b0iufwcjmj.cloudfront.net', 'noyhasade.b-cdn.net',
+      'imageproxy.wolt.com', 'storage.googleapis.com', 'pricez.co.il',
+    ];
+
+    try {
+      const urlObj = new URL(originalUrl);
+      const allowed = allowedDomains.some(d => urlObj.hostname.includes(d));
+      if (!allowed) return reply.code(403).send('Domain not allowed');
+    } catch {
+      return reply.code(400).send('Invalid URL');
+    }
+
+    try {
+      const response = await fetch(originalUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://savy.co.il' },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) return reply.code(404).send('Image not found');
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      const buffer = await response.arrayBuffer();
+      reply
+        .header('Content-Type', contentType)
+        .header('Cache-Control', 'public, max-age=86400')
+        .header('Content-Disposition', 'inline')
+        .header('X-Content-Type-Options', 'nosniff')
+        .send(Buffer.from(buffer));
+    } catch {
+      return reply.code(502).send('Failed to fetch image');
+    }
+  });
