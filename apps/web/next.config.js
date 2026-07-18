@@ -16,6 +16,10 @@ module.exports = {
         destination: '/api/receipt',
       },
       {
+        source: '/api/image-proxy',
+        destination: '/api/image-proxy',
+      },
+      {
         source: '/api/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api'}/:path*`,
       },
