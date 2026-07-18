@@ -247,6 +247,7 @@ export default function ProductPageClient({
   const [chainFilter, setChainFilter] = useState<string | null>(null);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [locMode, setLocMode] = useState<"cheapest" | "nearby">("cheapest");
+  const [radius, setRadius] = useState<number>(10);
   const [locLoading, setLocLoading] = useState(false);
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(false);
