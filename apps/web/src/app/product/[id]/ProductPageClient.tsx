@@ -116,6 +116,121 @@ interface Product {
 
 // ─── Main client component ────────────────────────────────────────
 
+
+function NutritionCard({ product }: { product: any }) {
+  const { energyKcal, proteinG, carbsG, sugarsG, fatG, saturatedFatG,
+          transFatG, sodiumMg, fiberG, cholesterolMg, ingredients, allergens,
+          highSaturatedFat, highSugars, highSodium } = product;
+
+  if (!energyKcal && !ingredients) return null;
+
+  const round = (v: any) => Math.round(Number(v) * 10) / 10;
+  const pct = (v: any, daily: number) => Math.min(100, Math.round((Number(v) / daily) * 100));
+
+  const macros = [
+    { label: 'קלוריות', value: energyKcal, unit: 'קק"ל', daily: 2000, color: '#059669', bg: '#ecfdf5',
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 4 C18 4 12 12 12 20 C12 25.5 14.7 30 18 30 C21.3 30 24 25.5 24 20 C24 12 18 4 18 4Z" fill="#bbf7d0" stroke="#059669" strokeWidth="1.8" strokeLinejoin="round"/><path d="M18 30 C18 30 22 26 22 22 C22 19 20 17 18 16" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/></svg> },
+    { label: 'חלבון', value: proteinG, unit: 'g', daily: 50, color: '#2563eb', bg: '#eff6ff',
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><rect x="11" y="14" width="14" height="16" rx="4" stroke="#2563eb" strokeWidth="1.8"/><path d="M14 14 L14 11 C14 9.3 15.3 8 17 8 L19 8 C20.7 8 22 9.3 22 11 L22 14" stroke="#2563eb" strokeWidth="1.8" strokeLinecap="round"/><path d="M15 22 L21 22" stroke="#93c5fd" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+    { label: 'פחמימות', value: carbsG, unit: 'g', daily: 260, color: '#ca8a04', bg: '#fefce8',
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 6 C18 6 18 12 18 14" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round"/><path d="M18 10 C18 10 13 7 12 4" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 10 C18 10 23 7 24 4" stroke="#ca8a04" strokeWidth="1.5" strokeLinecap="round"/><path d="M18 14 L18 30" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round"/><path d="M13 30 L23 30" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+    { label: 'שומן', value: fatG, unit: 'g', daily: 78, color: '#9333ea', bg: '#faf5ff',
+      icon: <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><ellipse cx="18" cy="22" rx="7" ry="9" fill="none" stroke="#9333ea" strokeWidth="1.8"/><path d="M18 4 C14 10 11 15 11 22" stroke="#9333ea" strokeWidth="1.8" strokeLinecap="round"/><path d="M18 4 C22 10 25 15 25 22" stroke="#9333ea" strokeWidth="1.8" strokeLinecap="round"/></svg> },
+  ].filter(m => m.value != null);
+
+  const detailRows = [
+    { label: 'שומן רווי', value: saturatedFatG, unit: 'g', flag: highSaturatedFat },
+    { label: 'שומן טראנס', value: transFatG, unit: 'g' },
+    { label: 'סוכרים', value: sugarsG, unit: 'g', flag: highSugars },
+    { label: 'נתרן', value: sodiumMg, unit: 'מ"ג', flag: highSodium },
+    { label: 'סיבים', value: fiberG, unit: 'g' },
+    { label: 'כולסטרול', value: cholesterolMg, unit: 'מ"ג' },
+  ].filter((r: any) => r.value !== null && r.value !== undefined);
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+      <div className="px-5 py-5 border-b border-stone-100 flex items-center justify-between">
+        <div>
+          <h2 className="font-bold text-xl text-stone-800">ערכים תזונתיים</h2>
+          <p className="text-sm text-stone-400 mt-1">לכל 100 גרם מוצר</p>
+        </div>
+        {(highSaturatedFat || highSugars || highSodium) && (
+          <div className="flex items-center gap-2">
+            {highSaturatedFat && <img src="/icons/food-marking/shoman.png" alt="שומן רווי" className="w-10 h-10 object-contain" />}
+            {highSugars && <img src="/icons/food-marking/suger.png" alt="סוכר" className="w-10 h-10 object-contain" />}
+            {highSodium && <img src="/icons/food-marking/natran.png" alt="נתרן" className="w-10 h-10 object-contain" />}
+          </div>
+        )}
+      </div>
+
+      {macros.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 border-b border-stone-100">
+          {macros.map((m, i) => {
+            const p = pct(m.value, m.daily);
+            return (
+              <div key={i} className="rounded-2xl p-3.5 flex flex-col gap-2" style={{background: m.bg}}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white">{m.icon}</div>
+                <div>
+                  <div className="text-3xl font-black" style={{color: m.color, lineHeight:1}}>
+                    {m.label === 'קלוריות' ? Math.round(Number(m.value)) : round(m.value)}
+                    <span className="text-sm font-medium text-stone-400 mr-1">{m.unit}</span>
+                  </div>
+                  <div className="text-sm font-bold mt-1" style={{color: m.color, opacity:0.8}}>{m.label}</div>
+                </div>
+                <div>
+                  <div className="h-1.5 rounded-full bg-white/60 overflow-hidden">
+                    <div className="h-full rounded-full" style={{width: `${p}%`, background: m.color}} />
+                  </div>
+                  <div className="text-[9px] mt-1" style={{color: m.color}}>{p}% מהצריכה היומית</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {detailRows.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 p-4 border-b border-stone-100">
+          {detailRows.map((row: any, i: number) => (
+            <div key={i} className="bg-stone-50 rounded-xl p-3">
+              <div className="flex items-center gap-1 mb-1">
+                {row.flag && <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 inline-block" />}
+                <span className="text-[10px] text-stone-400 leading-tight">{row.label}</span>
+              </div>
+              <div className="text-base font-bold text-stone-800">
+                {round(row.value)}<span className="text-[10px] font-normal text-stone-400 mr-0.5">{row.unit}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ingredients && (
+        <div className="px-5 py-4 border-b border-stone-100">
+          <p className="text-[11px] font-medium text-stone-400 uppercase tracking-wider mb-2">רכיבים</p>
+          <p className="text-xs text-stone-600 leading-relaxed">{ingredients}</p>
+        </div>
+      )}
+
+      {allergens && (
+        <div className="px-5 py-4 border-b border-amber-100 bg-amber-50/40">
+          <p className="text-[11px] font-medium text-amber-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            אזהרת אלרגנים
+          </p>
+          <p className="text-xs text-amber-800 leading-relaxed">{allergens}</p>
+        </div>
+      )}
+
+      <div className="px-5 py-3 border-t border-stone-100">
+        <p className="text-[10px] text-stone-400 leading-relaxed">
+          הנתונים המדויקים מופיעים על גבי המוצר. אין להסתמך על הפירוט המופיע באתר — יתכנו טעויות או אי התאמות. יש לקרוא את המופיע על גבי אריזת המוצר לפני השימוש.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductPageClient({
   product,
   initialPrices,
@@ -193,7 +308,14 @@ export default function ProductPageClient({
   };
 
   const fp = prices
-    .filter((p) => !chainFilter || p.chainName === chainFilter)
+    .filter((p) => {
+      if (chainFilter && p.chainName !== chainFilter) return false;
+      if (locMode === "nearby" && p.dist !== undefined && p.dist !== null) {
+        const km = Math.sqrt(p.dist) * 111;
+        if (km > radius) return false;
+      }
+      return true;
+    })
     .sort((a, b) => a.price - b.price);
 
   const cheap = fp.length ? Math.min(...fp.map((p) => p.price)) : 0;
@@ -286,6 +408,7 @@ export default function ProductPageClient({
           </div>
         </div>
 
+        <NutritionCard product={product} />
         {/* Location mode toggle */}
         <div className="flex gap-2">
           <button
@@ -302,6 +425,23 @@ export default function ProductPageClient({
           </button>
         </div>
 
+        {/* Radius slider */}
+        {locMode === "nearby" && (
+          <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-stone-400">📍 רדיוס חיפוש</span>
+              <span className="font-mono font-black text-lg text-emerald-600">{radius} <span className="text-xs font-semibold text-stone-400">ק״מ</span></span>
+            </div>
+            <input type="range" min={1} max={50} value={radius}
+              onChange={e => setRadius(Number(e.target.value))}
+              className="w-full accent-emerald-500" />
+            <div className="flex justify-between mt-1">
+              {[1,5,10,20,30,50].map(v => (
+                <button key={v} onClick={() => setRadius(v)} className={"text-[10px] font-bold " + (radius === v ? "text-emerald-600" : "text-stone-400")}>{v}</button>
+              ))}
+            </div>
+          </div>
+        )}
         {/* Chain filter */}
         {uChains.length > 1 && (
           <div className="bg-white rounded-xl border border-stone-100 px-4 py-3 flex flex-wrap gap-1.5">
