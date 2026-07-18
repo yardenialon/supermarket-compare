@@ -227,7 +227,7 @@ function CLogo({ name, subchain, size = 40 }: { name: string; subchain?: string;
 
 function ProductImg({ name, imageUrl, size = 80 }: { name: string; imageUrl?: string | null; size?: number }) {
   const [err, setErr] = useState(false);
-  const url = imageUrl && !err ? '/api/img?u=' + btoa(imageUrl) : '';
+  const url = imageUrl && !err ? '/img-proxy?u=' + btoa(imageUrl) : '';
   if (!url)
     return (
       <div className="rounded-2xl bg-stone-100 flex items-center justify-center shrink-0" style={{ width: size, height: size }}>

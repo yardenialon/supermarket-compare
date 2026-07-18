@@ -107,7 +107,7 @@ function ProductImg({ barcode, name, size = 48, imageUrl, clickable = true }: { 
   const [err, setErr] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const proxyUrl = imageUrl && !err
-    ? '/api/img?u=' + Buffer.from(imageUrl).toString('base64')
+    ? '/img-proxy?u=' + Buffer.from(imageUrl).toString('base64')
     : '';
   const url = proxyUrl;
 
