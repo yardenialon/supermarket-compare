@@ -13,21 +13,19 @@ if not DB_URL:
 KAGGLE_DATASET = "erlichsefi/israeli-supermarkets-2024"
 
 CHAIN_MAP = {
-    'shufersal': 'Shufersal', 'rami_levy': 'Rami Levy', 'yochananof': 'Yochananof',
-    'victory': 'Victory', 'osher_ad': 'Osher Ad', 'mega': 'Mega', 'tiv_taam': 'Tiv Taam',
-    'hazi_hinam': 'Hazi Hinam', 'keshet_taamim': 'Keshet Taamim', 'freshmarket': 'Freshmarket',
-    'bareket': 'Bareket', 'city_market': 'City Market', 'dor_alon': 'Dor Alon',
-    'good_pharm': 'Good Pharm', 'het_cohen': 'Het Cohen', 'king_store': 'King Store',
-    'maayan_2000': 'Maayan 2000', 'mahsani_ashuk': 'Mahsani Ashuk',
-    'meshmat_yosef': 'Meshmat Yosef', 'netiv_hased': 'Netiv Hased', 'polizer': 'Polizer',
+    'shufersal': 'Shufersal', 'rami_levy': 'Rami Levy', 'yohananof': 'Yochananof',
+    'victory_new_source': 'Victory', 'osher_ad': 'Osher Ad', 'tiv_taam': 'Tiv Taam',
+    'hazi_hinam': 'Hazi Hinam', 'keshet': 'Keshet Taamim',
+    'fresh_market_and_super_dosh': 'Freshmarket',
+    'bareket': 'Bareket', 'city_market_shops': 'City Market', 'dor_alon': 'Dor Alon',
+    'good_pharm': 'Good Pharm', 'het_cohen_new_source': 'Het Cohen', 'king_store': 'King Store',
+    'maayan_2000': 'Maayan 2000', 'mahsani_ashuk_new_source': 'Mahsani Ashuk',
+    'meshmat_yosef_1': 'Meshmat Yosef', 'netiv_hased': 'Netiv Hased', 'polizer': 'Polizer',
     'salach_dabach': 'Salach Dabach', 'shefa_barcart_ashem': 'Shefa Barcart Ashem',
     'shuk_ahir': 'Shuk Ahir', 'stop_market': 'Stop Market', 'super_sapir': 'Super Sapir',
-    'super_yuda': 'Super Yuda', 'super_dosh': 'Super Dosh', 'wolt': 'Wolt',
+    'super_yuda': 'Super Yuda', 'wolt': 'Wolt',
     'zol_vebegadol': 'Zol Vebegadol', 'yayno_bitan_and_carrefour': 'Carrefour',
-    'yellow': None,
-    'super_pharm': 'Super Pharm',
-    'super_pharm': 'Super Pharm',
-    'super_pharm': 'Super Pharm',
+    'yellow': None, 'cofix': None,
 }
 
 def get_row_fields(row):
