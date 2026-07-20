@@ -8,11 +8,19 @@ const HamburgerMenu = dynamic(() => import('./HamburgerMenu'), { ssr: false });
 export default function Header() {
   const [showAuth, setShowAuth] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // views without the hero logo (e.g. the shopping-list overlay) force the header logo on
+  const [forceLogo, setForceLogo] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 35);
+    const onForceLogo = (e: Event) => setForceLogo(!!(e as CustomEvent).detail);
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    document.addEventListener('savy-force-logo', onForceLogo);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('savy-force-logo', onForceLogo);
+    };
   }, []);
+  const showLogo = scrolled || forceLogo;
   const { user, setUser, logout } = useAuth();
 
   const initials = (user as any)?.name
@@ -71,7 +79,7 @@ export default function Header() {
           </div>
 
           {/* מרכז — לוגו */}
-          <a href="/" className={`absolute left-1/2 -translate-x-1/2 transition-all duration-300 ${scrolled ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
+          <a href="/" className={`absolute left-1/2 -translate-x-1/2 transition-all duration-300 ${showLogo ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
             <img src="/icons/savy-logo.png" alt="Savy" className="h-9 object-contain" />
           </a>
 

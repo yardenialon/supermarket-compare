@@ -254,6 +254,11 @@ export default function Home() {
     }
     return 'search';
   });
+  // the list overlay has no hero logo, so ask the header to show its own
+  useEffect(() => {
+    document.dispatchEvent(new CustomEvent('savy-force-logo', { detail: tab === 'list' }));
+    return () => { document.dispatchEvent(new CustomEvent('savy-force-logo', { detail: false })); };
+  }, [tab]);
   const [q, setQ] = useState(""); const [results, setResults] = useState<Product[]>([]); const [sel, setSel] = useState<Product | null>(null);
   const [prices, setPrices] = useState<Price[]>([]); const [loading, setLoading] = useState(false); const [pLoading, setPLoading] = useState(false);
   const [showCats, setShowCats] = useState(false); const [chainFilter, setChainFilter] = useState<string | null>(null);
