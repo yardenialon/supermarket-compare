@@ -357,7 +357,7 @@ export default function Home() {
     setSel(p); setPLoading(true); setChainFilter(null);
     setSelImage(productImages[p.id] || p.imageUrl || null);
     const useLoc = locMode === 'nearby' && userLoc;
-    api.prices(p.id, useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined).then((d: any) => {
+    api.prices(p.id, useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined, useLoc ? radius : undefined).then((d: any) => {
       // Fallback: if no results with location, retry without
       if ((!d.prices || d.prices.length === 0) && useLoc) {
         api.prices(p.id).then((d2: any) => {
@@ -413,6 +413,17 @@ export default function Home() {
   }, [list, locMode]);
 
   useEffect(() => { if (!list.length) { setListResults([]); return; } setListLoading(true); const useLoc = locMode === 'nearby' && userLoc; api.list(list.map(i => ({ productId: i.product.id, qty: i.qty })), useLoc ? userLoc.lat : undefined, useLoc ? userLoc.lng : undefined, locMode === 'nearby' ? radius : undefined).then((d: any) => setListResults(d.bestStoreCandidates || [])).catch(() => {}).finally(() => setListLoading(false)); }, [list, locMode, radius, userLoc]);
+
+  // refetch selected-product prices when the radius changes — the API caps at 50 rows,
+  // so widening the radius must go back to the server, not just re-filter locally
+  useEffect(() => {
+    if (!sel || locMode !== 'nearby' || !userLoc) return;
+    setPLoading(true);
+    api.prices(sel.id, userLoc.lat, userLoc.lng, radius)
+      .then((d: any) => setPrices(d.prices || []))
+      .catch(() => {})
+      .finally(() => setPLoading(false));
+  }, [radius, locMode, userLoc]);
 
   const fp = prices.filter((p: Price) => {
     if (chainFilter && p.chainName !== chainFilter) return false;

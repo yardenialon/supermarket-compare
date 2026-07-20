@@ -29,8 +29,8 @@ export const api = {
       });
   },
 
-  prices: (id: number, lat?: number, lng?: number) =>
-    f('/product/' + id + '/prices?limit=50' + (lat && lng ? `&lat=${lat}&lng=${lng}` : '')),
+  prices: (id: number, lat?: number, lng?: number, radiusKm?: number) =>
+    f('/product/' + id + '/prices?limit=50' + (lat && lng ? `&lat=${lat}&lng=${lng}` : '') + (lat && lng && radiusKm ? `&radius=${radiusKm}` : '')),
 
   image: (id: number) =>
     f('/product/' + id + '/image'),

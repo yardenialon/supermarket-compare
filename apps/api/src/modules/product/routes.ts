@@ -130,23 +130,41 @@ export async function productRoutes(app: any) {
   });
   app.get('/product/:id/prices', async (req: any) => {
     const { id } = req.params;
-    const { lat, lng } = req.query;
+    const { lat, lng, radius } = req.query;
     const prod = await query('SELECT image_url FROM product WHERE id=$1', [id]);
     let prices;
     if (lat && lng) {
       const uLat = parseFloat(lat as string);
       const uLng = parseFloat(lng as string);
-      prices = await query(`
-        SELECT sp.price, sp.is_promo as "isPromo",
-          s.id as "storeId", s.name as "storeName", s.city,
-          rc.name as "chainName", s.subchain_name as "subchainName",
-          ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
-        FROM store_price sp
-        JOIN store s ON s.id = sp.store_id
-        JOIN retailer_chain rc ON rc.id = s.chain_id
-        WHERE sp.product_id = $1 AND s.lat IS NOT NULL
-        ORDER BY dist ASC LIMIT 50
-      `, [id, uLat, uLng]);
+      // radius (km) → squared degrees, ~111km per degree (matches the client's distToKm)
+      const radKm = Math.min(Math.max(parseFloat((radius as string) || '0') || 0, 0), 100);
+      if (radKm > 0) {
+        const radDeg2 = (radKm / 111) ** 2;
+        prices = await query(`
+          SELECT sp.price, sp.is_promo as "isPromo",
+            s.id as "storeId", s.name as "storeName", s.city,
+            rc.name as "chainName", s.subchain_name as "subchainName",
+            ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
+          FROM store_price sp
+          JOIN store s ON s.id = sp.store_id
+          JOIN retailer_chain rc ON rc.id = s.chain_id
+          WHERE sp.product_id = $1 AND s.lat IS NOT NULL
+            AND ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) < $4
+          ORDER BY sp.price ASC LIMIT 50
+        `, [id, uLat, uLng, radDeg2]);
+      } else {
+        prices = await query(`
+          SELECT sp.price, sp.is_promo as "isPromo",
+            s.id as "storeId", s.name as "storeName", s.city,
+            rc.name as "chainName", s.subchain_name as "subchainName",
+            ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
+          FROM store_price sp
+          JOIN store s ON s.id = sp.store_id
+          JOIN retailer_chain rc ON rc.id = s.chain_id
+          WHERE sp.product_id = $1 AND s.lat IS NOT NULL
+          ORDER BY dist ASC LIMIT 50
+        `, [id, uLat, uLng]);
+      }
     } else {
       prices = await query(`
         SELECT sp.price, sp.is_promo as "isPromo",

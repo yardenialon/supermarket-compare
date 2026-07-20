@@ -262,18 +262,24 @@ export default function ProductPageClient({
   }, []);
 
   // Re-fetch prices when mode changes
-  const fetchPrices = (lat?: number, lng?: number) => {
+  const fetchPrices = (lat?: number, lng?: number, radiusKm?: number) => {
     setLoading(true);
-    api.prices(product.id ?? Number(id), lat, lng)
+    api.prices(product.id ?? Number(id), lat, lng, radiusKm)
       .then((d: any) => { setPrices(d.prices ?? []); })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
+  // widening the radius must re-query the server — the API caps at 50 rows within the radius
+  useEffect(() => {
+    if (locMode !== "nearby" || !userLoc) return;
+    fetchPrices(userLoc.lat, userLoc.lng, radius);
+  }, [radius]);
+
   const handleNearby = () => {
     if (userLoc) {
       setLocMode("nearby");
-      fetchPrices(userLoc.lat, userLoc.lng);
+      fetchPrices(userLoc.lat, userLoc.lng, radius);
       return;
     }
     setLocLoading(true);
@@ -283,7 +289,7 @@ export default function ProductPageClient({
         setUserLoc(loc);
         setLocMode("nearby");
         setLocLoading(false);
-        fetchPrices(loc.lat, loc.lng);
+        fetchPrices(loc.lat, loc.lng, radius);
       },
       () => setLocLoading(false),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
