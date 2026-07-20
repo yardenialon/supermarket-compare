@@ -53,18 +53,19 @@ const FOOTER_CATEGORIES = [
 ];
 
 const FOOTER_CHAINS = [
-  { name: "Shufersal", he: "שופרסל" },
-  { name: "Rami Levy", he: "רמי לוי" },
-  { name: "Osher Ad", he: "אושר עד" },
-  { name: "Victory", he: "ויקטורי" },
-  { name: "Carrefour", he: "קרפור" },
-  { name: "Yochananof", he: "יוחננוף" },
-  { name: "Tiv Taam", he: "טיב טעם" },
-  { name: "Hazi Hinam", he: "חצי חינם" },
+  { name: "Shufersal", he: "שופרסל", slug: "shufersal" },
+  { name: "Rami Levy", he: "רמי לוי", slug: "rami-levy" },
+  { name: "Osher Ad", he: "אושר עד", slug: "osher-ad" },
+  { name: "Victory", he: "ויקטורי", slug: "victory" },
+  { name: "Carrefour", he: "קרפור", slug: "carrefour" },
+  { name: "Yochananof", he: "יוחננוף", slug: "yochananof" },
+  { name: "Tiv Taam", he: "טיב טעם", slug: "tiv-taam" },
+  { name: "Hazi Hinam", he: "חצי חינם", slug: "hazi-hinam" },
 ];
 
 const FOOTER_PAGES = [
   { href: "/category", label: "כל הקטגוריות" },
+  { href: "/compare", label: "השוואת רשתות — מי יותר זול?" },
   { href: "/deals", label: "מבצעים" },
   { href: "/price-index", label: "מדד מחירי סופרמרקט" },
   { href: "/supermarkets", label: "רשתות הסופרמרקט בישראל" },
@@ -144,8 +145,10 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="text-xs font-bold text-stone-500 mb-2">מחירים לפי רשת</div>
               <ul className="space-y-1">
                 {FOOTER_CHAINS.map((c) => (
-                  <li key={c.name}>
+                  <li key={c.name} className="flex gap-2 justify-end">
                     <a href={`/chain/${encodeURIComponent(c.name)}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מחירי {c.he}</a>
+                    <span className="text-stone-200 text-xs">·</span>
+                    <a href={`/deals/${c.slug}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מבצעים</a>
                   </li>
                 ))}
               </ul>

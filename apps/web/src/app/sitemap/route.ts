@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { comparePairs, MAJOR_CHAINS } from "@/lib/chains";
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 const PAGE_SIZE = 10000;
 export async function GET(request: Request) {
@@ -124,7 +125,22 @@ ${urls}
     <loc>https://savy.co.il/produce</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
-  </url>${urls}
+  </url>
+  <url>
+    <loc>https://savy.co.il/compare</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>${comparePairs().map((p) => `
+  <url>
+    <loc>https://savy.co.il/compare/${p.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join("")}${MAJOR_CHAINS.map((c) => `
+  <url>
+    <loc>https://savy.co.il/deals/${c.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join("")}${urls}
 </urlset>`;
     return new NextResponse(xml, { headers: { "Content-Type": "application/xml", "Cache-Control": "public, max-age=86400, s-maxage=86400" } });
   } catch {
