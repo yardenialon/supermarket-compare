@@ -82,6 +82,7 @@ const FOOTER_PAGES = [
   { href: "/price-index", label: "מדד מחירי סופרמרקט" },
   { href: "/supermarkets", label: "רשתות הסופרמרקט בישראל" },
   { href: "/online", label: "השוואת סל קניות אונליין" },
+  { href: "/guides", label: "מדריכי חיסכון בקניות" },
   { href: "/guide", label: "מדריך השוואת מחירים" },
   { href: "/hashvatat-mekhirim-mazon", label: "השוואת מחירים מזון" },
   { href: "/produce", label: "מחירי ירקות ופירות" },

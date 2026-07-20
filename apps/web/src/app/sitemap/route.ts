@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { comparePairs, MAJOR_CHAINS } from "@/lib/chains";
 import { CITIES } from "@/lib/cities";
 import { STAPLES } from "@/lib/staples";
+import { GUIDES } from "@/lib/guides";
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 const PAGE_SIZE = 10000;
 export async function GET(request: Request) {
@@ -137,7 +138,17 @@ ${urls}
     <loc>https://savy.co.il/prices</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-  </url>${CITIES.map((c) => `
+  </url>
+  <url>
+    <loc>https://savy.co.il/guides</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>${GUIDES.map((gd) => `
+  <url>
+    <loc>https://savy.co.il/guides/${gd.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join("")}${CITIES.map((c) => `
   <url>
     <loc>https://savy.co.il/supermarkets/${c.slug}</loc>
     <changefreq>daily</changefreq>
