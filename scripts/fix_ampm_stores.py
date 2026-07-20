@@ -92,6 +92,27 @@ def name_hint(name):
     return re.sub(r"\s+", " ", h).strip()
 
 
+# known locality tokens (incl. common abbreviations) that appear inside AM-PM store names
+CITY_TOKENS: list[tuple[str, str]] = sorted([
+    ("תל אביב", "תל אביב"), ('ת"א', "תל אביב"), ("רמת גן", "רמת גן"), ('ר"ג', "רמת גן"),
+    ("בת ים", "בת ים"), ("גבעתיים", "גבעתיים"), ("הרצליה", "הרצליה"), ("חולון", "חולון"),
+    ("ראשון לציון", "ראשון לציון"), ('ראשל"צ', "ראשון לציון"), ("באר שבע", "באר שבע"), ('ב"ש', "באר שבע"),
+    ("חדרה", "חדרה"), ("קרית אונו", "קרית אונו"), ("קריית אונו", "קרית אונו"),
+    ("טירת הכרמל", "טירת כרמל"), ("טירת כרמל", "טירת כרמל"), ("נס ציונה", "נס ציונה"),
+    ("הוד השרון", "הוד השרון"), ("חיפה", "חיפה"), ("ירושלים", "ירושלים"),
+    ("קרית ביאליק", "קרית ביאליק"), ("קריית ביאליק", "קרית ביאליק"), ("קרית מוצקין", "קרית מוצקין"),
+    ("נווה מונסון", "נווה מונוסון"), ("רעננה", "רעננה"), ("כפר סבא", "כפר סבא"),
+    ("פתח תקווה", "פתח תקווה"), ('פ"ת', "פתח תקווה"), ("רמת השרון", "רמת השרון"),
+], key=lambda t: -len(t[0]))
+
+
+def city_from_text(text):
+    for token, canonical in CITY_TOKENS:
+        if token in (text or ""):
+            return canonical
+    return None
+
+
 def in_israel(lat, lng):
     return LAT_MIN <= lat <= LAT_MAX and LNG_MIN <= lng <= LNG_MAX
 
@@ -125,7 +146,11 @@ def main():
     for sid, name, address, old_city in stores:
         hint = name_hint(name)
         addr = (address or "").strip()
+        # a locality named inside the store name/address is the strongest signal we have
+        city_guess = city_from_text(f"{name} {addr}")
         queries = []
+        if addr and city_guess:
+            queries.append(f"{addr}, {city_guess}, ישראל")
         if addr and hint and hint not in addr:
             queries.append(f"{addr}, {hint}, ישראל")
         if addr:
@@ -147,13 +172,17 @@ def main():
                     break
                 coords = None
         if not coords:
-            # wrong coords are worse than none: hide the store from nearby search
-            cur.execute("UPDATE store SET lat=NULL, lng=NULL WHERE id=%s", (sid,))
+            # wrong coords are worse than none: hide the store from nearby search,
+            # but still fix the city label when the name tells us the real locality
+            if city_guess:
+                cur.execute("UPDATE store SET lat=NULL, lng=NULL, city=%s WHERE id=%s", (city_guess, sid))
+            else:
+                cur.execute("UPDATE store SET lat=NULL, lng=NULL WHERE id=%s", (sid,))
             failed += 1
             log.warning("  FAILED (coords cleared) [%s] %s | addr=%r old_city=%r", sid, name, address, old_city)
             continue
         lat, lng = coords
-        city = reverse_city(lat, lng) or reverse_city_osm(lat, lng) or old_city
+        city = reverse_city(lat, lng) or reverse_city_osm(lat, lng) or city_guess or old_city
         cur.execute("UPDATE store SET lat=%s, lng=%s, city=%s WHERE id=%s", (lat, lng, city, sid))
         fixed += 1
         marker = "" if city == old_city else f"  (city: {old_city!r} -> {city!r})"
