@@ -40,6 +40,8 @@ def geocode(query):
         res = data["results"][0]
         loc = res["geometry"]["location"]
         return loc["lat"], loc["lng"]
+    if data:
+        log.warning("  geocode %r -> status=%s error=%s", query, data.get("status"), data.get("error_message", ""))
     return None
 
 
