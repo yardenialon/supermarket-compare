@@ -22,12 +22,28 @@ async function getPrices(id: string) {
   } catch { return []; }
 }
 
+async function getRelated(category: string | null, brand: string | null, excludeId: string) {
+  if (!category) return [];
+  try {
+    const res = await fetch(`${API}/category/${encodeURIComponent(category)}/products?page=0`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const products = (data.products ?? []).filter((p: any) => String(p.id) !== String(excludeId));
+    // same-brand products first, then the rest of the category
+    const sameBrand = brand ? products.filter((p: any) => p.brand === brand) : [];
+    const rest = products.filter((p: any) => !sameBrand.includes(p));
+    return [...sameBrand, ...rest].slice(0, 10);
+  } catch { return []; }
+}
+
+const isKnownBrand = (brand?: string | null) => !!brand && brand !== "לא ידוע" && brand.toLowerCase() !== "unknown";
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const product = await getProduct(params.id);
   if (!product) return { title: "מוצר לא נמצא | Savy" };
 
   const { name, brand, category, barcode, minPrice, storeCount, imageUrl } = product;
-  const brandStr  = brand     ? ` של ${brand}`                           : "";
+  const brandStr  = isKnownBrand(brand) ? ` של ${brand}`                 : "";
   const priceStr  = minPrice  ? ` החל מ-₪${Number(minPrice).toFixed(2)}` : "";
   const storesStr = storeCount? ` ב-${storeCount} חנויות`                : "";
   const catStr    = category  ? ` | ${category}`                         : "";
@@ -93,13 +109,67 @@ function ProductJsonLd({ product, prices, id }: { product: any; prices: any[]; i
   );
 }
 
+function PriceSummary({ product, prices }: { product: any; prices: any[] }) {
+  if (!prices.length) return null;
+  const { name, brand } = product;
+  const nums = prices.map((p: any) => Number(p.price));
+  const min = Math.min(...nums);
+  const max = Math.max(...nums);
+  const cheapest = prices.find((p: any) => Number(p.price) === min);
+  const today = new Date().toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" });
+  const brandStr = isKnownBrand(brand) ? ` של ${brand}` : "";
+  return (
+    <section className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 mt-4 text-sm text-stone-600 leading-relaxed">
+      <h2 className="font-bold text-stone-800 mb-1">כמה עולה {name}?</h2>
+      <p>
+        {name}{brandStr} עולה בין ₪{min.toFixed(2)} ל-₪{max.toFixed(2)} ברשתות הסופרמרקט בישראל.
+        המחיר הזול ביותר — ₪{min.toFixed(2)}{cheapest?.chainName ? ` ב${cheapest.storeName ?? cheapest.chainName}` : ""} —
+        מתוך השוואה של {prices.length} חנויות. הנתונים מבוססים על מאגר שקיפות המחירים הממשלתי, נכון ל-{today}.
+      </p>
+    </section>
+  );
+}
+
+function RelatedProducts({ products, category }: { products: any[]; category: string | null }) {
+  if (!products.length) return null;
+  return (
+    <section className="mt-8">
+      <h2 className="font-black text-lg text-stone-800 mb-3">מוצרים דומים{category ? ` ב${category}` : ""}</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {products.map((p) => (
+          <a key={p.id} href={`/product/${p.id}`}
+            className="bg-white rounded-2xl border border-stone-100 shadow-sm p-3 hover:shadow-md transition flex flex-col gap-1.5">
+            <div className="w-full aspect-square bg-stone-50 rounded-xl flex items-center justify-center overflow-hidden">
+              {p.imageUrl
+                ? <img src={p.imageUrl} alt={p.name} loading="lazy" className="max-w-full max-h-full object-contain p-2" />
+                : <span className="text-3xl">📦</span>}
+            </div>
+            <div className="font-semibold text-stone-800 text-xs leading-snug line-clamp-2">{p.name}</div>
+            {p.minPrice && <div className="font-mono font-black text-emerald-600 text-sm">₪{Number(p.minPrice).toFixed(2)}</div>}
+          </a>
+        ))}
+      </div>
+      {category && (
+        <a href={`/category/${encodeURIComponent(category)}`} className="inline-block mt-3 text-sm font-semibold text-emerald-600 hover:underline">
+          לכל המוצרים בקטגוריית {category} ←
+        </a>
+      )}
+    </section>
+  );
+}
+
 export default async function ProductPage({ params }: { params: { id: string } }) {
   const [product, prices] = await Promise.all([getProduct(params.id), getPrices(params.id)]);
   if (!product) notFound();
+  const related = await getRelated(product.category ?? null, product.brand ?? null, params.id);
   return (
     <>
       <ProductJsonLd product={product} prices={prices} id={params.id} />
       <ProductPageClient product={product} initialPrices={prices} id={params.id} />
+      <div className="max-w-3xl mx-auto px-4">
+        <PriceSummary product={product} prices={prices} />
+        <RelatedProducts products={related} category={product.category ?? null} />
+      </div>
     </>
   );
 }

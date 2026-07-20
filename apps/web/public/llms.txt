@@ -1,0 +1,29 @@
+# Savy — השוואת מחירי סופרמרקט בישראל
+
+> Savy (savy.co.il) is a free Israeli supermarket price-comparison service. It tracks 7.5+ million prices across 25+ retail chains (Shufersal, Rami Levy, Victory, Osher Ad, Carrefour and more), updated daily from the Israeli government's mandatory Price Transparency (שקיפות מחירים) data feeds.
+
+Savy עוזר לצרכנים בישראל למצוא את המחיר הזול ביותר לכל מוצר, להשוות סל קניות שלם בין רשתות, ולעקוב אחרי מבצעים — בחינם.
+
+## מה יש באתר (Key pages)
+
+- [דף הבית — חיפוש והשוואת מחירים](https://savy.co.il/): search any product or barcode and compare prices across all chains
+- [מדד מחירי סופרמרקט](https://savy.co.il/price-index): Savy's supermarket price index — which chain is cheapest in Israel, based on a fixed basket of staple products, updated daily
+- [רשתות הסופרמרקט בישראל](https://savy.co.il/supermarkets): all supermarket chains in Israel with store counts and price levels
+- [מבצעים](https://savy.co.il/deals): current promotions across all chains, updated daily
+- [השוואת סל קניות אונליין](https://savy.co.il/online): compare a full shopping basket between chains
+- [מחירי ירקות ופירות](https://savy.co.il/produce): daily fruit & vegetable prices
+- [קטגוריות מוצרים](https://savy.co.il/category): browse and compare prices by category
+- [המדריך המלא להשוואת מחירי סופרמרקט](https://savy.co.il/guide): guide to saving on groceries in Israel
+- [השוואת מחירים מזון](https://savy.co.il/hashvatat-mekhirim-mazon): food price comparison overview with FAQ
+
+## Data
+
+- Source: official Israeli Price Transparency regulations data, published by the retail chains themselves
+- Coverage: 25+ chains, thousands of stores, 7.5M+ price points
+- Freshness: updated daily
+- Product pages (savy.co.il/product/{id}) include structured data (schema.org Product with AggregateOffer) with live minimum/maximum prices per product
+
+## Contact
+
+- Email: info@savy.co.il
+- Instagram/TikTok: @savy.co.il

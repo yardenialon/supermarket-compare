@@ -47,6 +47,62 @@ export const metadata = {
   },
 };
 
+const FOOTER_CATEGORIES = [
+  "מוצרי חלב", "לחם ומאפה", "בשר ועוף", "ירקות ופירות", "משקאות", "חטיפים וממתקים",
+  "שימורים ומזון יבש", "מוצרים קפואים", "ניקיון ובית", "היגיינה ויופי", "מוצרי תינוקות", "מזון לחיות מחמד",
+];
+
+const FOOTER_CHAINS = [
+  { name: "Shufersal", he: "שופרסל" },
+  { name: "Rami Levy", he: "רמי לוי" },
+  { name: "Osher Ad", he: "אושר עד" },
+  { name: "Victory", he: "ויקטורי" },
+  { name: "Carrefour", he: "קרפור" },
+  { name: "Yochananof", he: "יוחננוף" },
+  { name: "Tiv Taam", he: "טיב טעם" },
+  { name: "Hazi Hinam", he: "חצי חינם" },
+];
+
+const FOOTER_PAGES = [
+  { href: "/category", label: "כל הקטגוריות" },
+  { href: "/deals", label: "מבצעים" },
+  { href: "/price-index", label: "מדד מחירי סופרמרקט" },
+  { href: "/supermarkets", label: "רשתות הסופרמרקט בישראל" },
+  { href: "/online", label: "השוואת סל קניות אונליין" },
+  { href: "/guide", label: "מדריך השוואת מחירים" },
+  { href: "/hashvatat-mekhirim-mazon", label: "השוואת מחירים מזון" },
+  { href: "/produce", label: "מחירי ירקות ופירות" },
+];
+
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://savy.co.il/#organization",
+      name: "Savy",
+      url: "https://savy.co.il",
+      logo: "https://savy.co.il/icons/savy-logo.png",
+      email: "info@savy.co.il",
+      sameAs: [
+        "https://www.facebook.com/profile.php?id=61588513298725",
+        "https://www.instagram.com/savy.co.il",
+        "https://www.tiktok.com/@savy.co.il",
+        "https://www.youtube.com/@SAVYCOIL",
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://savy.co.il/#website",
+      url: "https://savy.co.il",
+      name: "Savy — השוואת מחירי סופרמרקט בישראל",
+      description: "השוואת מחירי מוצרים ב-25+ רשתות סופרמרקט בישראל. 7.5 מיליון מחירים, עדכון יומי.",
+      inLanguage: "he",
+      publisher: { "@id": "https://savy.co.il/#organization" },
+    },
+  ],
+};
+
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="he" dir="rtl">
@@ -72,6 +128,39 @@ export default function Layout({ children }: { children: ReactNode }) {
         <PWAInstall />
       <BottomNav />
         <footer className="border-t bg-white/50 mt-12 py-8 text-center">
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
+          <div className="max-w-5xl mx-auto px-4 text-right grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8">
+            <nav aria-label="קטגוריות">
+              <div className="text-xs font-bold text-stone-500 mb-2">השוואת מחירים לפי קטגוריה</div>
+              <ul className="space-y-1">
+                {FOOTER_CATEGORIES.map((c) => (
+                  <li key={c}>
+                    <a href={`/category/${encodeURIComponent(c)}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">{c}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <nav aria-label="רשתות">
+              <div className="text-xs font-bold text-stone-500 mb-2">מחירים לפי רשת</div>
+              <ul className="space-y-1">
+                {FOOTER_CHAINS.map((c) => (
+                  <li key={c.name}>
+                    <a href={`/chain/${encodeURIComponent(c.name)}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מחירי {c.he}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <nav aria-label="כלים ומדריכים">
+              <div className="text-xs font-bold text-stone-500 mb-2">כלים ומדריכים</div>
+              <ul className="space-y-1">
+                {FOOTER_PAGES.map((p) => (
+                  <li key={p.href}>
+                    <a href={p.href} className="text-xs text-stone-400 hover:text-emerald-600 transition">{p.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
           <div className="text-xs text-stone-300">מחירים מתעדכנים יומית מנתוני שקיפות מחירים 🇮🇱</div>
           <div className="text-[10px] text-stone-200 mt-1">Savy — כי מגיע לכם לדעת</div>
           <div className="flex items-center justify-center gap-4 mt-3 text-[11px] text-stone-300">

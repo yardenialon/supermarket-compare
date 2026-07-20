@@ -11,6 +11,7 @@ module.exports = {
   },
   async redirects() {
     return [
+      { source: '/sitemap.xml', destination: '/sitemap', permanent: true },
       { source: '/list', destination: '/?tab=list', permanent: true },
       { source: '/product', destination: '/', permanent: false },
       { source: '/profile', destination: '/', permanent: false },

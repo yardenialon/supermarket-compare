@@ -104,6 +104,26 @@ ${urls}
     <loc>https://savy.co.il/online</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://savy.co.il/category</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://savy.co.il/guide</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://savy.co.il/hashvatat-mekhirim-mazon</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://savy.co.il/produce</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>${urls}
 </urlset>`;
     return new NextResponse(xml, { headers: { "Content-Type": "application/xml", "Cache-Control": "public, max-age=86400, s-maxage=86400" } });
