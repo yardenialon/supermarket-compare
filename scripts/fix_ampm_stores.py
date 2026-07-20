@@ -54,6 +54,38 @@ def reverse_city(lat, lng):
     return None
 
 
+NOMINATIM_UA = {"User-Agent": "savy-store-fixer/1.0 (info@savy.co.il)"}
+NOMINATIM_DELAY = 1.1  # per usage policy: max 1 req/sec
+
+
+def nominatim(path, params):
+    url = f"https://nominatim.openstreetmap.org/{path}?" + urllib.parse.urlencode(params)
+    try:
+        req = urllib.request.Request(url, headers=NOMINATIM_UA)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        log.warning("nominatim error: %s", e)
+        return None
+
+
+def geocode_osm(query):
+    time.sleep(NOMINATIM_DELAY)
+    data = nominatim("search", {"q": query, "format": "json", "limit": 1, "countrycodes": "il"})
+    if data:
+        return float(data[0]["lat"]), float(data[0]["lon"])
+    return None
+
+
+def reverse_city_osm(lat, lng):
+    time.sleep(NOMINATIM_DELAY)
+    data = nominatim("reverse", {"lat": lat, "lon": lng, "format": "json", "zoom": 13, "accept-language": "he"})
+    if data and "address" in data:
+        a = data["address"]
+        return a.get("city") or a.get("town") or a.get("village") or a.get("municipality")
+    return None
+
+
 def name_hint(name):
     # strip AM-PM brand variants; what's left is usually a street/locality hint
     h = re.sub(r"(?i)am[\s-]*pm", " ", name or "")
@@ -108,11 +140,20 @@ def main():
             coords = None
             time.sleep(DELAY)
         if not coords:
+            # Google failed (e.g. expired key) — fall back to OpenStreetMap
+            for q in queries:
+                coords = geocode_osm(q)
+                if coords and in_israel(*coords):
+                    break
+                coords = None
+        if not coords:
+            # wrong coords are worse than none: hide the store from nearby search
+            cur.execute("UPDATE store SET lat=NULL, lng=NULL WHERE id=%s", (sid,))
             failed += 1
-            log.warning("  FAILED [%s] %s | addr=%r old_city=%r", sid, name, address, old_city)
+            log.warning("  FAILED (coords cleared) [%s] %s | addr=%r old_city=%r", sid, name, address, old_city)
             continue
         lat, lng = coords
-        city = reverse_city(lat, lng) or old_city
+        city = reverse_city(lat, lng) or reverse_city_osm(lat, lng) or old_city
         cur.execute("UPDATE store SET lat=%s, lng=%s, city=%s WHERE id=%s", (lat, lng, city, sid))
         fixed += 1
         marker = "" if city == old_city else f"  (city: {old_city!r} -> {city!r})"
