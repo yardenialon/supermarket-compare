@@ -13,6 +13,9 @@ Savy עוזר לצרכנים בישראל למצוא את המחיר הזול ב
 - [השוואת סל קניות אונליין](https://savy.co.il/online): compare a full shopping basket between chains
 - [מחירי ירקות ופירות](https://savy.co.il/produce): daily fruit & vegetable prices
 - [קטגוריות מוצרים](https://savy.co.il/category): browse and compare prices by category
+- [השוואת רשתות — מי יותר זול?](https://savy.co.il/compare): head-to-head price comparisons between chains (e.g. Shufersal vs Rami Levy) on a real staples basket
+- [כמה עולה?](https://savy.co.il/prices): current price ranges for staple products (milk, bread, eggs, diapers…) with per-product comparison links
+- [סופרמרקט זול לפי עיר](https://savy.co.il/supermarkets/tel-aviv): per-city pages showing the cheapest chain in each Israeli city, computed on that city's stores only
 - [המדריך המלא להשוואת מחירי סופרמרקט](https://savy.co.il/guide): guide to saving on groceries in Israel
 - [השוואת מחירים מזון](https://savy.co.il/hashvatat-mekhirim-mazon): food price comparison overview with FAQ
 

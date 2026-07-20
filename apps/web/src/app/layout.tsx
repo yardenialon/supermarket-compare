@@ -63,9 +63,21 @@ const FOOTER_CHAINS = [
   { name: "Hazi Hinam", he: "חצי חינם", slug: "hazi-hinam" },
 ];
 
+const FOOTER_CITIES = [
+  { slug: "tel-aviv", he: "תל אביב" },
+  { slug: "jerusalem", he: "ירושלים" },
+  { slug: "haifa", he: "חיפה" },
+  { slug: "beer-sheva", he: "באר שבע" },
+  { slug: "rishon-lezion", he: "ראשון לציון" },
+  { slug: "petah-tikva", he: "פתח תקווה" },
+  { slug: "netanya", he: "נתניה" },
+  { slug: "ashdod", he: "אשדוד" },
+];
+
 const FOOTER_PAGES = [
   { href: "/category", label: "כל הקטגוריות" },
   { href: "/compare", label: "השוואת רשתות — מי יותר זול?" },
+  { href: "/prices", label: "כמה עולה? מחירי מוצרי יסוד" },
   { href: "/deals", label: "מבצעים" },
   { href: "/price-index", label: "מדד מחירי סופרמרקט" },
   { href: "/supermarkets", label: "רשתות הסופרמרקט בישראל" },
@@ -130,7 +142,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <BottomNav />
         <footer className="border-t bg-white/50 mt-12 py-8 text-center">
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
-          <div className="max-w-5xl mx-auto px-4 text-right grid grid-cols-2 sm:grid-cols-3 gap-6 mb-8">
+          <div className="max-w-5xl mx-auto px-4 text-right grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8">
             <nav aria-label="קטגוריות">
               <div className="text-xs font-bold text-stone-500 mb-2">השוואת מחירים לפי קטגוריה</div>
               <ul className="space-y-1">
@@ -149,6 +161,16 @@ export default function Layout({ children }: { children: ReactNode }) {
                     <a href={`/chain/${encodeURIComponent(c.name)}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מחירי {c.he}</a>
                     <span className="text-stone-200 text-xs">·</span>
                     <a href={`/deals/${c.slug}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מבצעים</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <nav aria-label="ערים">
+              <div className="text-xs font-bold text-stone-500 mb-2">סופרמרקט זול לפי עיר</div>
+              <ul className="space-y-1">
+                {FOOTER_CITIES.map((c) => (
+                  <li key={c.slug}>
+                    <a href={`/supermarkets/${c.slug}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">סופרמרקט זול ב{c.he}</a>
                   </li>
                 ))}
               </ul>

@@ -1,6 +1,69 @@
 import { query } from '../../db.js';
 export async function storeRoutes(app) {
   app.get('/stores', async () => { const r = await query('SELECT s.id, s.name, s.city, rc.name as "chainName" FROM store s JOIN retailer_chain rc ON rc.id=s.chain_id ORDER BY rc.name LIMIT 50'); return { stores: r.rows }; });
+
+  // GET /cities — ערים עם סניפים פעילים
+  app.get('/cities', async () => {
+    const r = await query(`
+      SELECT s.city, COUNT(*)::int as "storeCount", COUNT(DISTINCT s.chain_id)::int as "chainCount"
+      FROM store s
+      JOIN retailer_chain rc ON rc.id = s.chain_id
+      WHERE s.city IS NOT NULL AND s.city != '' AND rc.is_active = true
+      GROUP BY s.city
+      HAVING COUNT(*) >= 2
+      ORDER BY COUNT(*) DESC
+      LIMIT 200
+    `);
+    return { cities: r.rows };
+  });
+
+  // GET /city/:name — הרשתות בעיר + השוואת סל היסוד בין הרשתות על סניפי העיר בלבד
+  app.get('/city/:name', async (req: any, reply: any) => {
+    const name = decodeURIComponent(req.params.name);
+    const chains = await query(`
+      SELECT rc.name as chain, rc.name_he as "chainHe", COUNT(*)::int as "storeCount"
+      FROM store s
+      JOIN retailer_chain rc ON rc.id = s.chain_id
+      WHERE s.city ILIKE $1 AND rc.is_active = true
+      GROUP BY rc.name, rc.name_he
+      ORDER BY COUNT(*) DESC
+    `, [`%${name}%`]);
+    if (!chains.rows.length) return reply.code(404).send({ error: 'City not found' });
+
+    const basket = await query('SELECT sb.product_id FROM savy_basket sb');
+    const productIds = basket.rows.map((r: any) => r.product_id);
+    let basketChains: any[] = [];
+    if (productIds.length) {
+      const prices = await query(`
+        SELECT rc.name as chain, rc.name_he as "chainHe", sp.product_id, MIN(sp.price) as price
+        FROM store_price sp
+        JOIN store s ON s.id = sp.store_id
+        JOIN retailer_chain rc ON rc.id = s.chain_id
+        WHERE sp.product_id = ANY($1) AND s.city ILIKE $2 AND rc.is_active = true AND sp.price > 0
+        GROUP BY rc.name, rc.name_he, sp.product_id
+      `, [productIds, `%${name}%`]);
+      const byChain: Record<string, { he: string; prods: Record<number, number> }> = {};
+      for (const row of prices.rows as any[]) {
+        if (!byChain[row.chain]) byChain[row.chain] = { he: row.chainHe, prods: {} };
+        byChain[row.chain].prods[row.product_id] = Number(row.price);
+      }
+      // avg per product (not raw total) so chains with partial basket coverage stay comparable
+      const minProducts = Math.floor(productIds.length * 0.6);
+      const rows = Object.entries(byChain)
+        .filter(([_, c]) => Object.keys(c.prods).length >= minProducts)
+        .map(([chain, c]) => {
+          const vals = Object.values(c.prods);
+          const avg = vals.reduce((s, v) => s + v, 0) / vals.length;
+          return { chain, chainHe: c.he, productCount: vals.length, avgPrice: Number(avg.toFixed(2)) };
+        })
+        .sort((a, b) => a.avgPrice - b.avgPrice);
+      const minAvg = rows.length ? rows[0].avgPrice : 0;
+      basketChains = rows.map((r) => ({ ...r, index: minAvg ? Math.round((r.avgPrice / minAvg) * 100) : 100 }));
+    }
+
+    const storeCount = chains.rows.reduce((s: number, c: any) => s + c.storeCount, 0);
+    return { city: name, storeCount, chains: chains.rows, basketChains };
+  });
   // GET /chain/:name — פרטי רשת עם סניפים
   app.get('/chain/:name', async (req: any, reply: any) => {
     const name = decodeURIComponent(req.params.name);
