@@ -145,7 +145,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <div className="text-xs font-bold text-stone-500 mb-2">מחירים לפי רשת</div>
               <ul className="space-y-1">
                 {FOOTER_CHAINS.map((c) => (
-                  <li key={c.name} className="flex gap-2 justify-end">
+                  <li key={c.name} className="flex gap-2">
                     <a href={`/chain/${encodeURIComponent(c.name)}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מחירי {c.he}</a>
                     <span className="text-stone-200 text-xs">·</span>
                     <a href={`/deals/${c.slug}`} className="text-xs text-stone-400 hover:text-emerald-600 transition">מבצעים</a>
