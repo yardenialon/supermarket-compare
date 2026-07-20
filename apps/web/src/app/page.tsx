@@ -526,19 +526,7 @@ export default function Home() {
     </div>
 
   </div>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <button onClick={() => setLocMode('bychain')} className={"flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all " + (locMode === 'bychain' ? "bg-emerald-500 border-emerald-500 shadow-lg" : "bg-white border-gray-100 hover:border-emerald-200")}>
-              <div className={"w-9 h-9 rounded-xl flex items-center justify-center transition-all " + (locMode === 'bychain' ? "bg-white/20" : "bg-gray-50")}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="3" width="7" height="7" rx="2" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2"/>
-                  <rect x="14" y="3" width="7" height="7" rx="2" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2"/>
-                  <rect x="3" y="14" width="7" height="7" rx="2" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2"/>
-                  <path d="M17.5 14v6M14.5 17h6" stroke={locMode === 'bychain' ? 'white' : '#6b7280'} strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <span className={"text-xs font-bold tracking-tight " + (locMode === 'bychain' ? "text-white" : "text-gray-700")}>לפי רשת</span>
-              <span className={"text-[10px] " + (locMode === 'bychain' ? "text-white/70" : "text-gray-400")}>השווה רשתות</span>
-            </button>
+          <div className="mt-4 grid grid-cols-2 gap-2">
             <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }); } }} className={"flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all " + (locMode === 'nearby' ? "bg-emerald-500 border-emerald-500 shadow-lg" : locStatus === 'loading' ? "bg-amber-50 border-amber-300 animate-pulse" : "bg-white border-gray-100 hover:border-emerald-200")}>
               <div className={"w-9 h-9 rounded-xl flex items-center justify-center " + (locMode === 'nearby' ? "bg-white/20" : "bg-gray-50")}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -559,29 +547,7 @@ export default function Home() {
               <span className={"text-[10px] " + (locMode === 'cheapest' ? "text-white/70" : "text-gray-400")}>כל הסניפים</span>
             </button>
           </div>
-          {locMode === 'bychain' && list.length > 0 && (
-            <div className="mt-4 space-y-2">
-              {chainLoading ? (
-                <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-stone-200 border-t-emerald-600 rounded-full animate-spin" /></div>
-              ) : chainResults.length === 0 ? (
-                <div className="text-center text-stone-400 text-sm py-6">לא נמצאו תוצאות</div>
-              ) : chainResults.map((c: any, i: number) => (
-                <div key={c.chainName} className={"bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 " + (i === 0 ? "border-emerald-300 bg-emerald-50/40" : "border-stone-100")}>
-                  <div className="shrink-0">{(() => { const logo = CHAINS[c.chainName]?.logo; return logo ? <img src={logo} alt={c.chainName} className="w-10 h-10 object-contain" onError={e => (e.currentTarget.style.display='none')} /> : <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{backgroundColor: CHAINS[c.chainName]?.color || '#6b7280'}}>{(CHAINS[c.chainName]?.he || c.chainName).charAt(0)}</span>; })()}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-stone-800 text-sm">{CHAINS[c.chainName]?.he || c.chainName}</div>
-                    <div className="text-xs text-stone-400">{c.storeName} · {c.city}</div>
-                    {c.missingCount > 0 && <div className="text-xs text-red-400">חסרים {c.missingCount} מוצרים</div>}
-                  </div>
-                  <div className="shrink-0 text-left">
-                    <div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{c.total.toFixed(2)}</div>
-                    {i === 0 && chainResults[1] && <div className="text-xs text-emerald-600">חיסכון ₪{(chainResults[1].total - c.total).toFixed(2)}</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {locMode !== 'bychain' && locMode === 'nearby' && (
+          {locMode === 'nearby' && (
             <div className="mt-3 mx-auto max-w-sm">
               <div className="bg-white rounded-2xl border border-stone-100 shadow-sm px-5 py-4">
                 <div className="flex items-center justify-between mb-3">
