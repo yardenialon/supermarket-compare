@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { parseCompareSlug, comparePairs, type ChainInfo } from "@/lib/chains";
+import AdSlot from "@/components/AdSlot";
+import { AD_SLOTS } from "@/lib/ads";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
@@ -174,6 +176,8 @@ export default async function ComparePage({ params }: { params: { slug: string }
                 * המחיר לכל מוצר הוא הזול ביותר שנמצא ברשת (ללא סניפי אילת וללא חנויות אונליין). מוצרים שאינם נמכרים בשתי הרשתות לא נכללו.
               </p>
             </section>
+
+            <AdSlot slot={AD_SLOTS.content} />
 
             <section className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5 mb-6 text-sm text-stone-600 leading-relaxed space-y-3">
               <h2 className="font-black text-lg text-stone-800">שאלות נפוצות</h2>

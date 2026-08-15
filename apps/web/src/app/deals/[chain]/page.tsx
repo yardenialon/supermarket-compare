@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { chainBySlug, MAJOR_CHAINS } from "@/lib/chains";
+import AdSlot from "@/components/AdSlot";
+import { AD_SLOTS } from "@/lib/ads";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
@@ -111,6 +113,8 @@ export default async function ChainDealsPage({ params }: { params: { chain: stri
             ))}
           </div>
         )}
+
+        <AdSlot slot={AD_SLOTS.deals} />
 
         <section>
           <h2 className="font-black text-lg text-stone-800 mb-3">מבצעים ברשתות נוספות</h2>

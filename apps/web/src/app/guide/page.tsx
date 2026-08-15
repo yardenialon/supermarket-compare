@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AdSlot from "@/components/AdSlot";
+import { AD_SLOTS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "המדריך המלא להשוואת מחירי סופרמרקט בישראל 2026 | Savy",
@@ -121,6 +123,8 @@ export default function GuidePage() {
             ))}
           </div>
         </div>
+
+        <AdSlot slot={AD_SLOTS.content} />
 
         <div className="bg-emerald-500 rounded-2xl p-6 text-center text-white">
           <h2 className="font-black text-lg mb-2">מוכן להתחיל לחסוך?</h2>

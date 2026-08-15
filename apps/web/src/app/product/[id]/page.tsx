@@ -2,6 +2,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductPageClient from "./ProductPageClient";
+import AdSlot from "@/components/AdSlot";
+import { AD_SLOTS } from "@/lib/ads";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
@@ -168,6 +170,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
       <ProductPageClient product={product} initialPrices={prices} id={params.id} />
       <div className="max-w-3xl mx-auto px-4">
         <PriceSummary product={product} prices={prices} />
+        <AdSlot slot={AD_SLOTS.product} />
         <RelatedProducts products={related} category={product.category ?? null} />
       </div>
     </>
