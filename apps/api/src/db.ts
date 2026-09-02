@@ -7,8 +7,14 @@ const pool = new pg.Pool({
   connectionTimeoutMillis: 30000,
 });
 
-// keepalive — מונע מ-Neon לעבור למצב Idle
+// keepalive חכם — רק בשעות פעילות (06:00–24:00 שעון ישראל).
+// בלילה אין שאילתות דופק, כך ש-Neon יכול לרדת לאפס (scale to zero)
+// ולחסוך שעות מחשוב. גולש בודד בלילה ישלם cold start של ~שנייה.
+const israelHour = () =>
+  Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hour12: false, timeZone: 'Asia/Jerusalem' }).format(new Date()));
+
 setInterval(async () => {
+  if (israelHour() < 6) return;
   try { await pool.query('SELECT 1'); } catch {}
 }, 4 * 60 * 1000);
 
