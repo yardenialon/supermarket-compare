@@ -267,6 +267,18 @@ def main():
         WHERE p.id=sub.product_id
         AND (p.min_price IS DISTINCT FROM sub.min_price OR p.store_count IS DISTINCT FROM sub.store_count)""")
     print(f"  {cur.rowcount} products updated", flush=True); conn.commit()
+
+    # Idempotent: trigram index so /search ILIKE '%q%' is index-assisted
+    try:
+        old_iso = conn.isolation_level
+        conn.set_isolation_level(0)  # autocommit, required for CONCURRENTLY
+        cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+        cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_product_name_trgm ON product USING gin (name gin_trgm_ops)")
+        conn.set_isolation_level(old_iso)
+        print("  trgm index ok", flush=True)
+    except Exception as e:
+        print(f"  trgm index skipped: {e}", flush=True)
+
     print(f"\n=== DONE: {total} prices in {time.time()-start:.0f}s ===", flush=True)
     conn.close()
 
