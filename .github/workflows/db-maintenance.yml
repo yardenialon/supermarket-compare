@@ -6,7 +6,7 @@ on:
 jobs:
   maintain:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,6 +35,7 @@ jobs:
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_item_promo ON promotion_item (promotion_id)")
           cur.execute("ANALYZE store"); cur.execute("ANALYZE promotion"); cur.execute("ANALYZE promotion_item")
           print("Creating deals_current materialized view...", flush=True)
+          cur.execute("SET work_mem = '256MB'")
           cur.execute("""CREATE MATERIALIZED VIEW IF NOT EXISTS deals_current AS
             SELECT
               pr.id AS promo_id, pr.chain_promotion_id, pr.store_id,
@@ -42,8 +43,8 @@ jobs:
               rc.name AS chain_name,
               pr.description, pr.discounted_price, pr.discount_rate, pr.min_qty,
               pr.end_date, pr.is_club_only, pr.category, pr.subcategory, pr.item_count,
-              (row_number() OVER (
-                 PARTITION BY COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text)
+              (pr.chain_promotion_id IS NULL OR row_number() OVER (
+                 PARTITION BY pr.chain_promotion_id, rc.name
                  ORDER BY pr.id) = 1) AS is_canonical
             FROM promotion pr
             JOIN store s ON s.id = pr.store_id
