@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: { params: { name: string } })
   const { chain } = data;
   const nameHe = chain.nameHe || chain.name;
   return {
-    title: `${nameHe} | סניפים, מבצעים ומחירים | Savy`,
-    description: `כל סניפי ${nameHe} בישראל — ${chain.storeCount} סניפים. מבצעים חמים, מחירים עדכניים והשוואה לרשתות אחרות. מתעדכן יומית.`,
+    title: `סניפי ${nameHe} — רשימת כל ${chain.storeCount} הסניפים, מבצעים ומחירים | Savy`,
+    description: `כל סניפי ${nameHe} בישראל לפי עיר — ${chain.storeCount} סניפים עם כתובות וניווט. מבצעים חמים, מחירים עדכניים והשוואה לרשתות אחרות. מתעדכן יומית.`,
     alternates: { canonical: `https://savy.co.il/chain/${encodeURIComponent(chain.name)}` },
     openGraph: {
       title: `${nameHe} | סניפים ומבצעים | Savy`,
@@ -87,6 +87,18 @@ export default async function ChainPage({ params }: { params: { name: string } }
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org", "@type": "GroceryStore",
         "name": nameHe, "url": `https://savy.co.il/chain/${encodeURIComponent(chain.name)}`,
+      }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org", "@type": "ItemList",
+        "name": `סניפי ${nameHe} בישראל`,
+        "numberOfItems": stores.length,
+        "itemListElement": stores.slice(0, 200).map((s: any, i: number) => ({
+          "@type": "ListItem", "position": i + 1,
+          "item": {
+            "@type": "GroceryStore", "name": s.name,
+            ...(s.address || s.city ? { "address": { "@type": "PostalAddress", ...(s.address && { streetAddress: s.address }), ...(s.city && { addressLocality: s.city }), addressCountry: "IL" } } : {}),
+          },
+        })),
       }) }} />
 
       {/* Sticky Header */}
@@ -234,9 +246,9 @@ export default async function ChainPage({ params }: { params: { name: string } }
               <span className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
               </span>
-              סניפים · {chain.storeCount}
+              סניפי {nameHe} בישראל · {chain.storeCount} סניפים
             </h2>
-            <p className="text-xs text-stone-400 mt-0.5">לחץ לניווט בוויז</p>
+            <p className="text-xs text-stone-400 mt-0.5">רשימת כל הסניפים לפי עיר — לחץ לניווט בוויז</p>
           </div>
           <div>
             {cities.map((city, ci) => (
@@ -245,11 +257,10 @@ export default async function ChainPage({ params }: { params: { name: string } }
                   <span className="text-xs font-bold text-stone-600">{city}</span>
                   <span className="text-xs text-stone-400">{byCity[city].length} סניפים</span>
                 </div>
-                {byCity[city].map((store: any, si: number) => (
-                  <a key={store.id}
-                    href={`https://waze.com/ul?ll=${store.lat},${store.lng}&navigate=yes&zoom=17`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-blue-50/30 transition border-b border-stone-50 last:border-0 group">
+                {byCity[city].map((store: any, si: number) => {
+                  const hasCoords = store.lat != null && store.lng != null;
+                  const Row = (
+                    <>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-stone-700 text-sm group-hover:text-blue-600 transition">{store.name}</div>
                       {store.address && <div className="text-xs text-stone-400 mt-0.5">{store.address}</div>}
@@ -257,12 +268,27 @@ export default async function ChainPage({ params }: { params: { name: string } }
                         <span className="inline-block text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full mt-1">{store.subchainName}</span>
                       )}
                     </div>
+                    {hasCoords && (
                     <div className="flex items-center gap-1.5 text-blue-500 bg-blue-50 px-3 py-1.5 rounded-xl flex-shrink-0 group-hover:bg-blue-100 transition">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
                       <span className="text-xs font-bold">נווט</span>
                     </div>
-                  </a>
-                ))}
+                    )}
+                    </>
+                  );
+                  return hasCoords ? (
+                    <a key={store.id}
+                      href={`https://waze.com/ul?ll=${store.lat},${store.lng}&navigate=yes&zoom=17`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-5 py-3.5 hover:bg-blue-50/30 transition border-b border-stone-50 last:border-0 group">
+                      {Row}
+                    </a>
+                  ) : (
+                    <div key={store.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-stone-50 last:border-0 group">
+                      {Row}
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
