@@ -1,0 +1,140 @@
+benchmark @ 2026-10-26T12:10:16Z
+national deals:      502 300.153726s
+nearby deals cold:   200 40.747075s
+nearby deals warm:   200 38.415644s
+nearby deals r=5:    200 47.174979s
+search milk:         200 0.578703s
+deals chains list:   200 3.672039s
+deals categories:    200 1.929645s
+
+########## COUNT query (capped)
+Aggregate (actual time=11425.798..11468.823 rows=1 loops=1)
+  Buffers: shared hit=63498 read=150304 dirtied=31886 written=30487, temp read=3263 written=5113
+  ->  Limit (actual time=9800.091..11468.537 rows=500 loops=1)
+        Buffers: shared hit=63498 read=150304 dirtied=31886 written=30487, temp read=3263 written=5113
+        ->  Unique (actual time=9800.083..11468.365 rows=500 loops=1)
+              Buffers: shared hit=63498 read=150304 dirtied=31886 written=30487, temp read=3263 written=5113
+              ->  Nested Loop (actual time=9800.081..11466.150 rows=19449 loops=1)
+                    Buffers: shared hit=63498 read=150304 dirtied=31886 written=30487, temp read=3263 written=5113
+                    ->  Gather Merge (actual time=9785.587..9848.444 rows=11830 loops=1)
+                          Workers Planned: 2
+                          Workers Launched: 2
+                          Buffers: shared hit=15032 read=150120 dirtied=31786 written=30478, temp read=3263 written=5113
+                          ->  Sort (actual time=9631.892..9634.173 rows=4500 loops=3)
+                                Sort Key: (COALESCE((pr.chain_promotion_id || rc.name), (pr.id)::text))
+                                Sort Method: external merge  Disk: 9008kB
+                                Buffers: shared hit=15032 read=150120 dirtied=31786 written=30478, temp read=3263 written=5113
+                                Worker 0:  Sort Method: external merge  Disk: 8864kB
+                                Worker 1:  Sort Method: external merge  Disk: 8616kB
+                                ->  Merge Join (actual time=8806.901..9108.023 rows=173928 loops=3)
+                                      Merge Cond: (s.chain_id = rc.id)
+                                      Buffers: shared hit=15020 read=150116 dirtied=31786 written=30478, temp read=1787 written=1793
+                                      ->  Sort (actual time=8806.857..8919.504 rows=173928 loops=3)
+                                            Sort Key: s.chain_id
+                                            Sort Method: external merge  Disk: 4864kB
+                                            Buffers: shared hit=15017 read=150116 dirtied=31786 written=30478, temp read=1787 written=1793
+                                            Worker 0:  Sort Method: external merge  Disk: 4784kB
+                                            Worker 1:  Sort Method: external merge  Disk: 4648kB
+                                            ->  Hash Join (actual time=23.014..8662.909 rows=173928 loops=3)
+                                                  Hash Cond: (pr.store_id = s.id)
+                                                  Buffers: shared hit=15009 read=150116 dirtied=31786 written=30478
+                                                  ->  Hash Join (actual time=20.598..8556.133 rows=173928 loops=3)
+                                                        Hash Cond: (pr.store_id = st.id)
+                                                        Buffers: shared hit=14877 read=150107 dirtied=31786 written=30478
+                                                        ->  Parallel Seq Scan on promotion pr (actual time=1.374..7975.490 rows=2437082 loops=3)
+                                                              Filter: ((description IS NOT NULL) AND ((end_date IS NULL) OR (end_date > now())) AND ((item_count IS NULL) OR (item_count = 0) OR ((item_count > 0) AND (item_count <= 100))))
+                                                              Rows Removed by Filter: 353072
+                                                              Buffers: shared hit=14712 read=150090 dirtied=31786 written=30478
+                                                        ->  Hash (actual time=4.158..4.160 rows=153 loops=3)
+                                                              Buckets: 1024  Batches: 1  Memory Usage: 14kB
+                                                              Buffers: shared hit=115 read=7
+                                                              ->  Bitmap Heap Scan on store st (actual time=3.930..4.107 rows=153 loops=3)
+                                                                    Recheck Cond: ((lat >= '32.052972972972974'::double precision) AND (lat <= '32.10702702702703'::double precision) AND (lng >= '34.74969696969697'::double precision) AND (lng <= '34.81030303030303'::double precision))
+                                                                    Filter: (((((lat - '32.08'::double precision) * (lat - '32.08'::double precision)) * '12321'::double precision) + (((lng - '34.78'::double precision) * (lng - '34.78'::double precision)) * '9801'::double precision)) < '9'::double precision)
+                                                                    Rows Removed by Filter: 13
+                                                                    Heap Blocks: exact=36
+                                                                    Buffers: shared hit=115 read=7
+                                                                    ->  Bitmap Index Scan on idx_store_lat_lng (actual time=3.906..3.906 rows=166 loops=3)
+                                                                          Index Cond: ((lat >= '32.052972972972974'::double precision) AND (lat <= '32.10702702702703'::double precision) AND (lng >= '34.74969696969697'::double precision) AND (lng <= '34.81030303030303'::double precision))
+                                                                          Buffers: shared hit=8 read=6
+                                                  ->  Hash (actual time=2.389..2.389 rows=2254 loops=3)
+                                                        Buckets: 4096  Batches: 1  Memory Usage: 121kB
+                                                        Buffers: shared hit=132 read=9
+                                                        ->  Seq Scan on store s (actual time=0.026..2.029 rows=2254 loops=3)
+                                                              Buffers: shared hit=132 read=9
+                                      ->  Sort (actual time=0.037..0.047 rows=29 loops=3)
+                                            Sort Key: rc.id
+                                            Sort Method: quicksort  Memory: 26kB
+                                            Buffers: shared hit=3
+                                            Worker 0:  Sort Method: quicksort  Memory: 26kB
+                                            Worker 1:  Sort Method: quicksort  Memory: 26kB
+                                            ->  Seq Scan on retailer_chain rc (actual time=0.020..0.023 rows=32 loops=3)
+                                                  Buffers: shared hit=3
+                    ->  Index Only Scan using idx_promotion_item_promo on promotion_item pi (actual time=0.114..0.136 rows=2 loops=11830)
+                          Index Cond: (promotion_id = pr.id)
+                          Heap Fetches: 713
+                          Buffers: shared hit=48466 read=184 dirtied=100 written=9
+Planning:
+  Buffers: shared hit=60 read=28 dirtied=1 written=1
+Planning Time: 108.065 ms
+Execution Time: 11478.894 ms
+
+########## MAIN query (filtered CTE shape)
+Limit (actual time=17242.635..17590.166 rows=15 loops=1)
+  Buffers: shared hit=15844 read=151614 dirtied=11657 written=6330, temp read=2298 written=2307
+  ->  Unique (actual time=17242.634..17590.153 rows=15 loops=1)
+        Buffers: shared hit=15844 read=151614 dirtied=11657 written=6330, temp read=2298 written=2307
+        ->  Sort (actual time=17242.632..17474.917 rows=521783 loops=1)
+              Sort Key: rc.name, (((((s.lat - '32.08'::double precision) * (s.lat - '32.08'::double precision)) * '12321'::double precision) + (((s.lng - '34.78'::double precision) * (s.lng - '34.78'::double precision)) * '9801'::double precision))), pr.id DESC
+              Sort Method: external merge  Disk: 18384kB
+              Buffers: shared hit=15844 read=151614 dirtied=11657 written=6330, temp read=2298 written=2307
+              ->  Nested Loop (actual time=3.740..16294.569 rows=521783 loops=1)
+                    Buffers: shared hit=15844 read=151614 dirtied=11657 written=6330
+                    ->  Nested Loop (actual time=0.027..4.458 rows=153 loops=1)
+                          Buffers: shared hit=743 read=69 written=1
+                          ->  Nested Loop (actual time=0.021..3.493 rows=153 loops=1)
+                                Buffers: shared hit=437 read=69 written=1
+                                ->  Seq Scan on store st (actual time=0.015..0.995 rows=153 loops=1)
+                                      Filter: ((lat >= '32.052972972972974'::double precision) AND (lat <= '32.10702702702703'::double precision) AND (lng >= '34.74969696969697'::double precision) AND (lng <= '34.81030303030303'::double precision) AND (((((lat - '32.08'::double precision) * (lat - '32.08'::double precision)) * '12321'::double precision) + (((lng - '34.78'::double precision) * (lng - '34.78'::double precision)) * '9801'::double precision)) < '9'::double precision))
+                                      Rows Removed by Filter: 2101
+                                      Buffers: shared hit=10 read=37
+                                ->  Index Scan using store_pkey on store s (actual time=0.010..0.010 rows=1 loops=153)
+                                      Index Cond: (id = st.id)
+                                      Buffers: shared hit=427 read=32 written=1
+                          ->  Index Scan using retailer_chain_pkey on retailer_chain rc (actual time=0.004..0.004 rows=1 loops=153)
+                                Index Cond: (id = s.chain_id)
+                                Buffers: shared hit=306
+                    ->  Index Scan using idx_promotion_store_id on promotion pr (actual time=2.795..105.487 rows=3410 loops=153)
+                          Index Cond: (store_id = s.id)
+                          Filter: ((description IS NOT NULL) AND ((end_date IS NULL) OR (end_date > now())) AND ((item_count IS NULL) OR (item_count = 0) OR ((item_count > 0) AND (item_count <= 100))))
+                          Rows Removed by Filter: 431
+                          Buffers: shared hit=15101 read=151545 dirtied=11657 written=6329
+Planning:
+  Buffers: shared hit=54 read=12 dirtied=1
+Planning Time: 53.496 ms
+Execution Time: 17594.480 ms
+
+########## existing indexes:
+  idx_promo_category_active
+  idx_promo_chain_promo_id
+  idx_promo_dedupe
+  idx_promo_store_active
+  idx_promotion_category
+  idx_promotion_end_date
+  idx_promotion_item_count
+  idx_promotion_item_product
+  idx_promotion_item_product_id
+  idx_promotion_item_promo
+  idx_promotion_item_promotion
+  idx_promotion_item_promotion_id
+  idx_promotion_store_id
+  idx_promotion_unique
+  idx_store_chain
+  idx_store_geog
+  idx_store_lat_lng
+  promotion_item_pkey
+  promotion_pkey
+  store_chain_code_uq
+  store_chain_id_store_code_key
+  store_pkey
+  uq_promo_store_chain
