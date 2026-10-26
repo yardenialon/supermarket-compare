@@ -142,7 +142,7 @@ export async function productRoutes(app: any) {
       if (radKm > 0) {
         const radDeg2 = (radKm / 111) ** 2;
         prices = await query(`
-          SELECT sp.price, sp.is_promo as "isPromo",
+          SELECT sp.price, sp.is_promo as "isPromo", sp.promo_price as "promoPrice",
             s.id as "storeId", s.name as "storeName", s.city,
             rc.name as "chainName", s.subchain_name as "subchainName",
             ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
@@ -155,7 +155,7 @@ export async function productRoutes(app: any) {
         `, [id, uLat, uLng, radDeg2]);
       } else {
         prices = await query(`
-          SELECT sp.price, sp.is_promo as "isPromo",
+          SELECT sp.price, sp.is_promo as "isPromo", sp.promo_price as "promoPrice",
             s.id as "storeId", s.name as "storeName", s.city,
             rc.name as "chainName", s.subchain_name as "subchainName",
             ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
@@ -168,7 +168,7 @@ export async function productRoutes(app: any) {
       }
     } else {
       prices = await query(`
-        SELECT sp.price, sp.is_promo as "isPromo",
+        SELECT sp.price, sp.is_promo as "isPromo", sp.promo_price as "promoPrice",
           s.id as "storeId", s.name as "storeName", s.city,
           rc.name as "chainName", s.subchain_name as "subchainName"
         FROM store_price sp

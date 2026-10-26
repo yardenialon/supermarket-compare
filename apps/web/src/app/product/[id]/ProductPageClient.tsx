@@ -90,6 +90,7 @@ function ProductImg({ name, imageUrl, size = 80 }: { name: string; imageUrl?: st
 interface Price {
   price: number;
   isPromo: boolean;
+  promoPrice?: number | null;
   storeId: number;
   storeName: string;
   city: string;
@@ -509,7 +510,10 @@ export default function ProductPageClient({
                       ₪{Number(p.price).toFixed(2)}
                     </span>
                     {p.isPromo && (
-                      <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none">🔥 מבצע</span>
+                      <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none"
+                        title="מחיר מבצע — ייתכנו תנאים (כמות מינימום / מועדון)">
+                        🔥 מבצע{p.promoPrice && Number(p.promoPrice) < Number(p.price) ? ` ₪${Number(p.promoPrice).toFixed(2)}` : ""}
+                      </span>
                     )}
                     {i === 0 && (
                       <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full leading-none">הכי זול</span>

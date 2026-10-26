@@ -13,7 +13,7 @@ const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ss
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
 interface ListItem { product: Product; qty: number; }
-interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; total: number; availableCount: number; missingCount: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
+interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; total: number; availableCount: number; missingCount: number; promoSavings?: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',        color: '#e11d48', logo: '/logos/shufersal.png' },
@@ -1047,6 +1047,15 @@ export default function Home() {
                           {isWinner && listResults.length > 1 && (
                             <div className="mt-3 text-center text-xs font-bold text-emerald-600 bg-emerald-50 py-2 rounded-lg">
                               💰 חיסכון של ₪{(listResults[listResults.length - 1].total - store.total).toFixed(2)} לעומת הכי יקר
+                            </div>
+                          )}
+
+                          {/* Potential promo savings — totals stay on regular prices,
+                              promos may carry conditions (min qty / club) */}
+                          {(store.promoSavings ?? 0) >= 1 && (
+                            <div className="mt-2 text-center text-[11px] font-semibold text-red-500 bg-red-50 py-1.5 rounded-lg"
+                              title="הערכה לפי מחירי מבצע מפורסמים — חלק מהמבצעים מותנים בכמות או במועדון">
+                              🏷️ עד ₪{store.promoSavings!.toFixed(2)} חיסכון נוסף במבצעים (בכפוף לתנאים)
                             </div>
                           )}
 

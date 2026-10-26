@@ -7,7 +7,7 @@ export async function listRoutes(app) {
     let sql, params;
     if (lat && lng) {
       const radDeg = (radiusKm || 10) / 111;
-      sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo,
+      sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo, sp.promo_price,
              s.name as store_name, s.city, rc.name as chain_name,
              s.subchain_name,
              ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
@@ -19,7 +19,7 @@ export async function listRoutes(app) {
              AND s.lng BETWEEN $3 - $4 AND $3 + $4`;
       params = [pids, parseFloat(lat), parseFloat(lng), radDeg];
     } else {
-      sql = `SELECT sp.store_id, sp.product_id, sp.price,
+      sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.promo_price,
              s.name as store_name, s.city, rc.name as chain_name,
              s.subchain_name
              FROM store_price sp
@@ -31,19 +31,30 @@ export async function listRoutes(app) {
     const { rows } = await query(sql, params);
     const sm = new Map();
     for (const r of rows) {
-      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, subchainName: r.subchain_name || null, city: r.city, dist: r.dist, prices: new Map() });
-      const cur = sm.get(r.store_id).prices.get(r.product_id);
-      if (!cur || +r.price < cur) sm.get(r.store_id).prices.set(r.product_id, +r.price);
+      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, subchainName: r.subchain_name || null, city: r.city, dist: r.dist, prices: new Map(), promos: new Map() });
+      const st = sm.get(r.store_id);
+      const cur = st.prices.get(r.product_id);
+      if (!cur || +r.price < cur) st.prices.set(r.product_id, +r.price);
+      if (r.promo_price != null && +r.promo_price > 0) {
+        const curP = st.promos.get(r.product_id);
+        if (!curP || +r.promo_price < curP) st.promos.set(r.product_id, +r.promo_price);
+      }
     }
     const cands = [];
     for (const [sid, s] of sm) {
-      let total = 0; const bd = []; let miss = 0;
+      let total = 0; const bd = []; let miss = 0; let promoSavings = 0;
       for (const it of items) {
         const p = s.prices.get(it.productId);
-        if (p !== undefined) { total += p * it.qty; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) }); }
+        if (p !== undefined) {
+          total += p * it.qty; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) });
+          // totals stay on regular prices; promo upside is reported separately
+          // because promos may carry conditions (min qty / club membership)
+          const pp = s.promos.get(it.productId);
+          if (pp !== undefined && pp < p) promoSavings += (p - pp) * it.qty;
+        }
         else miss++;
       }
-      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, subchainName: s.subchainName, city: s.city, dist: s.dist, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, breakdown: bd });
+      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, subchainName: s.subchainName, city: s.city, dist: s.dist, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, promoSavings: +promoSavings.toFixed(2), breakdown: bd });
     }
     cands.sort((a, b) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
     return { bestStoreCandidates: cands.slice(0, topN), totalStoresSearched: sm.size };
@@ -61,7 +72,7 @@ export async function sharedListRoutes(app: any) {
     const pids = items.map((i: any) => i.productId);
 
     const { rows } = await query(`
-      SELECT sp.store_id, sp.product_id, sp.price,
+      SELECT sp.store_id, sp.product_id, sp.price, sp.promo_price,
              s.name as store_name, s.city, rc.name as chain_name,
              s.subchain_name
       FROM store_price sp
@@ -81,12 +92,17 @@ export async function sharedListRoutes(app: any) {
     for (const r of rows) {
       if (!chainMap.has(r.chain_name)) chainMap.set(r.chain_name, new Map());
       const storeMap = chainMap.get(r.chain_name)!;
-      if (!storeMap.has(r.store_id)) storeMap.set(r.store_id, { 
+      if (!storeMap.has(r.store_id)) storeMap.set(r.store_id, {
         storeId: r.store_id, storeName: r.store_name, city: r.city,
-        subchainName: r.subchain_name || null, prices: new Map() 
+        subchainName: r.subchain_name || null, prices: new Map(), promos: new Map()
       });
-      const cur = storeMap.get(r.store_id)!.prices.get(r.product_id);
-      if (!cur || +r.price < cur) storeMap.get(r.store_id)!.prices.set(r.product_id, +r.price);
+      const st = storeMap.get(r.store_id)!;
+      const cur = st.prices.get(r.product_id);
+      if (!cur || +r.price < cur) st.prices.set(r.product_id, +r.price);
+      if (r.promo_price != null && +r.promo_price > 0) {
+        const curP = st.promos.get(r.product_id);
+        if (!curP || +r.promo_price < curP) st.promos.set(r.product_id, +r.promo_price);
+      }
     }
 
     // For each chain, find the best store (most products, then cheapest)
@@ -97,15 +113,19 @@ export async function sharedListRoutes(app: any) {
       let bestAvailable = 0;
 
       for (const [, store] of storeMap) {
-        let total = 0; let available = 0; const bd = [];
+        let total = 0; let available = 0; const bd = []; let promoSavings = 0;
         for (const it of items) {
           const p = store.prices.get(it.productId);
-          if (p !== undefined) { total += p * it.qty; available++; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) }); }
+          if (p !== undefined) {
+            total += p * it.qty; available++; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) });
+            const pp = store.promos.get(it.productId);
+            if (pp !== undefined && pp < p) promoSavings += (p - pp) * it.qty;
+          }
         }
         if (available > bestAvailable || (available === bestAvailable && total < bestTotal)) {
           bestAvailable = available;
           bestTotal = total;
-          bestStore = { ...store, total: +total.toFixed(2), availableCount: available, missingCount: items.length - available, breakdown: bd };
+          bestStore = { ...store, total: +total.toFixed(2), availableCount: available, missingCount: items.length - available, promoSavings: +promoSavings.toFixed(2), breakdown: bd };
         }
       }
       if (bestStore) results.push({ chainName, ...bestStore });
@@ -151,7 +171,7 @@ export async function onlineListRoutes(app: any) {
     if (!items || !items.length) return { bestStoreCandidates: [] };
     const pids = items.map((i: any) => i.productId);
     const { rows } = await query(
-      `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo,
+      `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo, sp.promo_price,
               s.name as store_name, s.city, rc.name as chain_name
        FROM store_price sp
        JOIN store s ON s.id = sp.store_id
@@ -161,19 +181,28 @@ export async function onlineListRoutes(app: any) {
     );
     const sm = new Map();
     for (const r of rows) {
-      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, city: r.city, prices: new Map() });
-      const cur = sm.get(r.store_id).prices.get(r.product_id);
-      if (!cur || +r.price < cur) sm.get(r.store_id).prices.set(r.product_id, +r.price);
+      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, city: r.city, prices: new Map(), promos: new Map() });
+      const st = sm.get(r.store_id);
+      const cur = st.prices.get(r.product_id);
+      if (!cur || +r.price < cur) st.prices.set(r.product_id, +r.price);
+      if (r.promo_price != null && +r.promo_price > 0) {
+        const curP = st.promos.get(r.product_id);
+        if (!curP || +r.promo_price < curP) st.promos.set(r.product_id, +r.promo_price);
+      }
     }
     const cands = [];
     for (const [sid, s] of sm) {
-      let total = 0; const bd = []; let miss = 0;
+      let total = 0; const bd = []; let miss = 0; let promoSavings = 0;
       for (const it of items) {
         const p = s.prices.get(it.productId);
-        if (p !== undefined) { total += p * it.qty; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) }); }
+        if (p !== undefined) {
+          total += p * it.qty; bd.push({ productId: it.productId, price: p, qty: it.qty, subtotal: +(p * it.qty).toFixed(2) });
+          const pp = s.promos.get(it.productId);
+          if (pp !== undefined && pp < p) promoSavings += (p - pp) * it.qty;
+        }
         else miss++;
       }
-      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, city: s.city, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, breakdown: bd });
+      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, city: s.city, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, promoSavings: +promoSavings.toFixed(2), breakdown: bd });
     }
     cands.sort((a, b) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
     return { bestStoreCandidates: cands.slice(0, topN), totalStoresSearched: sm.size };
