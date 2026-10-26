@@ -116,16 +116,17 @@ export async function productRoutes(app: any) {
     }
     return { products: result.rows, page, limit };
   });
-  // Sitemap endpoints
+  // Sitemap endpoints — only products worth indexing (sold in 3+ stores):
+  // feeding Google every thin product got ~70% of the site deindexed in Aug 2026
   app.get('/products/sitemap/count', async () => {
-    const result = await query('SELECT COUNT(*) as count FROM product');
+    const result = await query('SELECT COUNT(*) as count FROM product WHERE COALESCE(store_count, 0) >= 3');
     return { count: parseInt(result.rows[0].count) };
   });
   app.get('/products/sitemap', async (req: any) => {
     const page = parseInt(req.query.page || '0');
     const limit = parseInt(req.query.limit || '45000');
     const offset = page * limit;
-    const result = await query('SELECT id FROM product ORDER BY id LIMIT $1 OFFSET $2', [limit, offset]);
+    const result = await query('SELECT id FROM product WHERE COALESCE(store_count, 0) >= 3 ORDER BY id LIMIT $1 OFFSET $2', [limit, offset]);
     return result.rows.map((r: any) => r.id);
   });
   app.get('/product/:id/prices', async (req: any) => {

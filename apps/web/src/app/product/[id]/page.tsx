@@ -7,12 +7,14 @@ import { AD_SLOTS } from "@/lib/ads";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 
+// A failing API must NOT look like a missing product: Google deindexes 404s.
+// Only a real 404 from the API returns null; any other failure throws, so the
+// page serves 500/503 (temporary, retried) or keeps the stale ISR copy.
 async function getProduct(id: string) {
-  try {
-    const res = await fetch(`${API}/product/${id}`, { next: { revalidate: 300 } });
-    if (!res.ok) return null;
-    return res.json();
-  } catch { return null; }
+  const res = await fetch(`${API}/product/${id}`, { next: { revalidate: 300 } });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`product api ${res.status}`);
+  return res.json();
 }
 
 async function getPrices(id: string) {
