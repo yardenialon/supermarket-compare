@@ -1,0 +1,40 @@
+name: DB Maintenance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install psycopg2-binary
+
+      - name: Create search index and refresh product aggregates
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF'
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL'])
+          conn.set_isolation_level(0)  # autocommit, required for CONCURRENTLY
+          cur = conn.cursor()
+          print("Creating pg_trgm extension + index...", flush=True)
+          cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
+          cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_product_name_trgm ON product USING gin (name gin_trgm_ops)")
+          print("Index ok. Refreshing product aggregates...", flush=True)
+          cur.execute("""UPDATE product p SET min_price=sub.min_price, store_count=sub.store_count
+              FROM (SELECT product_id, MIN(price) as min_price, COUNT(DISTINCT store_id) as store_count
+                    FROM store_price GROUP BY product_id) sub
+              WHERE p.id=sub.product_id
+              AND (p.min_price IS DISTINCT FROM sub.min_price OR p.store_count IS DISTINCT FROM sub.store_count)""")
+          print(f"{cur.rowcount} products refreshed", flush=True)
+          cur.execute("ANALYZE product")
+          print("ANALYZE done", flush=True)
+          EOF
