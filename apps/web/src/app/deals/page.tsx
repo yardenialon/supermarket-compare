@@ -122,7 +122,10 @@ export default function DealsPage() {
   }, []);
 
   const fetchDeals = useCallback(async (reset = true) => {
-    if (reset) setLoading(true); else setLoadingMore(true);
+    // soft refresh: when we already have deals on screen (e.g. location just
+    // arrived), keep showing them while the new batch loads instead of
+    // blanking the grid behind a spinner
+    if (reset) { if (deals.length === 0) setLoading(true); } else setLoadingMore(true);
     const currentOffset = reset ? 0 : offset;
     const useLocation = userLoc && (!selectedChain || showAllChain === false);
     const d = await dealsApi.list(

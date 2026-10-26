@@ -1,0 +1,69 @@
+name: API Benchmark
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Curl timings against production API
+        run: |
+          API="https://supermarket-compare-production.up.railway.app/api"
+          t() { curl -sS -o /dev/null -w "%{http_code} %{time_total}s" "$1"; }
+          echo "=== national deals:        $(t "$API/deals?limit=24")"
+          echo "=== nearby deals (cold):   $(t "$API/deals?lat=32.08&lng=34.78&radius=3&limit=24")"
+          echo "=== nearby deals (warm):   $(t "$API/deals?lat=32.08&lng=34.78&radius=3&limit=24")"
+          echo "=== nearby deals r=5:      $(t "$API/deals?lat=32.08&lng=34.78&radius=5&limit=24")"
+          echo "=== search milk:           $(t "$API/search?q=%D7%97%D7%9C%D7%91&limit=30")"
+          echo "=== deals chains list:     $(t "$API/deals/chains")"
+          echo "=== deals categories:      $(t "$API/deals/categories")"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+
+      - name: EXPLAIN ANALYZE nearby-deals queries
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF'
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+          LAT, LNG, R = 32.08, 34.78, 3
+          d_lat, d_lng, r2 = R/111, R/99, R**2
+          nearby = f"""pr.store_id IN (
+            SELECT st.id FROM store st
+            WHERE st.lat BETWEEN {LAT}-{d_lat} AND {LAT}+{d_lat}
+              AND st.lng BETWEEN {LNG}-{d_lng} AND {LNG}+{d_lng}
+              AND (st.lat-{LAT})*(st.lat-{LAT})*12321 + (st.lng-{LNG})*(st.lng-{LNG})*9801 < {r2})"""
+          where = f"""(pr.end_date IS NULL OR pr.end_date > NOW())
+            AND pr.description IS NOT NULL
+            AND (pr.item_count IS NULL OR pr.item_count = 0 OR (pr.item_count > 0 AND pr.item_count <= 100))
+            AND {nearby}"""
+          def explain(label, sql):
+              print(f"\n########## {label}")
+              cur.execute("EXPLAIN (ANALYZE, BUFFERS, COSTS OFF) " + sql)
+              for (line,) in cur.fetchall(): print(line)
+          explain("COUNT query (capped)", f"""
+            SELECT COUNT(*) FROM (
+              SELECT DISTINCT COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text)
+              FROM promotion pr JOIN store s ON s.id = pr.store_id
+              JOIN retailer_chain rc ON rc.id = s.chain_id
+              JOIN promotion_item pi ON pi.promotion_id = pr.id
+              WHERE {where} LIMIT 500) sub""")
+          explain("MAIN query (filtered CTE shape)", f"""
+            SELECT DISTINCT ON (rc.name) pr.id,
+              (s.lat-{LAT})*(s.lat-{LAT})*12321 + (s.lng-{LNG})*(s.lng-{LNG})*9801 as dist_sq
+            FROM promotion pr JOIN store s ON s.id = pr.store_id
+            JOIN retailer_chain rc ON rc.id = s.chain_id
+            WHERE {where}
+            ORDER BY rc.name, dist_sq ASC, pr.id DESC LIMIT 25""")
+          cur.execute("SELECT indexname FROM pg_indexes WHERE tablename IN ('promotion','store','promotion_item') ORDER BY 1")
+          print("\n########## existing indexes:")
+          for (ix,) in cur.fetchall(): print(" ", ix)
+          EOF
