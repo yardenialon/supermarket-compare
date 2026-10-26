@@ -207,7 +207,9 @@ def main():
     db_url = os.environ.get("DATABASE_URL")
     if not db_url: raise ValueError("DATABASE_URL not set")
     ensure_dataset()
-    files = sorted(KAGGLE_DATA_DIR.glob("promo_full_file_*.csv"))
+    # recursive: the dataset moved to per-chain subfolders in Aug 2026, which
+    # silently starved the old flat glob ("No promo files found") for months
+    files = sorted(set(KAGGLE_DATA_DIR.glob("promo_full_file_*.csv")) | set(KAGGLE_DATA_DIR.glob("**/promo_full_file_*.csv")))
     if not files: log.warning("No promo files found."); return
     log.info(f"Processing {len(files)} file(s)...")
     conn = psycopg2.connect(db_url)
@@ -246,5 +248,21 @@ def main():
     finally:
         conn.close()
 
+def refresh_deals_view():
+    """deals_current serves all /deals reads — refresh after loading promos."""
+    try:
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        conn.set_isolation_level(0)
+        cur = conn.cursor()
+        cur.execute("SELECT to_regclass('deals_current') IS NOT NULL")
+        if cur.fetchone()[0]:
+            log.info("Refreshing deals_current...")
+            cur.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY deals_current")
+            log.info("deals_current refreshed")
+        conn.close()
+    except Exception as e:
+        log.warning(f"deals_current refresh skipped: {e}")
+
 if __name__ == "__main__":
     main()
+    refresh_deals_view()

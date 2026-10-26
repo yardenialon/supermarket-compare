@@ -1,0 +1,29 @@
+name: Refresh Deals View
+
+on:
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Refresh deals_current
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF'
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL'])
+          conn.set_isolation_level(0)
+          cur = conn.cursor()
+          cur.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY deals_current")
+          cur.execute("SELECT COUNT(*), COUNT(*) FILTER (WHERE is_canonical), MAX(end_date)::date FROM deals_current")
+          print("deals_current:", cur.fetchone())
+          EOF
