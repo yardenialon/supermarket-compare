@@ -28,6 +28,12 @@ jobs:
           print("Creating pg_trgm extension + index...", flush=True)
           cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_product_name_trgm ON product USING gin (name gin_trgm_ops)")
+          print("Creating deals/geo indexes...", flush=True)
+          cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_store_lat_lng ON store (lat, lng)")
+          cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_store_id ON promotion (store_id)")
+          cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_end_date ON promotion (end_date)")
+          cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_item_promo ON promotion_item (promotion_id)")
+          cur.execute("ANALYZE store"); cur.execute("ANALYZE promotion"); cur.execute("ANALYZE promotion_item")
           print("Index ok. Refreshing product aggregates...", flush=True)
           cur.execute("""UPDATE product p SET min_price=sub.min_price, store_count=sub.store_count
               FROM (SELECT product_id, MIN(price) as min_price, COUNT(DISTINCT store_id) as store_count

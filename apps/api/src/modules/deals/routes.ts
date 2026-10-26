@@ -28,11 +28,19 @@ export async function dealsRoutes(app: any) {
       params.push(parseFloat(lat as string), parseFloat(lng as string));
       latIdx = params.length - 1;
       lngIdx = params.length;
-      const r2 = parseFloat(radius as string) ** 2;
-      conditions.push(
-        `s.lat IS NOT NULL AND s.lng IS NOT NULL AND ` +
-        `(s.lat - $${latIdx})*(s.lat - $${latIdx})*12321 + (s.lng - $${lngIdx})*(s.lng - $${lngIdx})*9801 < ${r2}`
-      );
+      const r = parseFloat(radius as string);
+      const r2 = r ** 2;
+      // filter stores FIRST via an indexable bounding box (111km/deg lat, ~99km/deg lng),
+      // then exact radius — instead of evaluating the distance formula on every
+      // active promotion in the country
+      const dLat = (r / 111).toFixed(6);
+      const dLng = (r / 99).toFixed(6);
+      conditions.push(`pr.store_id IN (
+        SELECT st.id FROM store st
+        WHERE st.lat BETWEEN $${latIdx} - ${dLat} AND $${latIdx} + ${dLat}
+          AND st.lng BETWEEN $${lngIdx} - ${dLng} AND $${lngIdx} + ${dLng}
+          AND (st.lat - $${latIdx})*(st.lat - $${latIdx})*12321 + (st.lng - $${lngIdx})*(st.lng - $${lngIdx})*9801 < ${r2}
+      )`);
     }
 
     const where = conditions.join(' AND ');
@@ -62,7 +70,8 @@ export async function dealsRoutes(app: any) {
           AND pr2.item_count > 0 AND pr2.item_count <= 100
       ))
     `;
-    // Count
+    // Count — capped at 500: an exact count re-runs the whole filter over every
+    // matching promotion just to print a number; the UI only needs "how many-ish"
     let total = 0;
     if (true) {
       const countResult = await query(
@@ -73,6 +82,7 @@ export async function dealsRoutes(app: any) {
            JOIN retailer_chain rc ON rc.id = s.chain_id
            JOIN promotion_item pi ON pi.promotion_id = pr.id
            WHERE ${where}
+           LIMIT 500
          ) sub`,
         [...params]
       );
