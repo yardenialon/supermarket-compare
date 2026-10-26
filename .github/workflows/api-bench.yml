@@ -3,22 +3,35 @@ name: API Benchmark
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   bench:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
       - name: Curl timings against production API
         run: |
+          mkdir -p bench-results
+          OUT=bench-results/latest.txt
+          echo "benchmark @ $(date -u +%FT%TZ)" > $OUT
           API="https://supermarket-compare-production.up.railway.app/api"
           t() { curl -sS -o /dev/null -w "%{http_code} %{time_total}s" "$1"; }
-          echo "=== national deals:        $(t "$API/deals?limit=24")"
-          echo "=== nearby deals (cold):   $(t "$API/deals?lat=32.08&lng=34.78&radius=3&limit=24")"
-          echo "=== nearby deals (warm):   $(t "$API/deals?lat=32.08&lng=34.78&radius=3&limit=24")"
-          echo "=== nearby deals r=5:      $(t "$API/deals?lat=32.08&lng=34.78&radius=5&limit=24")"
-          echo "=== search milk:           $(t "$API/search?q=%D7%97%D7%9C%D7%91&limit=30")"
-          echo "=== deals chains list:     $(t "$API/deals/chains")"
-          echo "=== deals categories:      $(t "$API/deals/categories")"
+          {
+            echo "national deals:      $(t "$API/deals?limit=24")"
+            echo "nearby deals cold:   $(t "$API/deals?lat=32.08&lng=34.78&radius=3&limit=24")"
+            echo "nearby deals warm:   $(t "$API/deals?lat=32.08&lng=34.78&radius=3&limit=24")"
+            echo "nearby deals r=5:    $(t "$API/deals?lat=32.08&lng=34.78&radius=5&limit=24")"
+            echo "search milk:         $(t "$API/search?q=%D7%97%D7%9C%D7%91&limit=30")"
+            echo "deals chains list:   $(t "$API/deals/chains")"
+            echo "deals categories:    $(t "$API/deals/categories")"
+          } | tee -a $OUT
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,7 +44,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          python - <<'EOF'
+          python - <<'EOF' | tee -a bench-results/latest.txt
           import os, psycopg2
           conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
           LAT, LNG, R = 32.08, 34.78, 3
@@ -67,3 +80,11 @@ jobs:
           print("\n########## existing indexes:")
           for (ix,) in cur.fetchall(): print(" ", ix)
           EOF
+
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git add bench-results/latest.txt
+          git commit -m "chore(bench): api benchmark results [skip ci]" || echo "no changes"
+          git pull --rebase origin main && git push origin main
