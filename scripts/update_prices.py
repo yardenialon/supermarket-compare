@@ -178,6 +178,37 @@ def process_promos_batch(cur, conn, filepath, chain_name):
         conn.commit()
     return updated
 
+def download_per_file():
+    """Fallback when the bulk zip is broken on Kaggle's side ('No gcs url found'):
+    list the dataset files and fetch the ones we need, one by one."""
+    import subprocess, zipfile
+    r = subprocess.run(["kaggle", "datasets", "files", KAGGLE_DATASET, "-v", "--page-size", "1000"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        print(f"ERROR: could not list dataset files:\n{r.stderr}"); return False
+    names = [line.split(",")[0].strip() for line in r.stdout.splitlines()[1:] if "," in line]
+    wanted = [n for n in names if n.endswith(".csv")
+              and any(k in n for k in ("price_full_file", "store_file", "promo_full_file"))]
+    if not wanted:
+        print("ERROR: file listing returned no price/store/promo CSVs"); return False
+    print(f"  per-file fallback: {len(wanted)} files", flush=True)
+    ok = 0
+    for n in wanted:
+        rr = subprocess.run(["kaggle", "datasets", "download", "-d", KAGGLE_DATASET, "-f", n, "-p", "kaggle_data"],
+                            capture_output=True, text=True)
+        if rr.returncode == 0:
+            ok += 1
+        else:
+            print(f"  WARN: failed {n}: {rr.stderr.strip()[:200]}", flush=True)
+    for z in glob.glob("kaggle_data/**/*.zip", recursive=True):
+        try:
+            with zipfile.ZipFile(z) as zf: zf.extractall("kaggle_data")
+            os.remove(z)
+        except Exception as e:
+            print(f"  WARN: unzip {z}: {e}", flush=True)
+    print(f"  per-file fallback: {ok}/{len(wanted)} downloaded", flush=True)
+    return ok > 0
+
 def main():
     start = time.time()
     print("Downloading dataset...", flush=True)
@@ -189,7 +220,9 @@ def main():
         print(f"WARN: download attempt {attempt}/3 failed (exit {ret}), retrying in 90s...", flush=True)
         time.sleep(90)
     if ret != 0:
-        print("ERROR: Kaggle download failed"); sys.exit(1)
+        print("WARN: bulk download failed — trying per-file fallback", flush=True)
+        if not download_per_file():
+            print("ERROR: Kaggle download failed"); sys.exit(1)
 
     # Find CSVs
     all_csvs = glob.glob("kaggle_data/**/*.csv", recursive=True)
