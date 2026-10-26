@@ -280,10 +280,16 @@ def main():
         conn.set_isolation_level(0)  # autocommit, required for CONCURRENTLY
         cur.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")
         cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_product_name_trgm ON product USING gin (name gin_trgm_ops)")
-        conn.set_isolation_level(old_iso)
         print("  trgm index ok", flush=True)
+        # deals_current serves /deals reads; refresh after today's promos landed
+        cur.execute("SELECT to_regclass('deals_current') IS NOT NULL")
+        if cur.fetchone()[0]:
+            print("  refreshing deals_current...", flush=True)
+            cur.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY deals_current")
+            print("  deals_current refreshed", flush=True)
+        conn.set_isolation_level(old_iso)
     except Exception as e:
-        print(f"  trgm index skipped: {e}", flush=True)
+        print(f"  index/matview maintenance skipped: {e}", flush=True)
 
     print(f"\n=== DONE: {total} prices in {time.time()-start:.0f}s ===", flush=True)
     conn.close()

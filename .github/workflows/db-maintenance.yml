@@ -34,6 +34,32 @@ jobs:
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_end_date ON promotion (end_date)")
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_item_promo ON promotion_item (promotion_id)")
           cur.execute("ANALYZE store"); cur.execute("ANALYZE promotion"); cur.execute("ANALYZE promotion_item")
+          print("Creating deals_current materialized view...", flush=True)
+          cur.execute("""CREATE MATERIALIZED VIEW IF NOT EXISTS deals_current AS
+            SELECT
+              pr.id AS promo_id, pr.chain_promotion_id, pr.store_id,
+              s.name AS store_name, s.city, s.address, s.lat, s.lng, s.subchain_name,
+              rc.name AS chain_name,
+              pr.description, pr.discounted_price, pr.discount_rate, pr.min_qty,
+              pr.end_date, pr.is_club_only, pr.category, pr.subcategory, pr.item_count,
+              (row_number() OVER (
+                 PARTITION BY COALESCE(pr.chain_promotion_id::text || rc.name, pr.id::text)
+                 ORDER BY pr.id) = 1) AS is_canonical
+            FROM promotion pr
+            JOIN store s ON s.id = pr.store_id
+            JOIN retailer_chain rc ON rc.id = s.chain_id
+            WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
+              AND pr.description IS NOT NULL
+              AND (pr.item_count IS NULL OR pr.item_count = 0 OR (pr.item_count > 0 AND pr.item_count <= 100))""")
+          cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_dc_promo ON deals_current (promo_id)")
+          cur.execute("CREATE INDEX IF NOT EXISTS idx_dc_store ON deals_current (store_id)")
+          cur.execute("CREATE INDEX IF NOT EXISTS idx_dc_canonical_rate ON deals_current (discount_rate DESC NULLS LAST) WHERE is_canonical")
+          cur.execute("CREATE INDEX IF NOT EXISTS idx_dc_chain ON deals_current (chain_name)")
+          cur.execute("CREATE INDEX IF NOT EXISTS idx_dc_category ON deals_current (category)")
+          cur.execute("ANALYZE deals_current")
+          cur.execute("SELECT COUNT(*), COUNT(*) FILTER (WHERE is_canonical), pg_size_pretty(pg_total_relation_size('deals_current')) FROM deals_current")
+          rows, canon, size = cur.fetchone()
+          print(f"deals_current: {rows} rows ({canon} canonical), size {size}", flush=True)
           print("Index ok. Refreshing product aggregates...", flush=True)
           cur.execute("""UPDATE product p SET min_price=sub.min_price, store_count=sub.store_count
               FROM (SELECT product_id, MIN(price) as min_price, COUNT(DISTINCT store_id) as store_count
