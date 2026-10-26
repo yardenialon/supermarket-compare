@@ -9,7 +9,7 @@ permissions:
 jobs:
   rescue:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,9 +69,21 @@ jobs:
           cur.execute("CREATE TABLE promotion_new (LIKE promotion INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES)")
           cur.execute("INSERT INTO promotion_new SELECT * FROM promotion WHERE end_date > NOW()")
           print(f"promotion_new rows: {cur.rowcount}", flush=True)
+          conn.commit()
           cur.execute("CREATE TABLE promotion_item_new (LIKE promotion_item INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES)")
-          cur.execute("INSERT INTO promotion_item_new SELECT pi.* FROM promotion_item pi JOIN promotion_new p ON p.id = pi.promotion_id")
-          print(f"promotion_item_new rows: {cur.rowcount}", flush=True)
+          conn.commit()
+          # copy items in chunks through idx_promotion_item_promo instead of
+          # seq-scanning the 3.8GB promotion_item table (timed out twice)
+          cur.execute("SELECT id FROM promotion_new ORDER BY id")
+          ids = [r[0] for r in cur.fetchall()]
+          copied = 0
+          for i in range(0, len(ids), 5000):
+              chunk = ids[i:i+5000]
+              cur.execute("INSERT INTO promotion_item_new SELECT pi.* FROM promotion_item pi WHERE pi.promotion_id = ANY(%s)", (chunk,))
+              copied += cur.rowcount
+              conn.commit()
+              print(f"  items copied: {copied} ({i+len(chunk)}/{len(ids)} promos)", flush=True)
+          print(f"promotion_item_new rows: {copied}", flush=True)
 
           print("swapping...", flush=True)
           if pseq: cur.execute(f"ALTER SEQUENCE {pseq} OWNED BY NONE")
