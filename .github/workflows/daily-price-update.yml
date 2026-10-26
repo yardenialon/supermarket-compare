@@ -32,7 +32,12 @@ jobs:
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: python scripts/update_prices.py
+        run: |
+          set -o pipefail
+          python scripts/update_prices.py 2>&1 | tee /tmp/update.log || {
+            echo "::error title=update_prices failed::$(tail -c 800 /tmp/update.log | tr '\n' ' ¦ ')"
+            exit 1
+          }
 
       - name: Run categories update
         env:

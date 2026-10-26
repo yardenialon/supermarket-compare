@@ -181,7 +181,13 @@ def process_promos_batch(cur, conn, filepath, chain_name):
 def main():
     start = time.time()
     print("Downloading dataset...", flush=True)
-    ret = os.system(f"kaggle datasets download -d {KAGGLE_DATASET} -p kaggle_data --unzip")
+    ret = 1
+    for attempt in range(1, 4):
+        ret = os.system(f"kaggle datasets download -d {KAGGLE_DATASET} -p kaggle_data --unzip")
+        if ret == 0:
+            break
+        print(f"WARN: download attempt {attempt}/3 failed (exit {ret}), retrying in 90s...", flush=True)
+        time.sleep(90)
     if ret != 0:
         print("ERROR: Kaggle download failed"); sys.exit(1)
 
