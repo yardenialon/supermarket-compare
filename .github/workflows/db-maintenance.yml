@@ -33,6 +33,7 @@ jobs:
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_store_id ON promotion (store_id)")
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_end_date ON promotion (end_date)")
           cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_item_promo ON promotion_item (promotion_id)")
+          cur.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_item_product ON promotion_item (product_id)")
           cur.execute("ANALYZE store"); cur.execute("ANALYZE promotion"); cur.execute("ANALYZE promotion_item")
           print("Creating deals_current materialized view...", flush=True)
           cur.execute("SET work_mem = '256MB'")

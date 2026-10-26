@@ -6,7 +6,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface ListItem { product: Product; qty: number; }
-interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; promoSavings?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
+interface StoreResult { storeId: number; storeName: string; chainName: string; city: string; total: number; availableCount: number; missingCount: number; promoSavings?: number; promoTotal?: number; promoClubTotal?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',      color: '#e11d48', logo: '/logos/shufersal.png' },
@@ -72,6 +72,8 @@ export default function OnlinePage() {
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [list, setList] = useState<ListItem[]>([]);
   const [results, setResults] = useState<StoreResult[] | null>(null);
+  const [includeClubPromos, setIncludeClubPromos] = useState(false);
+  useEffect(() => { try { setIncludeClubPromos(localStorage.getItem('savy_club_promos') === '1'); } catch {} }, []);
   const [loading, setLoading] = useState(false);
   const [comparing, setComparing] = useState(false);
   const [expandedStore, setExpandedStore] = useState<number | null>(null);
@@ -347,6 +349,14 @@ export default function OnlinePage() {
                   <span className="font-bold text-gray-900 text-sm">תוצאות השוואה 🏆</span>
                   <span className="text-xs text-gray-400">{results.length} אתרים</span>
                 </div>
+                {results.some((s) => s.promoClubTotal != null) && (
+                  <label className="flex items-center justify-end gap-2 text-xs text-gray-500 cursor-pointer select-none px-1">
+                    <input type="checkbox" checked={includeClubPromos}
+                      onChange={(e) => { setIncludeClubPromos(e.target.checked); try { localStorage.setItem('savy_club_promos', e.target.checked ? '1' : '0'); } catch {} }}
+                      className="accent-emerald-600 w-3.5 h-3.5" />
+                    כלול מבצעי מועדון בחישוב
+                  </label>
+                )}
                 {results.map((store, idx) => {
                   const isFirst = idx === 0;
                   const savings = isFirst ? 0 : +(store.total - results[0].total).toFixed(2);
@@ -366,12 +376,26 @@ export default function OnlinePage() {
                             ? <div className="text-xs text-amber-500">חסרים {store.missingCount} מוצרים</div>
                             : <div className="text-xs text-emerald-600">כל המוצרים נמצאו</div>
                           }
-                          {(store.promoSavings ?? 0) >= 1 && (
-                            <div className="text-[11px] text-red-500 font-medium"
-                              title="הערכה לפי מחירי מבצע מפורסמים — חלק מהמבצעים מותנים בכמות או במועדון">
-                              🏷️ עד ₪{store.promoSavings!.toFixed(2)} נוספים במבצעים
-                            </div>
-                          )}
+                          {(() => {
+                            const eff = includeClubPromos ? store.promoClubTotal : store.promoTotal;
+                            if (eff != null && eff < store.total - 0.5) {
+                              return (
+                                <div className="text-[11px] text-red-600 font-bold"
+                                  title="מחושב רק לפי מבצעים שהסל שלך עומד בתנאי הכמות שלהם">
+                                  🏷️ עם מבצעים: ₪{eff.toFixed(2)}{includeClubPromos ? " (כולל מועדון)" : ""}
+                                </div>
+                              );
+                            }
+                            if ((store.promoSavings ?? 0) >= 1) {
+                              return (
+                                <div className="text-[11px] text-red-500 font-medium"
+                                  title="הערכה לפי מחירי מבצע מפורסמים — חלק מהמבצעים מותנים בכמות או במועדון">
+                                  🏷️ עד ₪{store.promoSavings!.toFixed(2)} נוספים במבצעים
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                         <div className="text-left flex-shrink-0">
                           <div className={`font-black text-lg ${isFirst ? "text-emerald-600" : "text-gray-800"}`}>₪{store.total.toFixed(2)}</div>

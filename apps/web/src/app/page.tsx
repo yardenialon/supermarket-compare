@@ -13,7 +13,7 @@ const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ss
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
 interface ListItem { product: Product; qty: number; }
-interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; total: number; availableCount: number; missingCount: number; promoSavings?: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
+interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; total: number; availableCount: number; missingCount: number; promoSavings?: number; promoTotal?: number; promoClubTotal?: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',        color: '#e11d48', logo: '/logos/shufersal.png' },
@@ -265,6 +265,8 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<'price' | 'stores' | 'name'>('stores'); const db = useRef<any>(null);
   const { user, syncCartToCloud, loadCartFromCloud } = useAuth();
   const [list, setList] = useState<ListItem[]>([]); const [listResults, setListResults] = useState<StoreResult[]>([]);
+  const [includeClubPromos, setIncludeClubPromos] = useState(false);
+  useEffect(() => { try { setIncludeClubPromos(localStorage.getItem('savy_club_promos') === '1'); } catch {} }, []);
 
   // Load list from localStorage on mount
   useEffect(() => {
@@ -952,6 +954,14 @@ export default function Home() {
               ) :
               !listResults.length ? <div className="text-center py-16 text-stone-300 text-sm">לא נמצאו חנויות</div> :
               <div className="space-y-3">
+                {listResults.some((s: StoreResult) => s.promoClubTotal != null) && (
+                  <label className="flex items-center justify-end gap-2 text-xs text-stone-500 cursor-pointer select-none px-1">
+                    <input type="checkbox" checked={includeClubPromos}
+                      onChange={(e) => { setIncludeClubPromos(e.target.checked); try { localStorage.setItem('savy_club_promos', e.target.checked ? '1' : '0'); } catch {} }}
+                      className="accent-emerald-600 w-3.5 h-3.5" />
+                    כלול מבצעי מועדון בחישוב
+                  </label>
+                )}
                 {listResults.map((store: StoreResult, i: number) => {
                   const sav = i > 0 ? (store.total - listResults[0].total) : 0;
                   const foundIds = new Set(store.breakdown?.map((b: any) => b.productId) || []);
@@ -1050,14 +1060,28 @@ export default function Home() {
                             </div>
                           )}
 
-                          {/* Potential promo savings — totals stay on regular prices,
-                              promos may carry conditions (min qty / club) */}
-                          {(store.promoSavings ?? 0) >= 1 && (
-                            <div className="mt-2 text-center text-[11px] font-semibold text-red-500 bg-red-50 py-1.5 rounded-lg"
-                              title="הערכה לפי מחירי מבצע מפורסמים — חלק מהמבצעים מותנים בכמות או במועדון">
-                              🏷️ עד ₪{store.promoSavings!.toFixed(2)} חיסכון נוסף במבצעים (בכפוף לתנאים)
-                            </div>
-                          )}
+                          {/* Promo engine: effective total when the basket meets promo
+                              conditions; falls back to the rough upside estimate */}
+                          {(() => {
+                            const eff = includeClubPromos ? store.promoClubTotal : store.promoTotal;
+                            if (eff != null && eff < store.total - 0.5) {
+                              return (
+                                <div className="mt-2 text-center text-[11px] font-bold text-red-600 bg-red-50 py-1.5 rounded-lg"
+                                  title="מחושב רק לפי מבצעים שהסל שלך עומד בתנאי הכמות שלהם, לפי מחירי מבצע מפורסמים">
+                                  🏷️ עם מבצעים: ₪{eff.toFixed(2)} · חוסך ₪{(store.total - eff).toFixed(2)}{includeClubPromos ? " (כולל מועדון)" : ""}
+                                </div>
+                              );
+                            }
+                            if ((store.promoSavings ?? 0) >= 1) {
+                              return (
+                                <div className="mt-2 text-center text-[11px] font-semibold text-red-500 bg-red-50 py-1.5 rounded-lg"
+                                  title="הערכה לפי מחירי מבצע מפורסמים — חלק מהמבצעים מותנים בכמות או במועדון">
+                                  🏷️ עד ₪{store.promoSavings!.toFixed(2)} חיסכון נוסף במבצעים (בכפוף לתנאים)
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
 
                           {/* Navigate button */}
                           {store.storeName && (
