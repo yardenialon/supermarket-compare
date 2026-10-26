@@ -1,0 +1,136 @@
+name: Promo Rescue
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install psycopg2-binary "kaggle==1.6.17"
+
+      - name: Check Kaggle promo sources
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        continue-on-error: true
+        run: |
+          mkdir -p bench-results
+          OUT=bench-results/rescue.txt
+          echo "rescue @ $(date -u +%FT%TZ)" > $OUT
+          {
+            echo "--- erlichsefi dataset promo files:"
+            kaggle datasets files erlichsefi/israeli-supermarkets-2024 2>&1 | grep -i promo | head -20 || echo "(none or error)"
+            echo "--- motib7 dataset status:"
+            kaggle datasets files motib7/israeli-supermarket-prices 2>&1 | head -5
+          } | tee -a $OUT
+
+      - name: Rebuild promotion tables keeping only valid deals
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF' | tee -a bench-results/rescue.txt
+          import os, psycopg2, sys
+          conn = psycopg2.connect(os.environ['DATABASE_URL'])
+          cur = conn.cursor()
+          cur.execute("SET work_mem = '256MB'")
+
+          # preflight
+          cur.execute("SELECT COUNT(*) FROM promotion WHERE end_date > NOW()")
+          keep = cur.fetchone()[0]
+          print(f"promotions with future end_date: {keep}")
+          if keep < 1000:
+              print("ABORT: suspiciously few valid promotions, not swapping"); sys.exit(1)
+
+          cur.execute("SELECT pg_get_serial_sequence('promotion','id')")
+          pseq = cur.fetchone()[0]
+          cur.execute("SELECT pg_get_serial_sequence('promotion_item','id')")
+          iseq = cur.fetchone()[0]
+          cur.execute("""SELECT conname, conrelid::regclass::text, pg_get_constraintdef(oid)
+                         FROM pg_constraint WHERE confrelid='promotion'::regclass AND contype='f'""")
+          fks = cur.fetchall()
+          print("sequences:", pseq, iseq, "| FKs referencing promotion:", fks)
+
+          print("building clean tables...", flush=True)
+          cur.execute("DROP TABLE IF EXISTS promotion_new, promotion_item_new")
+          cur.execute("CREATE TABLE promotion_new (LIKE promotion INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES)")
+          cur.execute("INSERT INTO promotion_new SELECT * FROM promotion WHERE end_date > NOW()")
+          print(f"promotion_new rows: {cur.rowcount}", flush=True)
+          cur.execute("CREATE TABLE promotion_item_new (LIKE promotion_item INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES)")
+          cur.execute("INSERT INTO promotion_item_new SELECT pi.* FROM promotion_item pi JOIN promotion_new p ON p.id = pi.promotion_id")
+          print(f"promotion_item_new rows: {cur.rowcount}", flush=True)
+
+          print("swapping...", flush=True)
+          if pseq: cur.execute(f"ALTER SEQUENCE {pseq} OWNED BY NONE")
+          if iseq: cur.execute(f"ALTER SEQUENCE {iseq} OWNED BY NONE")
+          cur.execute("DROP TABLE promotion_item")
+          cur.execute("DROP TABLE promotion CASCADE")
+          cur.execute("ALTER TABLE promotion_new RENAME TO promotion")
+          cur.execute("ALTER TABLE promotion_item_new RENAME TO promotion_item")
+          if pseq: cur.execute(f"ALTER SEQUENCE {pseq} OWNED BY promotion.id")
+          if iseq: cur.execute(f"ALTER SEQUENCE {iseq} OWNED BY promotion_item.id")
+          for conname, reltable, condef in fks:
+              tgt = 'promotion_item' if 'promotion_item' in reltable else reltable
+              try:
+                  cur.execute(f'ALTER TABLE {tgt} ADD CONSTRAINT "{conname}" {condef}')
+                  print(f"recreated FK {conname} on {tgt}")
+              except Exception as e:
+                  print(f"FK {conname} skipped: {e}")
+          conn.commit()
+          cur.execute("ANALYZE promotion"); cur.execute("ANALYZE promotion_item"); conn.commit()
+          print("swap done", flush=True)
+
+          print("creating deals_current...", flush=True)
+          conn.set_isolation_level(0)
+          cur.execute("DROP MATERIALIZED VIEW IF EXISTS deals_current")
+          cur.execute("""CREATE MATERIALIZED VIEW deals_current AS
+            SELECT
+              pr.id AS promo_id, pr.chain_promotion_id, pr.store_id,
+              s.name AS store_name, s.city, s.address, s.lat, s.lng, s.subchain_name,
+              rc.name AS chain_name,
+              pr.description, pr.discounted_price, pr.discount_rate, pr.min_qty,
+              pr.end_date, pr.is_club_only, pr.category, pr.subcategory, pr.item_count,
+              (pr.chain_promotion_id IS NULL OR row_number() OVER (
+                 PARTITION BY pr.chain_promotion_id, rc.name
+                 ORDER BY pr.id) = 1) AS is_canonical
+            FROM promotion pr
+            JOIN store s ON s.id = pr.store_id
+            JOIN retailer_chain rc ON rc.id = s.chain_id
+            WHERE (pr.end_date IS NULL OR pr.end_date > NOW())
+              AND pr.description IS NOT NULL
+              AND (pr.item_count IS NULL OR pr.item_count = 0 OR (pr.item_count > 0 AND pr.item_count <= 100))""")
+          cur.execute("CREATE UNIQUE INDEX idx_dc_promo ON deals_current (promo_id)")
+          cur.execute("CREATE INDEX idx_dc_store ON deals_current (store_id)")
+          cur.execute("CREATE INDEX idx_dc_canonical_rate ON deals_current (discount_rate DESC NULLS LAST) WHERE is_canonical")
+          cur.execute("CREATE INDEX idx_dc_chain ON deals_current (chain_name)")
+          cur.execute("CREATE INDEX idx_dc_category ON deals_current (category)")
+          cur.execute("ANALYZE deals_current")
+          cur.execute("SELECT COUNT(*), COUNT(*) FILTER (WHERE is_canonical) FROM deals_current")
+          rows, canon = cur.fetchone()
+          for t in ('promotion','promotion_item','deals_current'):
+              cur.execute(f"SELECT pg_size_pretty(pg_total_relation_size('{t}'))")
+              print(f"size {t}: {cur.fetchone()[0]}")
+          print(f"deals_current ready: {rows} rows ({canon} canonical)")
+          EOF
+
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/rescue.txt
+          git commit -m "chore(bench): promo rescue report [skip ci]" || echo "no changes"
+          git push -f origin bench-data
