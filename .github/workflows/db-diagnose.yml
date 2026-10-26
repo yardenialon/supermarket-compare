@@ -1,0 +1,65 @@
+name: DB Diagnose
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Diagnose promotion table
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF' | tee bench-results/diagnose.txt
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+          cur.execute("""SELECT column_name, data_type FROM information_schema.columns
+                         WHERE table_name='promotion' ORDER BY ordinal_position""")
+          cols = cur.fetchall()
+          print("promotion columns:", ", ".join(f"{c}({t})" for c, t in cols))
+          colnames = [c for c, _ in cols]
+          cur.execute("""SELECT COUNT(*),
+                           COUNT(*) FILTER (WHERE end_date IS NULL),
+                           COUNT(*) FILTER (WHERE end_date > NOW()),
+                           COUNT(*) FILTER (WHERE end_date <= NOW())
+                         FROM promotion""")
+          total, nul, future, past = cur.fetchone()
+          print(f"promotion rows: total={total}, end_date NULL={nul}, future={future}, expired={past}")
+          for tcol in ('created_at', 'updated_at', 'start_date'):
+              if tcol in colnames:
+                  cur.execute(f"""SELECT COUNT(*) FILTER (WHERE {tcol} < NOW() - interval '30 days'),
+                                    COUNT(*) FILTER (WHERE {tcol} >= NOW() - interval '7 days'),
+                                    MIN({tcol})::date, MAX({tcol})::date FROM promotion""")
+                  old30, new7, mn, mx = cur.fetchone()
+                  print(f"{tcol}: older than 30d={old30}, last 7d={new7}, range {mn}..{mx}")
+          cur.execute("""SELECT COUNT(*) FILTER (WHERE end_date > NOW() AND end_date < NOW() + interval '60 days'),
+                           COUNT(*) FILTER (WHERE end_date > NOW() + interval '60 days')
+                         FROM promotion""")
+          near, far = cur.fetchone()
+          print(f"future end_date: within 60d={near}, beyond 60d={far}")
+          for t in ('promotion', 'promotion_item', 'store_price', 'product', 'store'):
+              cur.execute(f"SELECT pg_size_pretty(pg_total_relation_size('{t}'))")
+              print(f"size {t}: {cur.fetchone()[0]}")
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git add bench-results/diagnose.txt
+          git commit -m "chore(bench): promotion table diagnosis [skip ci]" || echo "no changes"
+          git pull --rebase origin main && git push origin main
