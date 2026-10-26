@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install psycopg2-binary kaggle
+        run: pip install psycopg2-binary "kaggle==1.6.17"
       - name: Setup Kaggle credentials
         run: |
           mkdir -p ~/.kaggle

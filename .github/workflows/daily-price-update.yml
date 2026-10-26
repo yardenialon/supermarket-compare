@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install kaggle psycopg2-binary
+        run: pip install "kaggle==1.6.17" psycopg2-binary
 
       - name: Verify script version
         run: head -3 scripts/update_prices.py
