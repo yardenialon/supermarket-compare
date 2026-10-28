@@ -75,6 +75,7 @@ const FOOTER_CITIES = [
 ];
 
 const FOOTER_PAGES = [
+  { href: "/hanukkah", label: "🕎 מחירי חנוכה 2026" },
   { href: "/category", label: "כל הקטגוריות" },
   { href: "/compare", label: "השוואת רשתות — מי יותר זול?" },
   { href: "/prices", label: "כמה עולה? מחירי מוצרי יסוד" },

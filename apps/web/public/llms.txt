@@ -19,6 +19,7 @@ Savy עוזר לצרכנים בישראל למצוא את המחיר הזול ב
 - [מדריכי חיסכון בקניות](https://savy.co.il/guides): data-driven guides answering common questions — which supermarket is cheapest, what a basic basket costs, where diapers are cheapest, Israel's price-controlled products list — all with live prices
 - [המדריך המלא להשוואת מחירי סופרמרקט](https://savy.co.il/guide): guide to saving on groceries in Israel
 - [השוואת מחירים מזון](https://savy.co.il/hashvatat-mekhirim-mazon): food price comparison overview with FAQ
+- [מחירי חנוכה](https://savy.co.il/hanukkah): Hanukkah 2026 holiday prices — sufganiyot, candles, frying oil, latke ingredients — with a live basic-basket estimate across all chains
 
 ## Data
 

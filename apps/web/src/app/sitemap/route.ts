@@ -135,6 +135,11 @@ ${urls}
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://savy.co.il/hanukkah</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://savy.co.il/prices</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
