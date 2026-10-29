@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
 update_images.py — Fetch product images.
-Strategy:
-1. Open Food Facts API (free, barcode-based, very accurate)
-2. SerpAPI — barcode-only query, trusted domains only
-Never saves irrelevant images.
+Strategy (images ONLY from retail chains, manufacturers/brands, and the
+open-license Open Food Facts database — NEVER from competitor comparison
+sites, which is a legal requirement):
+1. Chain CDNs by barcode (deterministic URL patterns, HEAD-verified)
+2. Open Food Facts API (open license, barcode-based)
+3. SerpAPI — barcode-only query, chain/brand domains only
+Every saved image is later vision-verified by scripts/verify_images.py.
 """
 import os, time, json, logging, sys
 import urllib.request, urllib.parse
@@ -13,7 +16,7 @@ import psycopg2
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.StreamHandler(sys.stdout)])
 log = logging.getLogger(__name__)
 
-SERP_KEY = os.environ.get("SERPAPI_KEY", "2e3660ec2b969459b9841800dc63c8e9aa6cf88aad1e3d707c3e799acfa2a778")
+SERP_KEY = os.environ.get("SERPAPI_KEY", "")  # no hardcoded fallback — rotate + store as secret
 BATCH_SIZE = int(os.environ.get("IMAGE_BATCH_SIZE", "500"))
 DELAY = 0.3
 
@@ -23,19 +26,54 @@ TRUSTED_DOMAINS = [
     'osheread.co.il', 'osherad.co.il', 'yochananof.co.il', 'tivtaam.co.il',
     'victory.co.il', 'victoryonline.co.il', 'half-price.co.il',
     'keshet-teamim.co.il', 'freshmarket.co.il', 'mahsaniashuk.co.il',
+    'carrefour.co.il', 'quik.co.il', 'cloudinary.com/shufersal',
     # יצרנים ומותגים
     'tnuva.co.il', 'strauss.co.il', 'osem.co.il', 'rfranco.com',
     'mybundles.co.il', 'schnellers.co.il', 'super-pharm.co.il',
     'telma.co.il', 'elite.co.il', 'nestle.co.il', 'unilever.com',
-    # מאגרי מידע פתוחים בלבד
+    'wissotzky.co.il', 'soglowek.co.il', 'zoglobek.co.il', 'sano.co.il',
+    # מאגר פתוח ברישיון חופשי בלבד (לא אתר מתחרה)
     'openfoodfacts.org', 'world.openfoodfacts.org',
 ]
 
+# אתרי השוואת מחירים ומתחרים — לעולם לא לוקחים מהם תמונות (חשיפה משפטית)
+BLOCKED_DOMAINS = [
+    'chp.co.il', 'pricez.co.il', 'zap.co.il', 'wisebuy.co.il',
+    'mysupermarket', 'pricecompare', 'zolpo', 'bonuscard', 'supersmart',
+    'machsaneihashuk',  # זהירות מכפילויות לא רשמיות
+]
+
 def is_trusted(url: str, barcode: str) -> bool:
+    """Accept only chain/manufacturer/open-db domains; competitor domains are
+    always rejected, even when the barcode appears in the URL."""
     if not url: return False
     lower = url.lower()
-    if barcode and len(barcode) >= 8 and barcode in lower: return True
+    if any(b in lower for b in BLOCKED_DOMAINS): return False
     return any(d in lower for d in TRUSTED_DOMAINS)
+
+# ─── Chain CDNs: deterministic image URLs keyed by barcode ───────────
+CHAIN_CDN_PATTERNS = [
+    "https://img.rami-levy.co.il/product/{barcode}/small.jpg",
+    "https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1/prod/product_images/products_small/P_{barcode}_1.png",
+    "https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1/prod/product_images/products_zoom/P_{barcode}ZO.png",
+]
+
+def fetch_from_chain_cdn(barcode: str) -> str | None:
+    """Try chain image CDNs where the URL is derived from the barcode —
+    the key IS the barcode, so a 200 response is the right product."""
+    if not barcode or len(barcode) < 8: return None
+    for pattern in CHAIN_CDN_PATTERNS:
+        url = pattern.format(barcode=barcode)
+        try:
+            req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "Mozilla/5.0 Savy-App/1.0"})
+            with urllib.request.urlopen(req, timeout=6) as r:
+                ctype = r.headers.get("Content-Type", "")
+                clen = int(r.headers.get("Content-Length") or 0)
+                if r.status == 200 and ctype.startswith("image/") and (clen == 0 or clen > 3000):
+                    return url
+        except Exception:
+            continue
+    return None
 
 def fetch_from_off(barcode: str) -> str | None:
     """Open Food Facts — חינמי ומדויק לפי ברקוד"""
@@ -60,9 +98,9 @@ def fetch_from_off(barcode: str) -> str | None:
 _serp_disabled = False  # נכבה אוטומטית אם 429
 
 def fetch_from_serp(barcode: str) -> str | None:
-    """SerpAPI — רק ברקוד, רק דומיינים מהימנים"""
+    """SerpAPI — רק ברקוד, רק דומייני רשתות/יצרנים"""
     global _serp_disabled
-    if _serp_disabled: return None
+    if _serp_disabled or not SERP_KEY: return None
     if not barcode or len(barcode) < 8: return None
     try:
         q = urllib.parse.quote(barcode)
@@ -92,9 +130,12 @@ def main():
     conn = psycopg2.connect(db_url)
     conn.autocommit = False
     cur = conn.cursor()
+    cur.execute("ALTER TABLE product ADD COLUMN IF NOT EXISTS image_checked_at timestamptz")
+    cur.execute("ALTER TABLE product ADD COLUMN IF NOT EXISTS image_rejected_url text")
+    conn.commit()
 
     cur.execute("""
-        SELECT p.id, p.barcode, p.name
+        SELECT p.id, p.barcode, p.name, p.image_rejected_url
         FROM product p
         WHERE (p.image_url IS NULL OR p.image_url = '')
           AND p.barcode IS NOT NULL
@@ -107,34 +148,35 @@ def main():
     products = cur.fetchall()
     log.info(f"Found {len(products)} products missing images")
 
-    updated = off_count = serp_count = not_found = 0
+    updated = cdn_count = off_count = serp_count = not_found = 0
 
-    for i, (pid, barcode, name) in enumerate(products):
-        img = None
-
-        # שלב 1 — Open Food Facts
-        img = fetch_from_off(barcode)
+    for i, (pid, barcode, name, rejected) in enumerate(products):
+        img = fetch_from_chain_cdn(barcode)
         if img:
-            off_count += 1
+            cdn_count += 1
         else:
-            # שלב 2 — SerpAPI ברקוד בלבד
-            time.sleep(DELAY)
-            img = fetch_from_serp(barcode)
+            img = fetch_from_off(barcode)
             if img:
-                serp_count += 1
+                off_count += 1
             else:
-                not_found += 1
+                # שלב 3 — SerpAPI ברקוד בלבד
+                time.sleep(DELAY)
+                img = fetch_from_serp(barcode)
+                if img:
+                    serp_count += 1
+                else:
+                    not_found += 1
 
-        if img:
-            cur.execute("UPDATE product SET image_url=%s WHERE id=%s", (img, pid))
+        if img and img != rejected:
+            cur.execute("UPDATE product SET image_url=%s, image_checked_at=NULL WHERE id=%s", (img, pid))
             updated += 1
 
         if (i + 1) % 50 == 0:
             conn.commit()
-            log.info(f"  {i+1}/{len(products)} — OFF:{off_count} SERP:{serp_count} missing:{not_found}")
+            log.info(f"  {i+1}/{len(products)} — CDN:{cdn_count} OFF:{off_count} SERP:{serp_count} missing:{not_found}")
 
     conn.commit()
-    log.info(f"\n🎉 Done — {updated}/{len(products)} updated (OFF:{off_count} SERP:{serp_count} not_found:{not_found})")
+    log.info(f"\n🎉 Done — {updated}/{len(products)} updated (CDN:{cdn_count} OFF:{off_count} SERP:{serp_count} not_found:{not_found})")
     conn.close()
 
 if __name__ == "__main__":
