@@ -40,7 +40,9 @@ export async function adminRoutes(app: any) {
     let cleanUrl = imageUrl;
     const ipxMatch = cleanUrl.match(/_ipx\/[^/]+\/(https?:\/\/.+)/);
     if (ipxMatch) cleanUrl = ipxMatch[1];
-    await query('UPDATE product SET image_url=$1 WHERE id=$2', [cleanUrl, productId]);
+    // a human picked this image — mark it verified so the nightly AI
+    // image check never overrides an admin decision
+    await query('UPDATE product SET image_url=$1, image_checked_at=NOW(), image_rejected_url=NULL WHERE id=$2', [cleanUrl, productId]);
     return { success: true };
   });
   // GET /admin/all-categories — כל הקטגוריות הקיימות
