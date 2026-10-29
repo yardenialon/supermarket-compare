@@ -14,19 +14,21 @@ interface HolidayItem {
   emoji: string;
   inBasket: boolean; // counted in the "basic Hanukkah basket" estimate
   note?: string;
+  exclude?: RegExp; // drop products whose name matches (e.g. sanitary pads matching "סופגני")
 }
 
 const ITEMS: HolidayItem[] = [
-  { key: "sufganiyot", he: "סופגניות",       q: "סופגני",        emoji: "🍩", inBasket: false, note: "סופגניות מוכנות מהמאפייה של הרשת" },
-  { key: "candles",    he: "נרות חנוכה",     q: "נרות חנוכה",    emoji: "🕎", inBasket: true },
+  { key: "sufganiyot", he: "סופגניות",       q: "סופגני",        emoji: "🍩", inBasket: false, note: "סופגניות מוכנות מהמאפייה של הרשת",
+    exclude: /פד|סופג(ת|ים)? (תחתון|יומי)|תחתון|מקסי|היגיינ|אינטימי|wc|אסלה/i },
+  { key: "candles",    he: "נרות חנוכה",     q: "נרות חנוכה",    emoji: "🕎", inBasket: true, exclude: /ריח|נשמה|זכרון/i },
   { key: "oil",        he: "שמן לטיגון",     q: "שמן קנולה",     emoji: "🫗", inBasket: true, note: "ללביבות ולסופגניות ביתיות" },
   { key: "flour",      he: "קמח",            q: "קמח לבן",       emoji: "🌾", inBasket: true },
-  { key: "potatoes",   he: "תפוחי אדמה",     q: "תפוח אדמה",     emoji: "🥔", inBasket: true, note: "הבסיס ללביבות" },
-  { key: "eggs",       he: "ביצים",          q: "ביצים L",       emoji: "🥚", inBasket: true },
+  { key: "potatoes",   he: "תפוחי אדמה",     q: "תפוח אדמה",     emoji: "🥔", inBasket: true, note: "הבסיס ללביבות", exclude: /חטיף|צ'יפס|קפוא מטוגן/i },
+  { key: "eggs",       he: "ביצים",          q: "ביצים L",       emoji: "🥚", inBasket: true, exclude: /שוקולד|הפתעה|קינדר/i },
   { key: "sugar",      he: "סוכר",           q: "סוכר לבן",      emoji: "🍬", inBasket: true },
   { key: "powdered",   he: "אבקת סוכר",      q: "אבקת סוכר",     emoji: "❄️", inBasket: true },
   { key: "jam",        he: "ריבה",           q: "ריבת תות",      emoji: "🍓", inBasket: true, note: "למילוי סופגניות" },
-  { key: "yeast",      he: "שמרים",          q: "שמרים",         emoji: "🍞", inBasket: true },
+  { key: "yeast",      he: "שמרים",          q: "שמרים",         emoji: "🍞", inBasket: true, exclude: /בירה|תוסף|כמוס/i },
   { key: "choco-coins", he: "מטבעות שוקולד", q: "מטבעות שוקולד", emoji: "🪙", inBasket: false },
   { key: "sevivon",    he: "סביבונים",       q: "סביבון",        emoji: "🔯", inBasket: false },
 ];
@@ -50,7 +52,11 @@ async function getProducts(q: string): Promise<SearchProduct[]> {
 }
 
 async function getAllItems() {
-  const results = await Promise.all(ITEMS.map(async (item) => ({ item, products: await getProducts(item.q) })));
+  const results = await Promise.all(ITEMS.map(async (item) => {
+    let products = await getProducts(item.q);
+    if (item.exclude) products = products.filter((p) => !item.exclude!.test(p.name));
+    return { item, products };
+  }));
   return results.filter((r) => r.products.length > 0);
 }
 
