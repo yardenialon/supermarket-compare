@@ -94,6 +94,11 @@ def main():
         verdict = ask_claude(name, brand, img)
         if verdict == "RETRY":
             verdict = ask_claude(name, brand, img)
+        if verdict == "BROKEN":
+            # slow origins time out transiently — only clear after a second strike
+            time.sleep(4)
+            verdict = ask_claude(name, brand, img)
+            if verdict == "RETRY": verdict = "SKIP"
         if verdict == "YES":
             cur.execute("UPDATE product SET image_checked_at=NOW() WHERE id=%s", (pid,))
             ok += 1
