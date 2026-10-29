@@ -130,7 +130,7 @@ export async function storeRoutes(app) {
 
   // חישוב ושמירה — מופעל מ-cron או ידנית עם admin key
   app.post('/price-index/compute', async (req: any, reply: any) => {
-    if (req.headers['x-admin-key'] !== (process.env.ADMIN_PASSWORD || 'savy-admin-2024')) {
+    if (!process.env.ADMIN_PASSWORD || req.headers['x-admin-key'] !== process.env.ADMIN_PASSWORD) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
     try {
@@ -325,7 +325,7 @@ export async function storeRoutes(app) {
 
   // POST /savy-basket/add — הוספת מוצר
   app.post('/savy-basket/add', async (req: any, reply: any) => {
-    if (req.headers['x-admin-key'] !== (process.env.ADMIN_PASSWORD || 'savy-admin-2024')) {
+    if (!process.env.ADMIN_PASSWORD || req.headers['x-admin-key'] !== process.env.ADMIN_PASSWORD) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
     const { productId } = req.body as any;
@@ -340,7 +340,7 @@ export async function storeRoutes(app) {
 
   // DELETE /savy-basket/remove/:productId — הסרת מוצר
   app.delete('/savy-basket/remove/:productId', async (req: any, reply: any) => {
-    if (req.headers['x-admin-key'] !== (process.env.ADMIN_PASSWORD || 'savy-admin-2024')) {
+    if (!process.env.ADMIN_PASSWORD || req.headers['x-admin-key'] !== process.env.ADMIN_PASSWORD) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
     const { productId } = req.params as any;
@@ -350,7 +350,7 @@ export async function storeRoutes(app) {
 
   // POST /savy-basket/compute — חישוב מדד לפי המוצרים שנבחרו
   app.post('/savy-basket/compute', async (req: any, reply: any) => {
-    if (req.headers['x-admin-key'] !== (process.env.ADMIN_PASSWORD || 'savy-admin-2024')) {
+    if (!process.env.ADMIN_PASSWORD || req.headers['x-admin-key'] !== process.env.ADMIN_PASSWORD) {
       return reply.code(401).send({ error: 'Unauthorized' });
     }
     const basket = await query('SELECT product_id FROM savy_basket');

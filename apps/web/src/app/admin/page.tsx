@@ -2,7 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api';
-const ADMIN_KEY = 'savy-admin-2024';
+// The admin key is whatever the user types, validated against the server.
+// Never hardcode it — this file ships to every browser.
+let adminKey = '';
 
 interface Product {
   id: number; barcode: string; name: string; store_count: number;
@@ -47,9 +49,12 @@ export default function AdminPage() {
   const [editing, setEditing] = useState<Record<number, { category: string; subcategory: string }>>({});
   const [catSaved, setCatSaved] = useState<Record<number, boolean>>({});
 
-  function login() {
-    if (password === ADMIN_KEY) { setAuthed(true); setAuthError(''); }
-    else setAuthError('סיסמא שגויה');
+  async function login() {
+    try {
+      const res = await fetch(`${API}/admin/all-categories`, { headers: { 'x-admin-key': password } });
+      if (res.ok) { adminKey = password; setAuthed(true); setAuthError(''); }
+      else setAuthError('סיסמא שגויה');
+    } catch { setAuthError('שגיאת תקשורת — נסה שוב'); }
   }
 
   // Load images
@@ -58,7 +63,7 @@ export default function AdminPage() {
     setImgLoading(true);
     try {
       const params = new URLSearchParams({ offset: String(imgOffset), limit: '20', search: imgSearch, showAll: String(showAll) });
-      const res = await fetch(`${API}/admin/products-missing-images?${params}`, { headers: { 'x-admin-key': ADMIN_KEY } });
+      const res = await fetch(`${API}/admin/products-missing-images?${params}`, { headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       setImgProducts(data.products || []);
       setImgTotal(data.total || 0);
@@ -72,7 +77,7 @@ export default function AdminPage() {
     if (!authed || tab !== 'basket') return;
     setBasketLoading(true);
     try {
-      const res = await fetch(`${API}/savy-basket`, { headers: { 'x-admin-key': ADMIN_KEY } });
+      const res = await fetch(`${API}/savy-basket`, { headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       setBasketProducts(data.products || []);
     } finally { setBasketLoading(false); }
@@ -93,7 +98,7 @@ export default function AdminPage() {
   async function addToBasket(productId: number) {
     await fetch(`${API}/savy-basket/add`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
       body: JSON.stringify({ productId })
     });
     setBasketSearch('');
@@ -104,7 +109,7 @@ export default function AdminPage() {
   async function removeFromBasket(productId: number) {
     await fetch(`${API}/savy-basket/remove/${productId}`, {
       method: 'DELETE',
-      headers: { 'x-admin-key': ADMIN_KEY }
+      headers: { 'x-admin-key': adminKey }
     });
     loadBasket();
   }
@@ -115,7 +120,7 @@ export default function AdminPage() {
     try {
       const res = await fetch(`${API}/savy-basket/compute`, {
         method: 'POST',
-        headers: { 'x-admin-key': ADMIN_KEY }
+        headers: { 'x-admin-key': adminKey }
       });
       const data = await res.json();
       if (data.success) {
@@ -132,7 +137,7 @@ export default function AdminPage() {
     setCatLoading(true);
     try {
       const params = new URLSearchParams({ offset: String(catOffset), limit: '20', search: catSearch, filterCategory });
-      const res = await fetch(`${API}/admin/products-categories?${params}`, { headers: { 'x-admin-key': ADMIN_KEY } });
+      const res = await fetch(`${API}/admin/products-categories?${params}`, { headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       setCatProducts(data.products || []);
       setCatTotal(data.total || 0);
@@ -144,7 +149,7 @@ export default function AdminPage() {
   // Load all categories map once
   useEffect(() => {
     if (!authed) return;
-    fetch(`${API}/admin/all-categories`, { headers: { 'x-admin-key': ADMIN_KEY } })
+    fetch(`${API}/admin/all-categories`, { headers: { 'x-admin-key': adminKey } })
       .then(r => r.json()).then(setAllCategories).catch(() => {});
   }, [authed]);
 
@@ -153,7 +158,7 @@ export default function AdminPage() {
     if (!url) return;
     await fetch(`${API}/admin/update-image`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
       body: JSON.stringify({ productId, imageUrl: url })
     });
     setSaved(prev => ({ ...prev, [productId]: true }));
@@ -165,7 +170,7 @@ export default function AdminPage() {
     if (!e) return;
     await fetch(`${API}/admin/update-category`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
       body: JSON.stringify({ productId, category: e.category, subcategory: e.subcategory })
     });
     setCatSaved(prev => ({ ...prev, [productId]: true }));
