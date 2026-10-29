@@ -15,6 +15,7 @@ interface HolidayItem {
   inBasket: boolean; // counted in the "basic Hanukkah basket" estimate
   note?: string;
   exclude?: RegExp; // drop products whose name matches (e.g. sanitary pads matching "סופגני")
+  requireCategory?: string; // fresh produce: only this category, so processed products don't win
 }
 
 const ITEMS: HolidayItem[] = [
@@ -23,7 +24,8 @@ const ITEMS: HolidayItem[] = [
   { key: "candles",    he: "נרות חנוכה",     q: "נרות חנוכה",    emoji: "🕎", inBasket: true, exclude: /ריח|נשמה|זכרון/i },
   { key: "oil",        he: "שמן לטיגון",     q: "שמן קנולה",     emoji: "🫗", inBasket: true, note: "ללביבות ולסופגניות ביתיות" },
   { key: "flour",      he: "קמח",            q: "קמח לבן",       emoji: "🌾", inBasket: true },
-  { key: "potatoes",   he: "תפוחי אדמה",     q: "תפוח אדמה",     emoji: "🥔", inBasket: true, note: "הבסיס ללביבות", exclude: /חטיף|צ'יפס|קפוא מטוגן/i },
+  { key: "potatoes",   he: "תפוחי אדמה",     q: "תפוח אדמה",     emoji: "🥔", inBasket: true, note: "הבסיס ללביבות — תפוחי אדמה טריים",
+    requireCategory: "ירקות ופירות", exclude: /חטיף|צ'יפס|קפוא|ניוקי|קמח|סלט|פירה|מוכן|אפוי/i },
   { key: "eggs",       he: "ביצים",          q: "ביצים L",       emoji: "🥚", inBasket: true, exclude: /שוקולד|הפתעה|קינדר/i },
   { key: "sugar",      he: "סוכר",           q: "סוכר לבן",      emoji: "🍬", inBasket: true },
   { key: "powdered",   he: "אבקת סוכר",      q: "אבקת סוכר",     emoji: "❄️", inBasket: true },
@@ -54,6 +56,7 @@ async function getProducts(q: string): Promise<SearchProduct[]> {
 async function getAllItems() {
   const results = await Promise.all(ITEMS.map(async (item) => {
     let products = await getProducts(item.q);
+    if (item.requireCategory) products = products.filter((p: any) => p.category === item.requireCategory);
     if (item.exclude) products = products.filter((p) => !item.exclude!.test(p.name));
     return { item, products };
   }));
