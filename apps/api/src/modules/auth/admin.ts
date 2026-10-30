@@ -4,6 +4,24 @@ import { query } from '../../db.js';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
 
 export async function adminRoutes(app: any) {
+  // תמונות שעודכנו לאחרונה ע"י רופא התמונות — לסקירה ויזואלית באדמין
+  app.get('/admin/recent-images', async (req: any, reply: any) => {
+    if (!ADMIN_PASSWORD || req.headers['x-admin-key'] !== ADMIN_PASSWORD) return reply.code(401).send({ error: 'Unauthorized' });
+    const hours = Math.min(parseInt(req.query.hours || '48'), 24 * 14);
+    const verified = await query(
+      `SELECT id, name, image_url as "imageUrl", image_checked_at as "checkedAt", store_count as "storeCount"
+       FROM product
+       WHERE image_checked_at > NOW() - ($1 || ' hours')::interval AND image_url IS NOT NULL
+       ORDER BY image_checked_at DESC LIMIT 120`, [String(hours)]);
+    const cleared = await query(
+      `SELECT id, name, image_rejected_url as "rejectedUrl", image_checked_at as "checkedAt", store_count as "storeCount"
+       FROM product
+       WHERE image_checked_at > NOW() - ($1 || ' hours')::interval
+         AND image_url IS NULL AND image_rejected_url IS NOT NULL
+       ORDER BY image_checked_at DESC LIMIT 120`, [String(hours)]);
+    return { verified: verified.rows, cleared: cleared.rows };
+  });
+
   app.get('/admin/products-missing-images', async (req: any, reply: any) => {
     if (!ADMIN_PASSWORD || req.headers['x-admin-key'] !== ADMIN_PASSWORD) return reply.code(401).send({ error: 'Unauthorized' });
     const { offset = 0, limit = 20, search = '', showAll = 'false' } = req.query;

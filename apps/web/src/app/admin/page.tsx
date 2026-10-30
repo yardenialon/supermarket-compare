@@ -11,13 +11,21 @@ interface Product {
   min_price: number; image_url?: string; category?: string; subcategory?: string;
 }
 
-type Tab = 'images' | 'categories' | 'basket';
+type Tab = 'images' | 'categories' | 'basket' | 'recent';
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [tab, setTab] = useState<Tab>('images');
+  const [recentData, setRecentData] = useState<{ verified: any[]; cleared: any[] } | null>(null);
+  const [recentHours, setRecentHours] = useState(48);
+  useEffect(() => {
+    if (!authed || tab !== 'recent') return;
+    setRecentData(null);
+    fetch(`${API}/admin/recent-images?hours=${recentHours}`, { headers: { 'x-admin-key': adminKey } })
+      .then(r => r.json()).then(setRecentData).catch(() => setRecentData({ verified: [], cleared: [] }));
+  }, [authed, tab, recentHours]);
 
   // --- Images state ---
   const [imgProducts, setImgProducts] = useState<Product[]>([]);
@@ -218,7 +226,51 @@ export default function AdminPage() {
             className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition ${tab === 'basket' ? 'bg-white border border-b-white border-stone-200 text-emerald-600' : 'text-stone-500 hover:text-stone-700'}`}>
             🛒 מדד סאבי
           </button>
+          <button onClick={() => setTab('recent')}
+            className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition ${tab === 'recent' ? 'bg-white border border-b-white border-stone-200 text-emerald-600' : 'text-stone-500 hover:text-stone-700'}`}>
+            🩺 תמונות אחרונות
+          </button>
         </div>
+
+        {/* ── TAB: RECENT IMAGES ── */}
+        {tab === 'recent' && (
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-sm text-stone-500">הצג פעילות של רופא התמונות מ-</span>
+              {[24, 48, 168].map(h => (
+                <button key={h} onClick={() => setRecentHours(h)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold border ${recentHours === h ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-600 border-stone-200'}`}>
+                  {h === 168 ? 'שבוע' : `${h} שעות`}
+                </button>
+              ))}
+            </div>
+            {!recentData ? <div className="text-stone-400 text-sm py-8 text-center">טוען...</div> : (
+              <>
+                <h3 className="font-bold text-stone-700 mb-2">✅ תמונות שאומתו ({recentData.verified.length})</h3>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
+                  {recentData.verified.map((p: any) => (
+                    <a key={p.id} href={`/product/${p.id}`} target="_blank" rel="noreferrer"
+                      className="bg-white rounded-xl border border-stone-100 p-2 hover:shadow-md transition">
+                      <div className="w-full aspect-square bg-stone-50 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img src={p.imageUrl} alt={p.name} loading="lazy" className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div className="text-[11px] text-stone-600 mt-1 line-clamp-2 leading-tight">{p.name}</div>
+                    </a>
+                  ))}
+                </div>
+                <h3 className="font-bold text-stone-700 mb-2">🗑️ תמונות שנוקו — ממתינות לתמונה חדשה ({recentData.cleared.length})</h3>
+                <div className="space-y-1.5">
+                  {recentData.cleared.map((p: any) => (
+                    <div key={p.id} className="bg-white rounded-lg border border-stone-100 px-3 py-2 flex items-center gap-3 text-sm">
+                      <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="font-medium text-stone-700 hover:text-emerald-600 flex-1 truncate">{p.name}</a>
+                      <span className="text-[10px] text-stone-400 truncate max-w-[40%]" title={p.rejectedUrl}>{p.rejectedUrl}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* ── TAB: IMAGES ── */}
         {tab === 'images' && (
