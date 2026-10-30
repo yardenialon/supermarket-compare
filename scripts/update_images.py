@@ -134,6 +134,17 @@ def main():
     cur.execute("ALTER TABLE product ADD COLUMN IF NOT EXISTS image_rejected_url text")
     conn.commit()
 
+    # purge legacy images from competitor comparison sites (legal requirement):
+    # the blocklist gates new fetches, this clears what older runs saved
+    purged_total = 0
+    for d in BLOCKED_DOMAINS:
+        cur.execute("""UPDATE product SET image_rejected_url=image_url, image_url=NULL, image_checked_at=NOW()
+                       WHERE image_url ILIKE %s""", (f"%{d}%",))
+        purged_total += cur.rowcount
+    conn.commit()
+    if purged_total:
+        log.info(f"Purged {purged_total} legacy images from blocked domains")
+
     cur.execute("""
         SELECT p.id, p.barcode, p.name, p.image_rejected_url
         FROM product p
