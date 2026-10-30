@@ -32,15 +32,21 @@ TRUSTED_DOMAINS = [
     'mybundles.co.il', 'schnellers.co.il', 'super-pharm.co.il',
     'telma.co.il', 'elite.co.il', 'nestle.co.il', 'unilever.com',
     'wissotzky.co.il', 'soglowek.co.il', 'zoglobek.co.il', 'sano.co.il',
+    # אחסון תמונות רשמי של רשתות (הדומיין הטכני שמאחורי האתר)
+    'superpharmstorage.blob.core.windows.net',
+    # GS1 ישראל — מאגר הברקודים הרשמי, היצרנים מעלים לשם את התמונות בעצמם
+    'd226b0iufwcjmj.cloudfront.net',
     # מאגר פתוח ברישיון חופשי בלבד (לא אתר מתחרה)
     'openfoodfacts.org', 'world.openfoodfacts.org',
 ]
 
-# אתרי השוואת מחירים ומתחרים — לעולם לא לוקחים מהם תמונות (חשיפה משפטית)
+# מדיניות: תמונות רק מרשתות מזון, יצרנים ו-GS1. כל השאר — חסום ומנוקה:
+# אתרי השוואת מחירים (חשיפה משפטית), קמעונאים שאינם מזון, יבואנים ומפיצים
 BLOCKED_DOMAINS = [
     'chp.co.il', 'pricez.co.il', 'zap.co.il', 'wisebuy.co.il',
     'mysupermarket', 'pricecompare', 'zolpo', 'bonuscard', 'supersmart',
     'machsaneihashuk',  # זהירות מכפילויות לא רשמיות
+    'ksp.co.il', 'the-importer.co.il', 'noyhasade', 'metav.b-cdn',
 ]
 
 def is_trusted(url: str, barcode: str) -> bool:
