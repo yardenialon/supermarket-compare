@@ -1,0 +1,56 @@
+name: Image Report
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Query recent image activity
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          mkdir -p bench-results
+          python - <<'EOF' | tee bench-results/images-report.txt
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+          cur.execute("""SELECT COUNT(*) FILTER (WHERE image_url IS NOT NULL),
+                                COUNT(*) FILTER (WHERE image_url IS NULL AND image_rejected_url IS NOT NULL)
+                         FROM product WHERE image_checked_at > NOW() - interval '30 hours'""")
+          ok, cleared = cur.fetchone()
+          print(f"last 30h: verified-ok={ok}, cleared={cleared}\n")
+          print("=== examples: images VERIFIED-OK recently ===")
+          cur.execute("""SELECT id, name, left(image_url, 80) FROM product
+                         WHERE image_checked_at > NOW() - interval '30 hours' AND image_url IS NOT NULL
+                         ORDER BY store_count DESC NULLS LAST LIMIT 10""")
+          for r in cur.fetchall(): print(f"  [{r[0]}] {r[1]} :: {r[2]}")
+          print("\n=== examples: images CLEARED recently (bad/broken) ===")
+          cur.execute("""SELECT id, name, left(image_rejected_url, 80) FROM product
+                         WHERE image_checked_at > NOW() - interval '30 hours'
+                           AND image_url IS NULL AND image_rejected_url IS NOT NULL
+                         ORDER BY store_count DESC NULLS LAST LIMIT 10""")
+          for r in cur.fetchall(): print(f"  [{r[0]}] {r[1]} :: was {r[2]}")
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/images-report.txt
+          git commit -m "chore(bench): image activity report [skip ci]" || echo "no changes"
+          git push -f origin bench-data
