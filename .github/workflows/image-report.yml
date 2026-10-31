@@ -46,6 +46,10 @@ jobs:
                          ORDER BY store_count DESC NULLS LAST LIMIT 10""")
           for r in cur.fetchall(): print(f"  [{r[0]}] {r[1]} :: was {r[2]}")
           EOF
+      - name: Check admin endpoint exists
+        run: |
+          echo "--- /admin/recent-images without key (expect 401 if deployed, 404 if not):" | tee -a bench-results/images-report.txt
+          curl -sS -o /dev/null -w "HTTP %{http_code}\n" "https://supermarket-compare-production.up.railway.app/api/admin/recent-images" | tee -a bench-results/images-report.txt
       - name: Commit results
         run: |
           git config user.name "savy-bench"
