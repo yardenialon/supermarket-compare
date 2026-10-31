@@ -1,0 +1,27 @@
+last 30h: verified-ok=1739, cleared=3129
+
+=== examples: images VERIFIED-OK recently ===
+  [1886] טסטר צ'ויס 200 גרם :: https://img.rami-levy.co.il/product/7290000072753/small.jpg
+  [5607] במבה במילוי נוגט 60 גרם :: https://img.rami-levy.co.il/product/7290100687109/small.jpg
+  [431] שוקולד פרה תות  מגדי :: https://img.rami-levy.co.il/product/7290008750677/small.jpg
+  [1542] דובונים חטיף תפו"א 40 גרם :: https://img.rami-levy.co.il/product/7290000066264/small.jpg
+  [422] *מבצע* עד חצות  חלב :: https://img.rami-levy.co.il/product/7290000181103/small.jpg
+  [328] אקס אל TEN ללא סוכר :: https://img.rami-levy.co.il/product/5902198160403/small.jpg
+  [1890] פתי בר אוסם 500 גרם :: https://img.rami-levy.co.il/product/7290000074184/small.jpg
+  [456] אנרגי פריכיות תחתית שוקולד חלב 80 גרם :: https://img.rami-levy.co.il/product/7290106526822/small.jpg
+  [788] תפוציפס בטעם שמנת בצ :: https://img.rami-levy.co.il/product/7290005200786/small.jpg
+  [1537] שקדי מרק רכיבים טבעי :: https://img.rami-levy.co.il/product/7290000063140/small.jpg
+
+=== examples: images CLEARED recently (bad/broken) ===
+  [33839] נקסט פיין 100 (ארוך :: was x-raw-image:///cb696b0cb366cf9f623d06d5143f31cf5cfc85c2e61a2fb8cb6c3eac7b08e02a
+  [685] קצף אורנים לניקוי כל :: was https://m.pricez.co.il/ProductPictures/7290005317125.jpg
+  [35545] ל.מ בלו 100 ארוך (כח :: was https://m.pricez.co.il/ProductPictures/7290114310222.jpg
+  [24506] אבוקדו בשל ארוז  יחי :: was https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551800922/prod
+  [33085] כאמל צהוב קצר (אריזה :: was https://m.pricez.co.il/ProductPictures/7290011618025.jpg
+  [32814] מרלבורו גולד (קצר לי :: was https://m.pricez.co.il/ProductPictures/7290115190090.jpg
+  [1085] סלק וואקום 500 גרם :: was https://m.pricez.co.il/ProductPictures/7290016150117.jpg
+  [18887] חתיכות פילה דג הרינג :: was https://m.pricez.co.il/ProductPictures/4810168000998.jpg
+  [32136] פאל מאל דמי בלו סלימ :: was https://en.pimg.jp/059/068/907/1/59068907.jpg
+  [37731] פאל מאל כחול ארוך בו :: was https://m.pricez.co.il/ProductPictures/7290119375295.jpg
+--- /admin/recent-images without key (expect 401 if deployed, 404 if not):
+HTTP 401
