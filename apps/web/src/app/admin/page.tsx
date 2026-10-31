@@ -24,7 +24,9 @@ export default function AdminPage() {
     if (!authed || tab !== 'recent') return;
     setRecentData(null);
     fetch(`${API}/admin/recent-images?hours=${recentHours}`, { headers: { 'x-admin-key': adminKey } })
-      .then(r => r.json()).then(setRecentData).catch(() => setRecentData({ verified: [], cleared: [] }));
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(d => setRecentData({ verified: d.verified || [], cleared: d.cleared || [] }))
+      .catch(() => setRecentData({ verified: [], cleared: [], error: true } as any));
   }, [authed, tab, recentHours]);
 
   // --- Images state ---
@@ -244,7 +246,8 @@ export default function AdminPage() {
                 </button>
               ))}
             </div>
-            {!recentData ? <div className="text-stone-400 text-sm py-8 text-center">טוען...</div> : (
+            {!recentData ? <div className="text-stone-400 text-sm py-8 text-center">טוען...</div> :
+             (recentData as any).error ? <div className="text-red-500 text-sm py-8 text-center">שגיאה בטעינה — ייתכן שהשרת באמצע עדכון, נסה שוב בעוד דקה</div> : (
               <>
                 <h3 className="font-bold text-stone-700 mb-2">✅ תמונות שאומתו ({recentData.verified.length})</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
