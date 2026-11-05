@@ -36,6 +36,37 @@ export async function subscribeToPush(): Promise<boolean> {
   } catch { return false; }
 }
 
+// ─── Personal price-drop alerts: sync the watched shopping list ───────
+export function watchItemsFromList(list: any[]): { productId: number; name: string; basePrice: number }[] {
+  return (list || [])
+    .map((i: any) => ({ productId: i?.product?.id, name: i?.product?.name || '', basePrice: Number(i?.product?.minPrice) }))
+    .filter((i) => i.productId > 0 && i.basePrice > 0);
+}
+
+export async function getPushSubscription(): Promise<PushSubscription | null> {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((res) => setTimeout(() => res(null), 5000)),
+    ]);
+    if (!reg) return null;
+    return await (reg as ServiceWorkerRegistration).pushManager.getSubscription();
+  } catch { return null; }
+}
+
+export async function syncWatchList(items: { productId: number; name: string; basePrice: number }[]): Promise<void> {
+  try {
+    const sub = await getPushSubscription();
+    if (!sub) return;
+    await fetch(`${API}/api/push/watch-list`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint, items }),
+    });
+  } catch {}
+}
+
 export async function unsubscribeFromPush(): Promise<boolean> {
   try {
     const reg = await navigator.serviceWorker.ready;

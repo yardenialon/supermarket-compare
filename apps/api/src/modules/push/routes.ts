@@ -28,6 +28,29 @@ export async function pushRoutes(app: FastifyInstance) {
     return { success: true };
   });
 
+  // sync the shopping list this subscription watches for price drops.
+  // knowing the (unguessable) endpoint URL proves ownership of the subscription.
+  app.post('/push/watch-list', async (req, reply) => {
+    const { endpoint, items } = req.body as any;
+    if (!endpoint || !Array.isArray(items)) return reply.code(400).send({ error: 'חסרים פרטים' });
+    const incoming = items.slice(0, 60)
+      .map((i: any) => ({ productId: Number(i.productId), name: String(i.name || '').slice(0, 120), basePrice: Number(i.basePrice) }))
+      .filter((i: any) => i.productId > 0 && i.basePrice > 0);
+    const cur = await query('SELECT watched_items FROM push_subscription WHERE endpoint=$1', [endpoint]);
+    if (!cur.rows.length) return reply.code(404).send({ error: 'לא רשום להתראות' });
+    // merge: items already watched keep their baseline (so a drop that happened
+    // since the last sync still alerts tonight); new items start from now
+    const existing = new Map(((cur.rows[0] as any).watched_items ?? []).map((i: any) => [Number(i.productId), i]));
+    const merged = incoming.map((i: any) => {
+      const prev: any = existing.get(i.productId);
+      return prev?.basePrice > 0 ? { ...i, basePrice: Number(prev.basePrice) } : i;
+    });
+    await query(
+      `UPDATE push_subscription SET watched_items=$1, last_used=NOW() WHERE endpoint=$2`,
+      [JSON.stringify(merged), endpoint]);
+    return { success: true, watching: merged.length };
+  });
+
   app.post('/push/unsubscribe', async (req, reply) => {
     const { endpoint } = req.body as any;
     if (!endpoint) return reply.code(400).send({ error: 'חסר endpoint' });

@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/useAuth";
 import { DealModal, HotDealsSlider } from "@/components/DealModal";
 import QuickAddProducts from "@/components/QuickAddProducts";
 import RecipeSlider from "@/components/RecipeSlider";
+import AlertsOptIn from "@/components/AlertsOptIn";
+import { syncWatchList, watchItemsFromList } from "@/components/PushNotifications";
 import HowItWorks from "@/components/HowItWorks";
 
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
@@ -299,6 +301,13 @@ export default function Home() {
     if (!listLoaded.current) { listLoaded.current = true; return; }
     try { localStorage.setItem('savy-list', JSON.stringify(list)); } catch {}
     if (user) syncCartToCloud(list);
+  }, [list]);
+
+  // keep the price-drop watch list in sync for push subscribers (debounced;
+  // no-op when there is no push subscription)
+  useEffect(() => {
+    const t = setTimeout(() => { syncWatchList(watchItemsFromList(list)); }, 4000);
+    return () => clearTimeout(t);
   }, [list]);
   const [selImage, setSelImage] = useState<string | null>(null);
   const [productImages, setProductImages] = useState<Record<number, string>>({});
@@ -952,6 +961,7 @@ export default function Home() {
               ) :
               !listResults.length ? <div className="text-center py-16 text-stone-300 text-sm">לא נמצאו חנויות</div> :
               <div className="space-y-3">
+                <AlertsOptIn list={list} />
                 {listResults.some((s: StoreResult) => s.promoClubTotal != null) && (
                   <label className="flex items-center justify-end gap-2 text-xs text-stone-500 cursor-pointer select-none px-1">
                     <input type="checkbox" checked={includeClubPromos}

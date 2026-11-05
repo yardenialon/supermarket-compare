@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { subscribeToPush } from "@/components/PushNotifications";
+import { subscribeToPush, syncWatchList, watchItemsFromList } from "@/components/PushNotifications";
 
 // Smart opt-in banner for the weekly "best-value recipe" push.
 // Shows only when it can actually work: push supported, permission not
@@ -39,6 +39,10 @@ export default function RecipePushBanner() {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") { setState("hidden"); return; }
       const ok = await subscribeToPush();
+      if (ok) {
+        // start watching their existing shopping list for price drops too
+        try { syncWatchList(watchItemsFromList(JSON.parse(localStorage.getItem("savy-list") || "[]"))); } catch {}
+      }
       setState(ok ? "done" : "error");
     } catch { setState("error"); }
   };
