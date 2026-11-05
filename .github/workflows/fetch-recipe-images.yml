@@ -30,17 +30,16 @@ jobs:
           import urllib.request, io
           from PIL import Image
           IMAGES = {
-            "shakshuka": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002951_69bd3317-00b7-4460-aba7-a8952fd37069.png",
-            "schnitzel-u-pure": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002949_d520cd03-9aad-4ac5-a5a8-34a3b87741c0.png",
-            "pasta-rotev-agvaniyot": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002952_8d3ceb67-792d-4af4-9db9-a26f175e42ff.png",
-            "ugat-gvina-afuya": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002949_68ce2e6d-5124-43fa-8c02-1141ffdec4ac.png",
-            "pancakes-shel-shabat": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002949_3504388c-496a-4287-bbce-0d181ad2c23d.png",
-            "majadra": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002952_04adc0b5-37bc-4bed-b3f0-f5c8de09685a.png",
-            "marak-adashim": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002949_07a62d1e-2842-42a5-a9c7-856f5db1ed90.png",
-            "aruhat-erev-israelit": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002950_45cfa739-d644-45e8-9fde-5235b24b8666.png",
-            "levivot": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002950_3b912337-799f-4ff3-81a9-8dd7185c791b.png",
-            "sufganiyot-beitiyot": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002950_ce7689a1-75c8-415e-b49e-29bc3f4426d7.png",
-            "kadurei-shokolad": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_002950_eb987c72-bc02-4486-8bce-d973a854a8c5.png",
+            "pizza-beitit": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005425_5337c4b8-73f7-400c-9fc8-f4cb76bb4d89.png",
+            "pasta-shamenet-pitriyot": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005427_cbe3701f-41ce-405f-8111-599468129a4c.png",
+            "ktzitzot-berotev-ptitim": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005428_38cedbfa-1bd1-4499-ad2a-183bdc9247e7.png",
+            "marak-katom": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005425_0ce73dc6-3dff-4a67-b2be-fc78a15d3d47.png",
+            "salat-pasta-tuna": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005427_4c92e85a-f8a6-4e4b-a1b0-30920a527735.png",
+            "of-bedvash": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005427_44955b9d-38a1-4e4a-b39c-6fee0566f693.png",
+            "orez-mukpatz": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005426_661b8c08-3e17-4484-8531-d7061516a213.png",
+            "ugiyot-shokolad-chips": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005426_6b16fd40-f255-473d-804e-98d6cc382008.png",
+            "kuskus-im-yerakot": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005427_550927d5-9b8f-491c-be9f-7769d25c9ba2.png",
+            "sabich-beiti": "https://d8j0ntlcm91z4.cloudfront.net/user_346B4hPO8Cc9EBBTKCY2nMoMMdB/hf_20261105_005426_0c20d84b-d9bf-4b15-94f2-78733b2b8ede.png",
           }
           for slug, url in IMAGES.items():
               req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
