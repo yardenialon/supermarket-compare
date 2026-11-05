@@ -3,6 +3,7 @@ import { comparePairs, MAJOR_CHAINS } from "@/lib/chains";
 import { CITIES } from "@/lib/cities";
 import { STAPLES } from "@/lib/staples";
 import { GUIDES } from "@/lib/guides";
+import { RECIPES } from "@/lib/recipes";
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
 const PAGE_SIZE = 10000;
 export async function GET(request: Request) {
@@ -139,6 +140,16 @@ ${urls}
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://savy.co.il/recipes</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>${RECIPES.map((r) => `
+  <url>
+    <loc>https://savy.co.il/recipes/${r.slug}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join("")}
   <url>
     <loc>https://savy.co.il/prices</loc>
     <changefreq>weekly</changefreq>

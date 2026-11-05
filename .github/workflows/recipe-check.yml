@@ -1,0 +1,33 @@
+name: Recipe Ingredient Check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Resolve every recipe ingredient against the live API
+        run: |
+          mkdir -p bench-results
+          npx -y tsx scripts/check_recipes.ts | tee bench-results/recipes-check.txt
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/recipes-check.txt
+          git commit -m "chore(bench): recipe ingredient resolution report [skip ci]" || echo "no changes"
+          git push -f origin bench-data
