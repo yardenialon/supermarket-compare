@@ -33,6 +33,10 @@ export async function pushRoutes(app: FastifyInstance) {
   });
 
   app.post('/push/send-test', async (req, reply) => {
+    // fail closed — this can blast every subscriber, admin only
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
+    if (!ADMIN_PASSWORD || (req.headers as any)['x-admin-key'] !== ADMIN_PASSWORD)
+      return reply.code(401).send({ error: 'Unauthorized' });
     if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY)
       return reply.code(503).send({ error: 'VAPID keys not configured' });
 

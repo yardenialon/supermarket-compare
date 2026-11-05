@@ -1,0 +1,48 @@
+name: Weekly Recipe Push
+
+# Picks the best-value recipe of the week (live prices + promos) and queues a
+# push campaign; the API's worker on Railway delivers it to subscribers.
+# Thursday morning Israel time — right before the weekend shop.
+on:
+  schedule:
+    - cron: '47 4 * * 4' # 06:47 Israel (winter)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "true = compute and report only, don't queue the push"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  pick-and-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install pg driver
+        run: npm install --no-save pg@8
+      - name: Score recipes and queue campaign
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run != 'false') && '1' || '0' }}
+        run: |
+          mkdir -p bench-results
+          npx -y tsx scripts/weekly_recipe_push.ts | tee bench-results/weekly-push.txt
+      - name: Commit report
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/weekly-push.txt
+          git commit -m "chore(bench): weekly recipe push report [skip ci]" || echo "no changes"
+          git push -f origin bench-data
