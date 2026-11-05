@@ -666,12 +666,9 @@ export default function Home() {
               </div>
             ))}
             {!loading && !q.trim() && (
-              <div>
-                <div className="text-center pt-8 pb-2">
-                  <p className="text-stone-400 text-sm font-medium">חפשו מוצר לפי שם או ברקוד</p>
-                  <p className="text-stone-400 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
-                </div>
-                <RecipeSlider />
+              <div className="text-center pt-8 pb-2">
+                <p className="text-stone-400 text-sm font-medium">חפשו מוצר לפי שם או ברקוד</p>
+                <p className="text-stone-400 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
               </div>
             )}
             {!loading && q.trim() && !results.length && (
@@ -738,6 +735,9 @@ export default function Home() {
             </div>
           </div>) : <div className="text-center py-24"><div className="text-3xl mb-2 opacity-20">📊</div><div className="text-stone-300 text-sm">בחרו מוצר</div></div>}</div>
         </div>
+
+        {/* recipe showcase — full page width, outside the two-column grid */}
+        {!q.trim() && !sel && <RecipeSlider />}
 
         {/* Mobile bottom sheet for price panel */}
         {promoModal && <DealModal deal={promoModal} onClose={() => setPromoModal(null)} onAddToList={() => {}} />}

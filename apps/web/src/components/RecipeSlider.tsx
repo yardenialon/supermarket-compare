@@ -20,7 +20,7 @@ function Card({ r, compact }: { r: Recipe; compact?: boolean }) {
       href={`/recipes/${r.slug}`}
       className={`bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden group hover:shadow-md transition ${compact ? "" : "snap-start shrink-0 w-[150px]"}`}
     >
-      <div className={`relative w-full bg-stone-50 overflow-hidden ${compact ? "aspect-[4/3]" : "aspect-square"}`}>
+      <div className={`relative w-full bg-stone-50 overflow-hidden aspect-square`}>
         {/* emoji sits behind the photo as a graceful fallback */}
         <span className="absolute inset-0 flex items-center justify-center text-5xl">{r.emoji}</span>
         <img
@@ -47,7 +47,7 @@ function Card({ r, compact }: { r: Recipe; compact?: boolean }) {
 
 export default function RecipeSlider() {
   return (
-    <section dir="rtl" className="max-w-2xl mx-auto px-4 pt-6 pb-2 text-right">
+    <section dir="rtl" className="max-w-6xl mx-auto px-4 pt-8 pb-2 text-right">
       <div className="flex items-end justify-between mb-3">
         <div>
           <h2 className="font-black text-lg text-stone-800 leading-tight">🍳 כמה עולה להכין?</h2>
@@ -73,8 +73,8 @@ export default function RecipeSlider() {
         </a>
       </div>
 
-      {/* desktop: clean 3×2 grid of a curated six */}
-      <div className="hidden sm:grid grid-cols-3 gap-3">
+      {/* desktop: one full-width row of a curated six */}
+      <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {showcase.map((r) => <Card key={r.slug} r={r} compact />)}
       </div>
       <a href="/recipes" className="hidden sm:flex mt-3 items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-100 rounded-xl py-2.5 transition">
