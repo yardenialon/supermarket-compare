@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import { AD_SLOTS } from "@/lib/ads";
 import RecipeCompare from "@/components/RecipeCompare";
+import RecipePushBanner from "@/components/RecipePushBanner";
 import { RECIPES, recipeBySlug, resolveRecipe, recipeEstimate, recipeImg } from "@/lib/recipes";
 
 export const revalidate = 3600;
@@ -136,6 +137,9 @@ export default async function RecipePage({ params }: { params: { slug: string } 
 
         {/* interactive basket + live comparison */}
         <RecipeCompare resolved={resolved} servings={recipe.servings} recipeTitle={recipe.title} />
+
+        {/* the reader just saw what this basket costs — the moment the weekly push sells itself */}
+        <RecipePushBanner />
 
         <AdSlot slot={AD_SLOTS.content} />
 

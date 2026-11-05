@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { RECIPES, resolveRecipe, recipeEstimate, recipeImg } from "@/lib/recipes";
+import RecipePushBanner from "@/components/RecipePushBanner";
 
 export const revalidate = 3600;
 
@@ -55,6 +56,8 @@ export default async function RecipesIndexPage() {
           ובאיזו רשת הכי זול לקנות את המצרכים</strong> — כולל מבצעים, ועם אפשרות להסיר מהחשבון
           את מה שכבר יש לכם בבית. המחירים מתעדכנים יומית מנתוני שקיפות המחירים. נכון ל-{today}.
         </p>
+
+        <RecipePushBanner />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {cards.map(({ recipe, est, images }) => (
