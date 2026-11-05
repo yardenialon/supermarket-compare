@@ -58,7 +58,14 @@ async function main() {
     sent_at timestamptz, sent_count int DEFAULT 0, fail_count int DEFAULT 0)`);
 
   const week = isoWeek();
-  const hist = await client.query("SELECT slug FROM push_campaign ORDER BY id DESC LIMIT 4");
+  const hist = await client.query(
+    "SELECT week, slug, status, sent_at, sent_count, fail_count FROM push_campaign ORDER BY id DESC LIMIT 4");
+  if (hist.rows.length) {
+    console.log("=== recent campaigns ===");
+    for (const r of hist.rows as any[]) {
+      console.log(`  ${r.week} ${r.slug}: ${r.status}${r.sent_at ? ` at ${r.sent_at.toISOString?.() ?? r.sent_at} (sent=${r.sent_count}, failed=${r.fail_count})` : ""}`);
+    }
+  }
   const recent = new Set(hist.rows.map((r: any) => r.slug));
 
   const scored: Scored[] = [];
