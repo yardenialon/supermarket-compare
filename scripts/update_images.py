@@ -151,12 +151,25 @@ def main():
     if purged_total:
         log.info(f"Purged {purged_total} legacy images from blocked domains")
 
+    # weighed fresh produce carries store-internal barcodes (EAN prefix 2):
+    # barcode-keyed CDN lookups return images of unrelated products for them
+    # (a bottle for "דלעת ארוזה"...), so clear anything a barcode lookup saved
+    # and never fetch for them again. Our own produce photos (savy.co.il,
+    # set by apply_produce_images) and admin picks are left untouched.
+    cur.execute("""UPDATE product SET image_rejected_url=image_url, image_url=NULL, image_checked_at=NOW()
+                   WHERE category='ירקות ופירות' AND barcode LIKE '2%%'
+                     AND image_url IS NOT NULL AND image_url NOT ILIKE '%%savy.co.il%%'""")
+    if cur.rowcount:
+        log.info(f"Purged {cur.rowcount} barcode-collision images from weighed produce")
+    conn.commit()
+
     cur.execute("""
         SELECT p.id, p.barcode, p.name, p.image_rejected_url
         FROM product p
         WHERE (p.image_url IS NULL OR p.image_url = '')
           AND p.barcode IS NOT NULL
           AND length(p.barcode) >= 8
+          AND NOT (p.category = 'ירקות ופירות' AND p.barcode LIKE '2%%')
           AND EXISTS (SELECT 1 FROM store_price sp WHERE sp.product_id = p.id)
         ORDER BY p.store_count DESC NULLS LAST
         LIMIT %s

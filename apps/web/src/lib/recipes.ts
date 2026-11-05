@@ -692,6 +692,9 @@ export interface ResolvedIngredient {
   pantry: boolean;
   units: number;
   note?: string;
+  /** fresh produce items carry store-internal (weighed) barcodes whose DB
+      images are unreliable — the UI shows the emoji instead */
+  freshProduce?: boolean;
   product: ResolvedProduct | null;
 }
 
@@ -713,6 +716,7 @@ export async function resolveRecipe(recipe: Recipe): Promise<ResolvedIngredient[
     return {
       key: ing.key, he: ing.he, amount: ing.amount, emoji: ing.emoji,
       pantry: !!ing.pantry, units: ing.units ?? 1, note: ing.note,
+      freshProduce: ing.requireCategory === "ירקות ופירות",
       product: products[0] ?? null,
     };
   }));

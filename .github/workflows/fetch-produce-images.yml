@@ -1,0 +1,73 @@
+name: Fetch Produce Images
+
+# Downloads our AI-generated produce photos (scripts/produce_images.json),
+# commits them to /public/produce-img, waits for the Vercel deploy, then
+# points weighed-produce DB rows at them (apply_produce_images.py).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-and-apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip -q install pillow psycopg2-binary
+      - name: Download and compress
+        run: |
+          mkdir -p apps/web/public/produce-img
+          python - <<'EOF'
+          import urllib.request, io, json
+          from PIL import Image
+          manifest = {k: v for k, v in json.load(open("scripts/produce_images.json")).items() if not k.startswith("_")}
+          for pid, url in manifest.items():
+              out = f"apps/web/public/produce-img/{pid}.jpg"
+              import os
+              if os.path.exists(out):
+                  print(f"{pid}: already present, skipping"); continue
+              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              data = urllib.request.urlopen(req, timeout=60).read()
+              img = Image.open(io.BytesIO(data)).convert("RGB")
+              img.thumbnail((600, 600), Image.LANCZOS)
+              img.save(out, "JPEG", quality=82, optimize=True, progressive=True)
+              print(f"{pid}: {len(data)//1024}KB -> {out}")
+          EOF
+          ls apps/web/public/produce-img/
+      - name: Commit to main
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git add apps/web/public/produce-img
+          if git commit -m "feat(images): AI-generated produce photos"; then
+            git pull --rebase origin main
+            git push origin main
+            echo "DEPLOY_WAIT=1" >> $GITHUB_ENV
+          else
+            echo "no new images"
+          fi
+      - name: Wait for Vercel deploy
+        if: env.DEPLOY_WAIT == '1'
+        run: sleep 180
+      - name: Point weighed-produce products at our photos
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          mkdir -p bench-results
+          python scripts/apply_produce_images.py | tee bench-results/produce-images.txt
+      - name: Commit report
+        run: |
+          git checkout -B bench-data
+          git add bench-results/produce-images.txt
+          git commit -m "chore(bench): produce images applied [skip ci]" || echo "no changes"
+          git push -f origin bench-data

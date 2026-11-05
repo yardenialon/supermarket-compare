@@ -16,6 +16,19 @@ interface BasketItem extends ProduceItem {
   qty: number;
 }
 
+// our AI-generated produce photo, with the emoji as a graceful fallback
+function ProduceImg({ id, emoji, size }: { id: string; emoji: string; size: number }) {
+  return (
+    <span className="relative inline-flex items-center justify-center rounded-lg bg-stone-50 overflow-hidden shrink-0"
+      style={{ width: size, height: size }}>
+      <span className="text-xl absolute">{emoji}</span>
+      <img src={`/produce-img/${id}.jpg`} alt="" loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+    </span>
+  );
+}
+
 interface StoreResult {
   store_id: number;
   store_name: string;
@@ -289,7 +302,7 @@ export default function ProducePage() {
               {basketItems.map(item => (
                 <div key={item.id}
                   className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-50">
-                  <span className="text-2xl">{item.emoji}</span>
+                  <ProduceImg id={item.id} emoji={item.emoji} size={36} />
                   <span className="flex-1 font-semibold text-sm text-gray-800">{item.name}</span>
                   <QtyControl qty={item.qty} unit={item.unit} onChange={q => updateQty(item.id, q)} />
                   <button onClick={() => toggleItem(item)}
@@ -465,7 +478,7 @@ export default function ProducePage() {
                       : 'border-gray-100 bg-white hover:border-emerald-200 hover:bg-emerald-50/40'
                   }`}
                 >
-                  <span className="text-2xl">{item.emoji}</span>
+                  <ProduceImg id={item.id} emoji={item.emoji} size={34} />
                   <div className="flex-1 min-w-0">
                     <div className={`text-sm font-semibold truncate ${inBasket ? 'text-emerald-800' : 'text-gray-700'}`}>
                       {item.name}
