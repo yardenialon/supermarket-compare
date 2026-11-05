@@ -19,6 +19,9 @@ export interface Ingredient {
   units?: number;    // packages to buy (basket qty), default 1
   pantry?: boolean;  // pantry staple — assumed "already at home" by default
   exclude?: RegExp;
+  /** positive gate: product name must match (stronger than exclude for fresh produce,
+      where processed products crowd the search results) */
+  require?: RegExp;
   requireCategory?: string;
   note?: string;
 }
@@ -49,14 +52,14 @@ const ING = {
   milk:    (amount: string): Ingredient => ({ key: "milk", he: "חלב", amount, q: "חלב טרי", emoji: "🥛", exclude: /סויה|שקדים|שיבולת|קוקוס|עמיד|נטול|דל לקטוז|שוקו|טעם|1%|עוגיות|ממרח/i }),
   butter:  (amount: string): Ingredient => ({ key: "butter", he: "חמאה", amount, q: "חמאה", emoji: "🧈", exclude: /עוגיות|טעם|וופל|בוטנים|שקדים|אגוז|קקאו|מלוחה|צמחי|ממרח|קוקוס|שום|מגורד|דני|קרואסון|מאפה|בצק/i }),
   onion:   (amount: string): Ingredient => ({ key: "onion", he: "בצל יבש", amount, q: "בצל יבש", emoji: "🧅", requireCategory: "ירקות ופירות", exclude: /מטוגן|שום|אבקת|קפוא|ירוק/i }),
-  potatoes:(amount: string): Ingredient => ({ key: "potatoes", he: "תפוחי אדמה", amount, q: "תפוח אדמה", emoji: "🥔", requireCategory: "ירקות ופירות", exclude: /חטיף|צ'יפס|קפוא|ניוקי|רביולי|מצונן|קמח|סלט|פירה|מוכן|אפוי|בורקס|מאפה|מיקרו/i }),
+  potatoes:(amount: string): Ingredient => ({ key: "potatoes", he: "תפוחי אדמה", amount, q: "תפוח אדמה", emoji: "🥔", requireCategory: "ירקות ופירות", require: /^תפוח אדמה (לבן|אדום|בייבי|לאפיה|ארוז|תפזורת)/i, exclude: /מיקרו|קפוא|קוביות/i }),
   tomatoes:(amount: string): Ingredient => ({ key: "tomatoes", he: "עגבניות", amount, q: "עגבניה", emoji: "🍅", requireCategory: "ירקות ופירות", exclude: /רסק|מרוסק|מיובש|שרי מריר|קפוא/i }),
   crushedTomatoes: (amount: string, units = 1): Ingredient => ({ key: "crushed-tomatoes", he: "עגבניות מרוסקות", amount, q: "עגבניות מרוסקות", emoji: "🥫", units }),
   tomatoPaste: (amount: string): Ingredient => ({ key: "tomato-paste", he: "רסק עגבניות", amount, q: "רסק עגבניות", emoji: "🥫", pantry: true }),
-  garlic:  (amount: string): Ingredient => ({ key: "garlic", he: "שום", amount, q: "שום", emoji: "🧄", requireCategory: "ירקות ופירות", exclude: /אבקת|כתוש|קוביות|קפוא|קונפי|שמן|נבטי|חמוץ|תיבולית|פטרוזיליה|פטרוזליה|שלוק/i }),
+  garlic:  (amount: string): Ingredient => ({ key: "garlic", he: "שום", amount, q: "שום", emoji: "🧄", requireCategory: "ירקות ופירות", require: /^שום( טרי| ארוז| תפזורת| ראש|$)/i, exclude: /כתוש|קוביות|קפוא|שלוק|מגורד/i }),
   cumin:   (amount: string): Ingredient => ({ key: "cumin", he: "כמון טחון", amount, q: "כמון טחון", emoji: "🟤", pantry: true }),
   rice:    (amount: string): Ingredient => ({ key: "rice", he: "אורז", amount, q: "אורז פרסי", emoji: "🍚", pantry: true, exclude: /מלא|בסמטי מלא|פריכיות|קפוא|מוכן/i }),
-  bakingPowder: (amount: string): Ingredient => ({ key: "baking-powder", he: "אבקת אפייה", amount, q: "אבקת אפייה", emoji: "✨", pantry: true, exclude: /ללא ג|gfree/i }),
+  bakingPowder: (amount: string): Ingredient => ({ key: "baking-powder", he: "אבקת אפייה", amount, q: "אבקת אפייה", emoji: "✨", pantry: true, exclude: /ללא ג|gfree|אלומיניום/i }),
   breadcrumbs: (amount: string): Ingredient => ({ key: "breadcrumbs", he: "פירורי לחם", amount, q: "פירורי לחם", emoji: "🍞" }),
   pettiBar: (amount: string, units = 1): Ingredient => ({ key: "petit-beurre", he: "ביסקוויטים פתי בר", amount, q: "פתי בר", emoji: "🍪", units }),
 };
@@ -248,7 +251,7 @@ export const RECIPES: Recipe[] = [
     ingredients: [
       { key: "lentils-red", he: "עדשים כתומות", amount: "כוס וחצי", q: "עדשים אדומות", emoji: "🥣", exclude: /קפוא|מוכן|שימורים|סנפרוסט/i },
       ING.onion("בצל אחד"),
-      { key: "carrots", he: "גזר", amount: "2 גזרים", q: "גזר", emoji: "🥕", requireCategory: "ירקות ופירות", exclude: /גמדי|חטיפוני|קפוא|מגורד|אפוי|מיץ|סלט|תפוגזר|ליטר|משקה/i },
+      { key: "carrots", he: "גזר", amount: "2 גזרים", q: "גזר", emoji: "🥕", requireCategory: "ירקות ופירות", require: /^גזר( ארוז| תפזורת| טרי|$)/i },
       ING.potatoes("תפוח אדמה אחד"),
       ING.garlic("2 שיני שום"),
       ING.cumin("כפית מלאה"),
@@ -276,7 +279,7 @@ export const RECIPES: Recipe[] = [
     ingredients: [
       ING.eggs("8 ביצים (לחביתות)"),
       ING.tomatoes("4 עגבניות (לסלט)"),
-      { key: "cucumbers", he: "מלפפונים", amount: "5 מלפפונים (לסלט)", q: "מלפפון", emoji: "🥒", requireCategory: "ירקות ופירות", exclude: /חמוץ|מוחמץ|בחומץ|מלוח|מלח|כבוש|בייבי בצנצנת/i },
+      { key: "cucumbers", he: "מלפפונים", amount: "5 מלפפונים (לסלט)", q: "מלפפון", emoji: "🥒", requireCategory: "ירקות ופירות", require: /^מלפפון(ים)?( ארוז| תפזורת| טרי| בייבי|$)/i, exclude: /מלח|חומץ|חמוץ|כבוש/i },
       { key: "white-cheese", he: "גבינה לבנה", amount: "גביע אחד", q: "גבינה לבנה 5%", emoji: "🥣", exclude: /מגורדת|צהובה|בולגרית/i },
       { key: "cottage", he: "קוטג'", amount: "גביע אחד", q: "קוטג", emoji: "🧀", exclude: /שום|שמיר|זיתים|פיקנטי|בטעם|חרי/i },
       { key: "bread", he: "לחם טרי", amount: "כיכר אחת", q: "לחם אחיד פרוס", emoji: "🥖", exclude: /קפוא|פירורי|לייט מיוחד/i },
@@ -404,7 +407,7 @@ export interface ResolvedIngredient {
 
 async function searchProducts(q: string): Promise<ResolvedProduct[]> {
   try {
-    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=20`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=40`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.results ?? []).filter((p: ResolvedProduct) => p.minPrice != null && p.storeCount > 5);
@@ -415,6 +418,7 @@ export async function resolveRecipe(recipe: Recipe): Promise<ResolvedIngredient[
   return Promise.all(recipe.ingredients.map(async (ing) => {
     let products = await searchProducts(ing.q);
     if (ing.requireCategory) products = products.filter((p) => p.category === ing.requireCategory);
+    if (ing.require) products = products.filter((p) => ing.require!.test(p.name.trim()));
     if (ing.exclude) products = products.filter((p) => !ing.exclude!.test(p.name));
     return {
       key: ing.key, he: ing.he, amount: ing.amount, emoji: ing.emoji,
