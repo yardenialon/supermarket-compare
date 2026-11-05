@@ -280,6 +280,33 @@ export default function Home() {
     // Warm up API + DB connection
     api.search('x').catch(() => {});
   }, []);
+
+  // refresh stale list snapshots (image fixes, price moves) — items live in
+  // localStorage with the imageUrl/minPrice from the moment they were added
+  const listRefreshed = useRef(false);
+  useEffect(() => {
+    if (listRefreshed.current || !list.length) return;
+    listRefreshed.current = true;
+    (async () => {
+      try {
+        const updates = await Promise.all(list.slice(0, 40).map(async (it) => {
+          if (!it.product?.barcode) return null;
+          try {
+            const data = await api.search(it.product.barcode);
+            const fresh = (data.results ?? []).find((r: any) => r.id === it.product.id);
+            return fresh ? { id: it.product.id, imageUrl: fresh.imageUrl ?? null, minPrice: fresh.minPrice } : null;
+          } catch { return null; }
+        }));
+        const map = new Map(updates.filter(Boolean).map((u: any) => [u.id, u]));
+        if (map.size) {
+          setList(prev => prev.map(it => {
+            const u = map.get(it.product.id);
+            return u ? { ...it, product: { ...it.product, imageUrl: u.imageUrl, minPrice: u.minPrice } } : it;
+          }));
+        }
+      } catch {}
+    })();
+  }, [list.length]);
   // Sync cart with cloud after auth
   const cloudSynced = useRef(false);
   useEffect(() => {
