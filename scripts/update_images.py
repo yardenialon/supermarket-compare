@@ -169,7 +169,7 @@ def main():
         WHERE (p.image_url IS NULL OR p.image_url = '')
           AND p.barcode IS NOT NULL
           AND length(p.barcode) >= 8
-          AND NOT (p.category = 'ירקות ופירות' AND p.barcode LIKE '2%%')
+          AND COALESCE(p.category, '') != 'ירקות ופירות'
           AND EXISTS (SELECT 1 FROM store_price sp WHERE sp.product_id = p.id)
         ORDER BY p.store_count DESC NULLS LAST
         LIMIT %s

@@ -3,13 +3,14 @@
 apply_produce_images.py — point weighed fresh-produce products at our own
 AI-generated produce photos (https://savy.co.il/produce-img/{id}.jpg).
 
-Scope is deliberately narrow and safe: only products in category
-'ירקות ופירות' whose barcode starts with '2' (store-internal / weighed EAN),
-whose barcode-keyed CDN images were wrong by construction. Only ids present
-in scripts/produce_images.json are applied, so partial generation batches
-roll out incrementally. image_checked_at is set so the vision verifier
-skips them; products whose image was hand-picked in the admin (a non-savy
-URL with image_checked_at set) are never overwritten.
+Scope: products in category 'ירקות ופירות' whose name matches a produce
+type. Retailers assign in-house codes to weighed produce both as EAN-prefix-2
+AND as full 729-prefixed EANs ('דלעת ארוזה' = 7290000961804), so barcode
+shape cannot gate this; the name patterns with their excludes do. Products
+whose current image was VERIFIED (image_checked_at set) and is not ours are
+left alone — that covers admin hand-picks and vision-approved real product
+photos; unverified images (where the barcode-collision junk lives) are
+replaced. image_checked_at is set so the vision verifier skips ours.
 """
 import os, json, psycopg2
 
@@ -80,9 +81,11 @@ def main():
         url = f"{BASE}/{pid}.jpg"
         cur.execute(f"""
             UPDATE product SET image_url=%s, image_checked_at=NOW(), image_rejected_url=NULL
-            WHERE category='ירקות ופירות' AND barcode LIKE '2%%'
+            WHERE category='ירקות ופירות'
               AND ({inc_sql}){exc_sql}
-              AND (image_url IS NULL OR image_url ILIKE '%%savy.co.il%%')
+              AND (image_url IS NULL
+                   OR image_url ILIKE '%%savy.co.il%%'
+                   OR image_checked_at IS NULL)
         """, [url, *includes, *excludes])
         print(f"{pid}: {cur.rowcount} products")
         total += cur.rowcount
