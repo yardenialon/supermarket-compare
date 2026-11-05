@@ -646,7 +646,7 @@ RECIPES.push(
     prepMinutes: 20,
     cookMinutes: 15,
     ingredients: [
-      { key: "eggplant", he: "חצילים", amount: "2 חצילים", q: "חציל", emoji: "🍆", requireCategory: "ירקות ופירות", require: /^חציל/i, exclude: /קפוא|מטוגן|סלט|במיונז|קלוי|טעם|כבד|ממרח|חמוץ/i },
+      { key: "eggplant", he: "חצילים", amount: "2 חצילים", q: "חציל", emoji: "🍆", requireCategory: "ירקות ופירות", require: /^חציל(ים)?( בלאדי| ארוז| תפזורת| רגיל| מובחר| יחידה|$)/i, exclude: /קפוא|מטוגן|סלט|במיונז|קלוי|טעם|כבד|ממרח|חמוץ|טחינה/i },
       ING.eggs("4 ביצים (קשות)"),
       { key: "pitot", he: "פיתות", amount: "חבילה", q: "פיתות", emoji: "🫓", exclude: /קפוא|מקמח מלא|כוסמין/i },
       { key: "tahini", he: "טחינה גולמית", amount: "חצי כוס", q: "טחינה גולמית", emoji: "🥣", exclude: /מתוקה|חלבה/i },
