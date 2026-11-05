@@ -2,8 +2,11 @@ import { FastifyInstance } from 'fastify';
 import { query } from '../../db.js';
 
 export async function pushRoutes(app: FastifyInstance) {
+  // first whitespace-separated token only: if the env var was pasted with
+  // extra lines (it happened — VAPID_PRIVATE_KEY ended up inside it and was
+  // served publicly), nothing beyond the public key ever leaves the server
   app.get('/push/vapid-key', async () => ({
-    publicKey: process.env.VAPID_PUBLIC_KEY || null
+    publicKey: (process.env.VAPID_PUBLIC_KEY || '').trim().split(/\s+/)[0] || null
   }));
 
   app.post('/push/subscribe', async (req, reply) => {
