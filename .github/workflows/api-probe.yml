@@ -1,0 +1,54 @@
+name: API Probe
+
+# Read-only diagnosis of the live API + push pipeline state.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Probe live API
+        run: |
+          mkdir -p bench-results
+          {
+            echo "== /api/search (API alive?) =="
+            curl -sS -m 15 -o /dev/null -w "HTTP %{http_code}, %{time_total}s\n" "https://supermarket-compare-production.up.railway.app/api/search?q=%D7%97%D7%9C%D7%91&limit=1"
+            echo "== /api/push/vapid-key (VAPID configured?) =="
+            curl -sS -m 15 "https://supermarket-compare-production.up.railway.app/api/push/vapid-key" | head -c 200; echo
+            echo "== /api/push/send-test unauthenticated (401 = new code deployed) =="
+            curl -sS -m 15 -o /dev/null -w "HTTP %{http_code}\n" -X POST -H "Content-Type: application/json" -H "x-admin-key: wrong-key-probe" -d '{}' "https://supermarket-compare-production.up.railway.app/api/push/send-test"
+          } | tee bench-results/api-probe.txt
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: DB state
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pip -q install psycopg2-binary
+          python - <<'EOF' | tee -a bench-results/api-probe.txt
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+          cur.execute("SELECT COUNT(*) FROM push_subscription")
+          print(f"push subscribers: {cur.fetchone()[0]}")
+          cur.execute("SELECT week, slug, status, created_at, sent_at, sent_count, fail_count FROM push_campaign ORDER BY id DESC LIMIT 5")
+          for r in cur.fetchall(): print("campaign:", r)
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/api-probe.txt
+          git commit -m "chore(bench): api probe [skip ci]" || echo "no changes"
+          git push -f origin bench-data
