@@ -40,23 +40,23 @@ export interface Recipe {
 
 // ─── Shared ingredient builders (pantry staples reused across recipes) ──
 const ING = {
-  flour:   (amount: string): Ingredient => ({ key: "flour", he: "קמח לבן", amount, q: "קמח לבן", emoji: "🌾", pantry: true }),
+  flour:   (amount: string): Ingredient => ({ key: "flour", he: "קמח לבן", amount, q: "קמח לבן", emoji: "🌾", pantry: true, exclude: /טורטייה|עלי|פיתות|לחם|מצה|תופח|מלא/i }),
   sugar:   (amount: string): Ingredient => ({ key: "sugar", he: "סוכר לבן", amount, q: "סוכר לבן", emoji: "🍬", pantry: true }),
   oil:     (amount: string): Ingredient => ({ key: "oil", he: "שמן קנולה", amount, q: "שמן קנולה", emoji: "🫗", pantry: true }),
   oliveOil:(amount: string): Ingredient => ({ key: "olive-oil", he: "שמן זית", amount, q: "שמן זית כתית", emoji: "🫒", pantry: true, exclude: /סבון|קרם|תחליב/i }),
   salt:    (amount: string): Ingredient => ({ key: "salt", he: "מלח", amount, q: "מלח שולחן", emoji: "🧂", pantry: true, exclude: /אמבט|גס לפסח/i }),
-  eggs:    (amount: string): Ingredient => ({ key: "eggs", he: "ביצים", amount, q: "ביצים L", emoji: "🥚", exclude: /שוקולד|הפתעה|קינדר/i }),
-  milk:    (amount: string): Ingredient => ({ key: "milk", he: "חלב", amount, q: "חלב טרי 3%", emoji: "🥛", exclude: /סויה|שקדים|שיבולת|קוקוס/i }),
-  butter:  (amount: string): Ingredient => ({ key: "butter", he: "חמאה", amount, q: "חמאה 100", emoji: "🧈", exclude: /בוטנים|שקדים|קקאו|מלוחה/i }),
+  eggs:    (amount: string): Ingredient => ({ key: "eggs", he: "ביצים", amount, q: "ביצים", emoji: "🥚", exclude: /שוקולד|הפתעה|קינדר|מקושקש|ביצי דגים|שלוות/i }),
+  milk:    (amount: string): Ingredient => ({ key: "milk", he: "חלב", amount, q: "חלב טרי", emoji: "🥛", exclude: /סויה|שקדים|שיבולת|קוקוס|עמיד|נטול|דל לקטוז|שוקו|טעם|1%|עוגיות|ממרח/i }),
+  butter:  (amount: string): Ingredient => ({ key: "butter", he: "חמאה", amount, q: "חמאה", emoji: "🧈", exclude: /עוגיות|טעם|וופל|בוטנים|שקדים|אגוז|קקאו|מלוחה|צמחי|ממרח|קוקוס|שום|מגורד|דני|קרואסון|מאפה|בצק/i }),
   onion:   (amount: string): Ingredient => ({ key: "onion", he: "בצל יבש", amount, q: "בצל יבש", emoji: "🧅", requireCategory: "ירקות ופירות", exclude: /מטוגן|שום|אבקת|קפוא|ירוק/i }),
-  potatoes:(amount: string): Ingredient => ({ key: "potatoes", he: "תפוחי אדמה", amount, q: "תפוח אדמה", emoji: "🥔", requireCategory: "ירקות ופירות", exclude: /חטיף|צ'יפס|קפוא|ניוקי|קמח|סלט|פירה|מוכן|אפוי/i }),
+  potatoes:(amount: string): Ingredient => ({ key: "potatoes", he: "תפוחי אדמה", amount, q: "תפוח אדמה", emoji: "🥔", requireCategory: "ירקות ופירות", exclude: /חטיף|צ'יפס|קפוא|ניוקי|רביולי|מצונן|קמח|סלט|פירה|מוכן|אפוי|בורקס|מאפה/i }),
   tomatoes:(amount: string): Ingredient => ({ key: "tomatoes", he: "עגבניות", amount, q: "עגבניה", emoji: "🍅", requireCategory: "ירקות ופירות", exclude: /רסק|מרוסק|מיובש|שרי מריר|קפוא/i }),
   crushedTomatoes: (amount: string, units = 1): Ingredient => ({ key: "crushed-tomatoes", he: "עגבניות מרוסקות", amount, q: "עגבניות מרוסקות", emoji: "🥫", units }),
   tomatoPaste: (amount: string): Ingredient => ({ key: "tomato-paste", he: "רסק עגבניות", amount, q: "רסק עגבניות", emoji: "🥫", pantry: true }),
-  garlic:  (amount: string): Ingredient => ({ key: "garlic", he: "שום", amount, q: "שום", emoji: "🧄", requireCategory: "ירקות ופירות", exclude: /אבקת|כתוש|קפוא|קונפי|שמן|נבטי/i }),
+  garlic:  (amount: string): Ingredient => ({ key: "garlic", he: "שום", amount, q: "שום", emoji: "🧄", requireCategory: "ירקות ופירות", exclude: /אבקת|כתוש|קוביות|קפוא|קונפי|שמן|נבטי|חמוץ/i }),
   cumin:   (amount: string): Ingredient => ({ key: "cumin", he: "כמון טחון", amount, q: "כמון טחון", emoji: "🟤", pantry: true }),
   rice:    (amount: string): Ingredient => ({ key: "rice", he: "אורז", amount, q: "אורז פרסי", emoji: "🍚", pantry: true, exclude: /מלא|בסמטי מלא|פריכיות|קפוא|מוכן/i }),
-  bakingPowder: (amount: string): Ingredient => ({ key: "baking-powder", he: "אבקת אפייה", amount, q: "אבקת אפייה", emoji: "✨", pantry: true }),
+  bakingPowder: (amount: string): Ingredient => ({ key: "baking-powder", he: "אבקת אפייה", amount, q: "אבקת אפייה", emoji: "✨", pantry: true, exclude: /ללא גלוטן|gfree/i }),
   breadcrumbs: (amount: string): Ingredient => ({ key: "breadcrumbs", he: "פירורי לחם", amount, q: "פירורי לחם", emoji: "🍞" }),
   pettiBar: (amount: string, units = 1): Ingredient => ({ key: "petit-beurre", he: "ביסקוויטים פתי בר", amount, q: "פתי בר", emoji: "🍪", units }),
 };
@@ -220,7 +220,7 @@ export const RECIPES: Recipe[] = [
     cookMinutes: 35,
     ingredients: [
       ING.rice("2 כוסות"),
-      { key: "lentils-green", he: "עדשים ירוקות", amount: "כוס אחת", q: "עדשים ירוקות", emoji: "🫘", exclude: /קפוא|מוכן|שימורים/i },
+      { key: "lentils-green", he: "עדשים ירוקות", amount: "כוס אחת", q: "עדשים ירוקות", emoji: "🫘", exclude: /קפוא|מוכן|שימורים|סנפרוסט/i },
       ING.onion("3 בצלים גדולים"),
       ING.oil("רבע כוס"),
       ING.cumin("כפית וחצי"),
@@ -246,9 +246,9 @@ export const RECIPES: Recipe[] = [
     prepMinutes: 10,
     cookMinutes: 25,
     ingredients: [
-      { key: "lentils-red", he: "עדשים כתומות", amount: "כוס וחצי", q: "עדשים אדומות", emoji: "🥣", exclude: /קפוא|מוכן|שימורים/i },
+      { key: "lentils-red", he: "עדשים כתומות", amount: "כוס וחצי", q: "עדשים אדומות", emoji: "🥣", exclude: /קפוא|מוכן|שימורים|סנפרוסט/i },
       ING.onion("בצל אחד"),
-      { key: "carrots", he: "גזר", amount: "2 גזרים", q: "גזר", emoji: "🥕", requireCategory: "ירקות ופירות", exclude: /גמדי|קפוא|מגורד|אפוי|מיץ/i },
+      { key: "carrots", he: "גזר", amount: "2 גזרים", q: "גזר", emoji: "🥕", requireCategory: "ירקות ופירות", exclude: /גמדי|חטיפוני|קפוא|מגורד|אפוי|מיץ|סלט/i },
       ING.potatoes("תפוח אדמה אחד"),
       ING.garlic("2 שיני שום"),
       ING.cumin("כפית מלאה"),
@@ -278,7 +278,7 @@ export const RECIPES: Recipe[] = [
       ING.tomatoes("4 עגבניות (לסלט)"),
       { key: "cucumbers", he: "מלפפונים", amount: "5 מלפפונים (לסלט)", q: "מלפפון", emoji: "🥒", requireCategory: "ירקות ופירות", exclude: /חמוץ|מוחמץ|בחומץ|מלוח/i },
       { key: "white-cheese", he: "גבינה לבנה", amount: "גביע אחד", q: "גבינה לבנה 5%", emoji: "🥣", exclude: /מגורדת|צהובה|בולגרית/i },
-      { key: "cottage", he: "קוטג'", amount: "גביע אחד", q: "קוטג 5%", emoji: "🧀" },
+      { key: "cottage", he: "קוטג'", amount: "גביע אחד", q: "קוטג", emoji: "🧀", exclude: /שום|שמיר|זיתים|פיקנטי|בטעם|חרי/i },
       { key: "bread", he: "לחם טרי", amount: "כיכר אחת", q: "לחם אחיד פרוס", emoji: "🥖", exclude: /קפוא|פירורי|לייט מיוחד/i },
       ING.oliveOil("לסלט ולמחבת"),
       ING.salt("לפי הטעם"),
@@ -335,7 +335,7 @@ export const RECIPES: Recipe[] = [
       ING.eggs("2 ביצים"),
       ING.milk("כוס אחת (פושרת)"),
       ING.butter("50 גרם רכה"),
-      { key: "jam", he: "ריבת תות", amount: "צנצנת (למילוי)", q: "ריבת תות", emoji: "🍓" },
+      { key: "jam", he: "ריבת תות", amount: "צנצנת (למילוי)", q: "ריבת תות", emoji: "🍓", exclude: /לייט|דיאט|ללא סוכר/i },
       ING.oil("לטיגון עמוק (בקבוק)"),
       { key: "powdered-sugar", he: "אבקת סוכר", amount: "לקישוט", q: "אבקת סוכר", emoji: "❄️" },
     ],
@@ -404,7 +404,7 @@ export interface ResolvedIngredient {
 
 async function searchProducts(q: string): Promise<ResolvedProduct[]> {
   try {
-    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=8`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=20`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     const data = await res.json();
     return (data.results ?? []).filter((p: ResolvedProduct) => p.minPrice != null && p.storeCount > 5);
