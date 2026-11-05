@@ -5,6 +5,7 @@ import { api, dealsApi } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { DealModal, HotDealsSlider } from "@/components/DealModal";
 import QuickAddProducts from "@/components/QuickAddProducts";
+import RecipeSlider from "@/components/RecipeSlider";
 import HowItWorks from "@/components/HowItWorks";
 
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
@@ -656,15 +657,12 @@ export default function Home() {
               </div>
             ))}
             {!loading && !q.trim() && (
-              <div className="text-center py-20">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                    <circle cx="11" cy="11" r="7" stroke="#059669" strokeWidth="2"/>
-                    <path d="M21 21L16.65 16.65" stroke="#059669" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
+              <div>
+                <div className="text-center pt-8 pb-2">
+                  <p className="text-stone-400 text-sm font-medium">חפשו מוצר לפי שם או ברקוד</p>
+                  <p className="text-stone-400 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
                 </div>
-                <p className="text-stone-400 text-sm font-medium">חפשו מוצר לפי שם או ברקוד</p>
-                <p className="text-stone-400 text-xs mt-1">למשל: חלב, במבה, שמפו...</p>
+                <RecipeSlider />
               </div>
             )}
             {!loading && q.trim() && !results.length && (

@@ -382,6 +382,9 @@ export const RECIPES: Recipe[] = [
 
 export const recipeBySlug = (slug: string): Recipe | undefined => RECIPES.find((r) => r.slug === slug);
 
+// AI-generated dish photo (ours — no third-party rights issues), committed to /public
+export const recipeImg = (slug: string) => `/recipes-img/${slug}.jpg`;
+
 // ─── Server-side ingredient → product resolution ─────────────────────
 export interface ResolvedProduct {
   id: number;

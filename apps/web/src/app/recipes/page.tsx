@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RECIPES, resolveRecipe, recipeEstimate } from "@/lib/recipes";
+import { RECIPES, resolveRecipe, recipeEstimate, recipeImg } from "@/lib/recipes";
 
 export const revalidate = 3600;
 
@@ -59,12 +59,14 @@ export default async function RecipesIndexPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {cards.map(({ recipe, est, images }) => (
             <a key={recipe.slug} href={`/recipes/${recipe.slug}`}
-              className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 hover:shadow-md transition flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="text-4xl">{recipe.emoji}</div>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded-full px-2.5 py-1">{recipe.occasion}</span>
+              className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden hover:shadow-md transition flex flex-col">
+              <div className="relative w-full aspect-[16/9] bg-stone-50">
+                <span className="absolute inset-0 flex items-center justify-center text-5xl">{recipe.emoji}</span>
+                <img src={recipeImg(recipe.slug)} alt={`מתכון ${recipe.title}`} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                <span className="absolute top-2.5 right-2.5 text-[10px] font-bold text-white bg-black/45 backdrop-blur-sm rounded-full px-2.5 py-1">{recipe.occasion}</span>
               </div>
-              <div className="font-black text-stone-800 leading-snug">{recipe.title}</div>
+              <div className="p-4 flex flex-col gap-2 flex-1">
+              <div className="font-black text-stone-800 leading-snug">{recipe.emoji} {recipe.title}</div>
               <p className="text-xs text-stone-400 leading-relaxed line-clamp-2">{recipe.description}</p>
               {images.length > 0 && (
                 <div className="flex gap-1.5">
@@ -83,6 +85,7 @@ export default async function RecipesIndexPage() {
                     <span className="font-sans font-normal text-[10px] text-stone-400"> · ₪{(est.total / recipe.servings).toFixed(1)} למנה</span>
                   </div>
                 )}
+              </div>
               </div>
             </a>
           ))}

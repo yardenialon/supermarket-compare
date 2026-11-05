@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import { AD_SLOTS } from "@/lib/ads";
 import RecipeCompare from "@/components/RecipeCompare";
-import { RECIPES, recipeBySlug, resolveRecipe, recipeEstimate } from "@/lib/recipes";
+import { RECIPES, recipeBySlug, resolveRecipe, recipeEstimate, recipeImg } from "@/lib/recipes";
 
 export const revalidate = 3600;
 
@@ -21,11 +21,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     ? `מתכון ${recipe.title} ל-${recipe.servings} מנות: המצרכים עולים החל מכ-₪${est.total.toFixed(0)}. השוואת מחיר חיה של סל המתכון בין כל רשתות הסופרמרקט — כולל מבצעים. ${recipe.description}`
     : `${recipe.description} מתכון מלא + השוואת מחיר של כל המצרכים בין רשתות הסופרמרקט בישראל.`;
   const url = `https://savy.co.il/recipes/${recipe.slug}`;
+  const image = `https://savy.co.il${recipeImg(recipe.slug)}`;
   return {
     title, description,
     alternates: { canonical: url },
-    openGraph: { title, description, url, siteName: "Savy", locale: "he_IL", type: "article" },
-    twitter: { card: "summary", title, description },
+    openGraph: { title, description, url, siteName: "Savy", locale: "he_IL", type: "article", images: [{ url: image, width: 800, height: 800 }] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
@@ -37,14 +38,14 @@ export default async function RecipePage({ params }: { params: { slug: string } 
   const est = recipeEstimate(resolved);
   const today = new Date().toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" });
   const totalMinutes = recipe.prepMinutes + recipe.cookMinutes;
-  const firstImage = resolved.find((r) => r.product?.imageUrl)?.product?.imageUrl;
+  const heroImage = `https://savy.co.il${recipeImg(recipe.slug)}`;
 
   const recipeJsonLd = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     name: recipe.title,
     description: recipe.description,
-    ...(firstImage ? { image: [firstImage] } : {}),
+    image: [heroImage],
     author: { "@type": "Organization", name: "Savy", url: "https://savy.co.il" },
     recipeYield: `${recipe.servings} מנות`,
     prepTime: `PT${recipe.prepMinutes}M`,
@@ -109,13 +110,12 @@ export default async function RecipePage({ params }: { params: { slug: string } 
           <span className="text-stone-500">{recipe.title}</span>
         </nav>
 
-        <div className="flex items-start gap-3 mb-2">
-          <div className="text-5xl leading-none">{recipe.emoji}</div>
-          <div>
-            <h1 className="font-black text-2xl sm:text-3xl text-stone-800 leading-tight">{recipe.title}</h1>
-            <div className="text-xs text-emerald-600 font-bold mt-1">{recipe.occasion}</div>
-          </div>
+        <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden bg-stone-100 mb-4 shadow-sm">
+          <span className="absolute inset-0 flex items-center justify-center text-7xl">{recipe.emoji}</span>
+          <img src={recipeImg(recipe.slug)} alt={`מתכון ${recipe.title}`} className="absolute inset-0 w-full h-full object-cover" />
+          <span className="absolute top-3 right-3 text-[11px] font-bold text-white bg-black/45 backdrop-blur-sm rounded-full px-3 py-1">{recipe.occasion}</span>
         </div>
+        <h1 className="font-black text-2xl sm:text-3xl text-stone-800 leading-tight mb-2">{recipe.emoji} {recipe.title}</h1>
         <p className="text-sm text-stone-500 leading-relaxed mb-4">{recipe.description}</p>
 
         {/* stat strip */}
@@ -173,10 +173,15 @@ export default async function RecipePage({ params }: { params: { slug: string } 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {RECIPES.filter((r) => r.slug !== recipe.slug).slice(0, 6).map((r) => (
               <a key={r.slug} href={`/recipes/${r.slug}`}
-                className="bg-white rounded-2xl border border-stone-100 shadow-sm p-3 hover:shadow-md transition text-center">
-                <div className="text-3xl mb-1">{r.emoji}</div>
-                <div className="font-bold text-xs text-stone-700 leading-snug">{r.title}</div>
-                <div className="text-[10px] text-stone-400 mt-0.5">{r.occasion}</div>
+                className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden hover:shadow-md transition text-center">
+                <div className="relative w-full aspect-[16/10] bg-stone-50">
+                  <span className="absolute inset-0 flex items-center justify-center text-3xl">{r.emoji}</span>
+                  <img src={recipeImg(r.slug)} alt={`מתכון ${r.title}`} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                </div>
+                <div className="p-2.5">
+                  <div className="font-bold text-xs text-stone-700 leading-snug">{r.title}</div>
+                  <div className="text-[10px] text-stone-400 mt-0.5">{r.occasion}</div>
+                </div>
               </a>
             ))}
           </div>
