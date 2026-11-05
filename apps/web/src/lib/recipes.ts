@@ -56,7 +56,7 @@ const ING = {
   tomatoes:(amount: string): Ingredient => ({ key: "tomatoes", he: "עגבניות", amount, q: "עגבניה", emoji: "🍅", requireCategory: "ירקות ופירות", exclude: /רסק|מרוסק|מיובש|שרי מריר|קפוא/i }),
   crushedTomatoes: (amount: string, units = 1): Ingredient => ({ key: "crushed-tomatoes", he: "עגבניות מרוסקות", amount, q: "עגבניות מרוסקות", emoji: "🥫", units }),
   tomatoPaste: (amount: string): Ingredient => ({ key: "tomato-paste", he: "רסק עגבניות", amount, q: "רסק עגבניות", emoji: "🥫", pantry: true }),
-  garlic:  (amount: string): Ingredient => ({ key: "garlic", he: "שום", amount, q: "שום", emoji: "🧄", requireCategory: "ירקות ופירות", require: /^שום( טרי| ארוז| תפזורת| ראש|$)/i, exclude: /כתוש|קוביות|קפוא|שלוק|מגורד/i }),
+  garlic:  (amount: string): Ingredient => ({ key: "garlic", he: "שום", amount, q: "ראש שום", emoji: "🧄", requireCategory: "ירקות ופירות", require: /שום/i, exclude: /כתוש|קוביות|קפוא|שלוק|מגורד|שומשום/i }),
   cumin:   (amount: string): Ingredient => ({ key: "cumin", he: "כמון טחון", amount, q: "כמון טחון", emoji: "🟤", pantry: true }),
   rice:    (amount: string): Ingredient => ({ key: "rice", he: "אורז", amount, q: "אורז פרסי", emoji: "🍚", pantry: true, exclude: /מלא|בסמטי מלא|פריכיות|קפוא|מוכן/i }),
   bakingPowder: (amount: string): Ingredient => ({ key: "baking-powder", he: "אבקת אפייה", amount, q: "אבקת אפייה", emoji: "✨", pantry: true, exclude: /ללא ג|gfree|אלומיניום/i }),
