@@ -2,6 +2,11 @@ name: Recipe Ingredient Check
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_queries:
+        description: "Comma-separated search queries to dump raw top-20 results for"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -20,6 +25,8 @@ jobs:
         with:
           node-version: '20'
       - name: Resolve every recipe ingredient against the live API
+        env:
+          DEBUG_QUERIES: ${{ inputs.debug_queries }}
         run: |
           mkdir -p bench-results
           npx -y tsx scripts/check_recipes.ts | tee bench-results/recipes-check.txt
