@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 const SITE = "https://www.savy.co.il";
 
 // strip leading quantity/unit tokens: "500 גרם קמח" -> {amount:"500 גרם", q:"קמח"}
-const UNIT = /^(\d+([.,/]\d+)?|חצי|רבע|שליש|שלושת|קורט|מעט|גרם|ג'?|קילו|ק"ג|קג|מ"ל|מל|ליטר|כוסות?|כפות|כף|כפיות?|כפית|יחידות|יחיד(ה|ות)|יח'?|חבילות|חבילה|גביעי?ם?|גביע|קופס(ה|ת|אות)|שקיות?|שקית|בקבוקי?ם?|בקבוק|פרוסות|שיני|שן|ראש|צרור|אגד)$/;
+const UNIT = /^(\d+([.,/]\d+)?|חצי|רבע|שליש|שלושת|קורט|מעט|גרם|ג'?|קילו|ק"ג|קג|מ"ל|מל|ליטר|כוס(ות)?|כפות|כף|כפיות?|כפית|יחידות|יחיד(ה|ות)|יח'?|חבילות|חבילה|גביעי?ם?|גביע|קופס(ה|ת|אות)|שקיות?|שקית|בקבוקי?ם?|בקבוק|פרוסות|שיני|שן|ראש|צרור|אגד)$/;
 
 function parseLine(line: string): { q: string; amount: string } | null {
   const clean = line.replace(/\(.*?\)/g, " ").replace(/[•\-–*·]/g, " ").replace(/\s+/g, " ").trim();
@@ -54,9 +54,26 @@ export default function WidgetGeneratorPage() {
         </h1>
         <p className="text-sm text-stone-500 leading-relaxed mb-6">
           ווידג'ט קטן שמציג לקוראים שלכם <strong className="text-stone-700">כמה עולים המצרכים של המתכון, ובאיזו רשת הכי זול</strong> —
-          עם מחירים חיים שמתעדכנים לבד, לנצח. מדביקים פעם אחת, והפוסט שלכם עונה על השאלה שכל קוראת שואלת.
-          בלי התקנות, בלי חשבון, בלי תחזוקה.
+          עם מחירים חיים שמתעדכנים לבד, לנצח. בלי חשבון, בלי תחזוקה, בחינם.
         </p>
+
+        <section className="bg-emerald-600 text-white rounded-2xl shadow-md p-5 mb-5">
+          <h2 className="font-black text-lg mb-1">⚡ התקנה אחת — כל המתכונים באתר</h2>
+          <p className="text-sm text-emerald-50 leading-relaxed mb-3">
+            יש לכם מאות מתכונים? מדביקים את השורה הזו <strong>פעם אחת</strong> בתבנית האתר, והווידג'ט
+            מופיע אוטומטית בכל עמוד מתכון — כולל הישנים וכל מתכון עתידי. הסקריפט מזהה לבד את
+            המצרכים מתוך נתוני המתכון שכבר קיימים בעמוד (אותה סכמת Recipe שתוסף המתכונים שלכם
+            יוצר עבור גוגל), ולא נוגע בעמודים שאינם מתכונים.
+          </p>
+          <pre dir="ltr" className="bg-emerald-800/60 text-emerald-100 text-[11px] leading-relaxed rounded-xl p-4 overflow-x-auto whitespace-pre-wrap break-all">{`<script src="https://www.savy.co.il/widget.js" defer></script>`}</pre>
+          <div className="text-xs text-emerald-50 leading-relaxed mt-3 space-y-1">
+            <p><strong>וורדפרס:</strong> תוסף WPCode (או כל תוסף "Header & Footer") ← הוסיפו את השורה ל-Footer. לחלופין: עיצוב ← עורך הקבצים ← footer.php לפני <code dir="ltr">&lt;/body&gt;</code>.</p>
+            <p><strong>Wix:</strong> הגדרות ← Custom Code ← הוסיפו ל-Body - End בכל העמודים.</p>
+            <p>עובד עם WP Recipe Maker, Tasty Recipes וכל תוסף שמייצר סכמת מתכון תקנית.</p>
+          </div>
+        </section>
+
+        <h2 className="font-bold text-sm text-stone-400 mb-3 text-center">— או: ווידג'ט למתכון בודד —</h2>
 
         <section className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5 mb-5">
           <h2 className="font-black text-lg text-stone-800 mb-3">1️⃣ מלאו את פרטי המתכון</h2>
