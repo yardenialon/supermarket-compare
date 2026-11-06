@@ -59,14 +59,14 @@ jobs:
 
           print(f"\n=== stores in city matching '{os.environ['CITY']}' ===")
           cur.execute("""
-            SELECT s.id, rc.name, s.name, s.city, s.lat IS NOT NULL AS has_coords,
+            SELECT s.id, rc.name, s.name, s.city, ROUND(s.lat::numeric,4), ROUND(s.lng::numeric,4),
                    (SELECT COUNT(*) FROM store_price sp WHERE sp.store_id = s.id) AS prices
             FROM store s JOIN retailer_chain rc ON rc.id = s.chain_id
             WHERE s.city ILIKE %s
             ORDER BY prices DESC LIMIT 60""", (city,))
           rows = cur.fetchall()
           for r in rows: print(" ", r)
-          print(f"\ncity matches: {len(rows)}; without coords: {sum(1 for r in rows if not r[4])}; without prices: {sum(1 for r in rows if r[5]==0)}")
+          print(f"\ncity matches: {len(rows)}; without coords: {sum(1 for r in rows if r[4] is None)}; without prices: {sum(1 for r in rows if r[6]==0)}")
           EOF
       - name: Commit results
         run: |
