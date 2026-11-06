@@ -1,0 +1,17 @@
+== /api/search (API alive?) ==
+HTTP 200, 0.437694s
+== /api/push/vapid-key (VAPID configured?) ==
+{"publicKey":"BGKUcJdjZZVCyHMFR4xMD-c5rv6bf_fr16WTpqSXtlFAilkl7o2wkn2qpCYe_Lra7JwEBF_A0AOUNlPkt_IRGM8"}
+== /api/push/send-test unauthenticated (401 = new code deployed) ==
+HTTP 401
+== blog widget /embed/recipe (following redirects) ==
+HTTP/2 307 
+location: https://www.savy.co.il/embed/recipe?n=x&ing=y:1
+class="chip" title="קמח לבן בהיר ארוז">קמח לבן<
+class="chip" title="ביצים 12 יח גדול">ביצים ×3<
+class="chip" title="סוכר לבן בצנצנת 1ק&quot;ג">סוכר לבן<
+items=61156%3A1%2C1448%3A3%2C638%3A1
+items=[{
+FINAL 200 https://www.savy.co.il/embed/recipe?n=%D7%A2%D7%95%D7%92%D7%94&ing=%D7%A7%D7%9E%D7%97%20%D7%9C%D7%91%D7%9F:500%20%D7%92%D7%A8%D7%9D,%D7%91%D7%99%D7%A6%D7%99%D7%9D:3,%D7%A1%D7%95%D7%9B%D7%A8%20%D7%9C%D7%91%D7%9F:1
+push subscribers: 1
+campaign: ('2026-W45', 'pasta-rotev-agvaniyot', 'sent', datetime.datetime(2026, 11, 5, 7, 31, 53, 398839, tzinfo=datetime.timezone.utc), datetime.datetime(2026, 11, 5, 17, 27, 48, 985839, tzinfo=datetime.timezone.utc), 1, 0)
