@@ -26,9 +26,9 @@ jobs:
             curl -sS -m 15 "https://supermarket-compare-production.up.railway.app/api/push/vapid-key" | head -c 200; echo
             echo "== /api/push/send-test unauthenticated (401 = new code deployed) =="
             curl -sS -m 15 -o /dev/null -w "HTTP %{http_code}\n" -X POST -H "Content-Type: application/json" -H "x-admin-key: wrong-key-probe" -d '{}' "https://supermarket-compare-production.up.railway.app/api/push/send-test"
-            echo "== blog widget /embed/recipe (expect resolved chips + CTA) =="
-            curl -sS -m 25 "https://savy.co.il/embed/recipe?n=%D7%A2%D7%95%D7%92%D7%94&ing=%D7%A7%D7%9E%D7%97%20%D7%9C%D7%91%D7%9F:500%20%D7%92%D7%A8%D7%9D,%D7%91%D7%99%D7%A6%D7%99%D7%9D:3,%D7%A1%D7%95%D7%9B%D7%A8%20%D7%9C%D7%91%D7%9F:1" \
-              | grep -oE 'basket-import\?items=[0-9:,%]+|class="chip"[^>]*>[^<]+' | head -8
+            echo "== blog widget /embed/recipe raw =="
+            curl -sS -m 25 -w "\nHTTP %{http_code}\n" "https://savy.co.il/embed/recipe?n=%D7%A2%D7%95%D7%92%D7%94&ing=%D7%A7%D7%9E%D7%97%20%D7%9C%D7%91%D7%9F:500%20%D7%92%D7%A8%D7%9D,%D7%91%D7%99%D7%A6%D7%99%D7%9D:3,%D7%A1%D7%95%D7%9B%D7%A8%20%D7%9C%D7%91%D7%9F:1" \
+              | tr -d '\n' | grep -oE 'items=[^"&]*|class="chip"[^<]*<|לא זוהו מצרכים|HTTP [0-9]+|Internal Server Error|This page could not be found' | head -12
           } | tee bench-results/api-probe.txt
       - name: Set up Python
         uses: actions/setup-python@v5
