@@ -36,7 +36,11 @@ export const api = {
     f('/product/' + id + '/image'),
 
   list: (items: { productId: number; qty: number }[], lat?: number, lng?: number, radiusKm?: number) =>
-    f('/list', { method: 'POST', body: JSON.stringify({ items, topN: 5, lat, lng, radiusKm }) }),
+    // topN 12 (not 5): stores with a smaller assortment (e.g. סופר ברקת,
+    // ~6K items) often miss one basket item, sort below the complete stores
+    // and used to vanish from the results entirely — the UI already shows
+    // "חסרים X" per store, so let the user see them and decide
+    f('/list', { method: 'POST', body: JSON.stringify({ items, topN: 12, lat, lng, radiusKm }) }),
 };
 
 export const dealsApi = {
