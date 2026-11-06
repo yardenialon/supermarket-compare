@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 // Widget generator for recipe bloggers: paste ingredients, get an iframe
 // snippet with a live preview. The embed itself lives at /embed/recipe.
-const SITE = "https://savy.co.il";
+const SITE = "https://www.savy.co.il";
 
 // strip leading quantity/unit tokens: "500 גרם קמח" -> {amount:"500 גרם", q:"קמח"}
 const UNIT = /^(\d+([.,/]\d+)?|חצי|רבע|שליש|שלושת|קורט|מעט|גרם|ג'?|קילו|ק"ג|קג|מ"ל|מל|ליטר|כוסות?|כפות|כף|כפיות?|כפית|יחידות|יחיד(ה|ות)|יח'?|חבילות|חבילה|גביעי?ם?|גביע|קופס(ה|ת|אות)|שקיות?|שקית|בקבוקי?ם?|בקבוק|פרוסות|שיני|שן|ראש|צרור|אגד)$/;
