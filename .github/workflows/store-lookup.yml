@@ -1,0 +1,78 @@
+name: Store Lookup
+
+# Read-only lookup: does a given store/branch exist, does it have
+# coordinates (required for nearby comparisons), and does it carry prices?
+on:
+  workflow_dispatch:
+    inputs:
+      term:
+        description: "Name fragment to search stores/chains for"
+        required: false
+        default: "ברקת"
+      city:
+        description: "City fragment"
+        required: false
+        default: "רמת השרון"
+
+permissions:
+  contents: write
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Lookup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TERM: ${{ inputs.term }}
+          CITY: ${{ inputs.city }}
+        run: |
+          mkdir -p bench-results
+          python - <<'EOF' | tee bench-results/store-lookup.txt
+          import os, psycopg2
+          term, city = f"%{os.environ['TERM']}%", f"%{os.environ['CITY']}%"
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+
+          print(f"=== chains matching '{os.environ['TERM']}' ===")
+          cur.execute("SELECT id, name FROM retailer_chain WHERE name ILIKE %s", (term,))
+          for r in cur.fetchall(): print(" ", r)
+
+          print(f"\n=== stores matching name/subchain '{os.environ['TERM']}' ===")
+          cur.execute("""
+            SELECT s.id, rc.name, s.name, s.subchain_name, s.city, s.lat IS NOT NULL AS has_coords,
+                   (SELECT COUNT(*) FROM store_price sp WHERE sp.store_id = s.id) AS prices
+            FROM store s JOIN retailer_chain rc ON rc.id = s.chain_id
+            WHERE s.name ILIKE %s OR s.subchain_name ILIKE %s
+            ORDER BY prices DESC LIMIT 40""", (term, term))
+          for r in cur.fetchall(): print(" ", r)
+
+          print(f"\n=== stores in city matching '{os.environ['CITY']}' ===")
+          cur.execute("""
+            SELECT s.id, rc.name, s.name, s.city, s.lat IS NOT NULL AS has_coords,
+                   (SELECT COUNT(*) FROM store_price sp WHERE sp.store_id = s.id) AS prices
+            FROM store s JOIN retailer_chain rc ON rc.id = s.chain_id
+            WHERE s.city ILIKE %s
+            ORDER BY prices DESC LIMIT 60""", (city,))
+          rows = cur.fetchall()
+          for r in rows: print(" ", r)
+          print(f"\ncity matches: {len(rows)}; without coords: {sum(1 for r in rows if not r[4])}; without prices: {sum(1 for r in rows if r[5]==0)}")
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/store-lookup.txt
+          git commit -m "chore(bench): store lookup [skip ci]" || echo "no changes"
+          git push -f origin bench-data
