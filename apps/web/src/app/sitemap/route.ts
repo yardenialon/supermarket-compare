@@ -144,6 +144,11 @@ ${urls}
     <loc>https://savy.co.il/recipes</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://savy.co.il/widget</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>${RECIPES.map((r) => `
   <url>
     <loc>https://savy.co.il/recipes/${r.slug}</loc>
