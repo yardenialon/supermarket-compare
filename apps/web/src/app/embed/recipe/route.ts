@@ -29,8 +29,12 @@ interface Resolved {
 const PRODUCE_WORDS = /עגבני|מלפפון|בצל|תפוח אדמה|תפו"א|גזר|קישוא|חציל|חסה|ברוקולי|כרובית|כרוב|פלפל|שום|בטטה|תרד|דלעת|סלרי|צנונ|לימון|תפוז|בננה|תפוח|אבוקדו|מנגו|תות|פטרוזיליה|כוסברה|נענע|שמיר|בזיליקום|פטריות/;
 // a candidate carrying these is a flavored/processed product, not the food
 // itself — penalized unless the ingredient line asked for it explicitly
-const FLAVORED = /בטעם|מעדן|יוגורט|דניאלה|מילקי|אקטימל|חטיף|שוקו |גלידת|גלידה|קינוח|משקה|מיץ|שייק|סמוזי|מופחת|סירופ|ממרח|דגני|עוגיות|וופל|תחליב|אבקת|רוטב|שלגון|ארטיק/;
-const PROCESSED_PRODUCE = /חטיף|מיובש|משקה|מיץ|רסק|שימור|חמוץ|מלח|כתוש|קוביות|תיבולית|סלט|מוכן|אפוי|מטוגן|בטחינה|טעם|צ'יפס|ניוקי|רביולי|קמח/;
+const FLAVORED = /בטעם|מעדן|יוגורט|דניאלה|מילקי|אקטימל|חטיף|שוקו |גלידת|גלידה|קינוח|משקה|מיץ|שייק|סמוזי|מופחת|סירופ|ממרח|דגני|עוגיות|וופל|תחליב|אבקת|רוטב|שלגון|ארטיק|פופסיקל|קרחון|סוכרי/;
+const PROCESSED_PRODUCE = /חטיף|מיובש|משקה|מיץ|רסק|שימור|חמוץ|חומץ|כבוש|מלח|כתוש|קוביות|תיבולית|סלט|מוכן|אפוי|מטוגן|בטחינה|טעם|צ'יפס|ניוקי|רביולי|קמח|פופסיקל|קרחון/;
+
+// shake/recipe lines that are not supermarket products at all — skipped,
+// never "matched" to ice pops (קרח → קרחונים was a real field bug)
+const STOP_LINES = /^(קרח|קוביות קרח|מים|מים קרים|מים רותחים|מלח ופלפל|פלפל שחור גרוס)$/;
 
 function wantsFrozen(q: string) { return /קפוא|קפואה|קפואים|קפואות/.test(q); }
 
@@ -71,6 +75,7 @@ function produceOk(p: any, word: string): boolean {
 async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
   const qty = /^\d+$/.test(amount.trim()) ? Math.min(20, parseInt(amount.trim())) : 1;
   const none = { q, amount, qty, product: null };
+  if (STOP_LINES.test(q.trim())) return none;
   try {
     let candidates = await searchOnce(q);
     const produceWord = q.match(PRODUCE_WORDS)?.[0];
@@ -243,7 +248,7 @@ export async function GET(request: Request) {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "X-Robots-Tag": "noindex",
-      "Cache-Control": "public, max-age=1800, s-maxage=3600",
+      "Cache-Control": "public, max-age=120, s-maxage=600, stale-while-revalidate=1800",
       "Content-Security-Policy": "frame-ancestors *",
     },
   });

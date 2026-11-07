@@ -78,15 +78,23 @@
       var n = norm(lines[i]);
       if (n.length >= 3) needles.push(n.slice(0, 30));
     }
-    var lists = document.querySelectorAll("ul, ol");
-    var bestEl = null, bestScore = 0;
-    for (var l = 0; l < lists.length; l++) {
-      var text = norm(lists[l].textContent);
-      var score = 0;
-      for (var k = 0; k < needles.length; k++) if (text.indexOf(needles[k]) !== -1) score++;
-      if (score > bestScore) { bestScore = score; bestEl = lists[l]; }
+    function scan(selector, maxLen) {
+      var els = document.querySelectorAll(selector);
+      var bestEl = null, bestScore = 0, bestLen = 1e9;
+      for (var l = 0; l < els.length; l++) {
+        var text = norm(els[l].textContent);
+        if (text.length > maxLen) continue;
+        var score = 0;
+        for (var k = 0; k < needles.length; k++) if (text.indexOf(needles[k]) !== -1) score++;
+        if (score > bestScore || (score === bestScore && score >= 2 && text.length < bestLen)) {
+          bestScore = score; bestEl = els[l]; bestLen = text.length;
+        }
+      }
+      return bestScore >= 2 ? bestEl : null;
     }
-    return bestScore >= 2 ? bestEl : null;
+    // standard lists first; then any compact block (sites that render
+    // ingredients as divs/spans/tables rather than ul/li)
+    return scan("ul, ol", 2000) || scan("table, section, div, p", 900);
   }
 
   function findIngredientHeading() {
@@ -135,6 +143,10 @@
     frame.style.cssText = "width:100%;max-width:" + ((me.dataset && me.dataset.maxWidth) || "640px") +
       ";height:380px;border:0;border-radius:20px;overflow:hidden;display:block;margin:18px auto";
 
+    // explicit placement wins: a blogger can drop <div id="savy-widget"></div>
+    // exactly where they want the widget
+    var slot = document.getElementById("savy-widget");
+    if (slot) { slot.appendChild(frame); return; }
     var host = anchorFor(data);
     if (host === document.body) host.appendChild(frame);
     else host.insertAdjacentElement("afterend", frame);

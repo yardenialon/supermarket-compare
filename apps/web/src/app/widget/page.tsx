@@ -70,6 +70,7 @@ export default function WidgetGeneratorPage() {
             <p><strong>וורדפרס:</strong> תוסף WPCode (או כל תוסף "Header & Footer") ← הוסיפו את השורה ל-Footer. לחלופין: עיצוב ← עורך הקבצים ← footer.php לפני <code dir="ltr">&lt;/body&gt;</code>.</p>
             <p><strong>Wix:</strong> הגדרות ← Custom Code ← הוסיפו ל-Body - End בכל העמודים.</p>
             <p>עובד עם WP Recipe Maker, Tasty Recipes וכל תוסף שמייצר סכמת מתכון תקנית.</p>
+            <p><strong>שליטה על המיקום (רשות):</strong> רוצים שהווידג'ט יופיע בנקודה מסוימת? הוסיפו שם <code dir="ltr">&lt;div id="savy-widget"&gt;&lt;/div&gt;</code> — הוא תמיד ינצח את המיקום האוטומטי.</p>
           </div>
         </section>
 

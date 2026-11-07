@@ -65,6 +65,14 @@ MAPPING: list[tuple[str, list[str], list[str]]] = [
     ("mint",        ["%נענע%"], ["%תה %", "%סוכרי%"]),
     ("dill",        ["%שמיר%"], []),
     ("basil",       ["%בזיליקום%"], []),
+    # batch 2 (field-test gaps). Specific types AFTER their generic parent so
+    # the specific photo overwrites the generic stamp (red onion after onion).
+    ("beet",         ["%סלק%"], ["%סלט%", "%חמוצים%"]),
+    ("mushrooms",    ["%פטריות%", "%פטריה%"], ["%שימור%", "%מיובש%", "%קפוא%", "%מוקפא%", "%חתוך%", "%חתוכ%", "%מולבן%", "%ברוטב%"]),
+    ("green_onion",  ["%בצל ירוק%"], []),
+    ("red_onion",    ["%בצל אדום%", "%בצל סגול%"], []),
+    ("red_cabbage",  ["%כרוב אדום%", "%כרוב סגול%"], []),
+    ("cherry_tomato",["%שרי%"], ["%שזיף%", "%דובדבן%", "%מיובש%"]),
 ]
 
 def main():
