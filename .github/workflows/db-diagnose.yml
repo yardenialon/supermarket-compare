@@ -21,40 +21,50 @@ jobs:
           python-version: '3.12'
       - name: Install psycopg2
         run: pip install psycopg2-binary
-      - name: Diagnose promotion table
+      - name: Audit produce stamps
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          mkdir -p bench-results
           python - <<'EOF' | tee bench-results/diagnose.txt
           import os, psycopg2
           conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
-          cur.execute("""SELECT column_name, data_type FROM information_schema.columns
-                         WHERE table_name='promotion' ORDER BY ordinal_position""")
-          cols = cur.fetchall()
-          print("promotion columns:", ", ".join(f"{c}({t})" for c, t in cols))
-          colnames = [c for c, _ in cols]
-          cur.execute("""SELECT COUNT(*),
-                           COUNT(*) FILTER (WHERE end_date IS NULL),
-                           COUNT(*) FILTER (WHERE end_date > NOW()),
-                           COUNT(*) FILTER (WHERE end_date <= NOW())
-                         FROM promotion""")
-          total, nul, future, past = cur.fetchone()
-          print(f"promotion rows: total={total}, end_date NULL={nul}, future={future}, expired={past}")
-          for tcol in ('created_at', 'updated_at', 'start_date'):
-              if tcol in colnames:
-                  cur.execute(f"""SELECT COUNT(*) FILTER (WHERE {tcol} < NOW() - interval '30 days'),
-                                    COUNT(*) FILTER (WHERE {tcol} >= NOW() - interval '7 days'),
-                                    MIN({tcol})::date, MAX({tcol})::date FROM promotion""")
-                  old30, new7, mn, mx = cur.fetchone()
-                  print(f"{tcol}: older than 30d={old30}, last 7d={new7}, range {mn}..{mx}")
-          cur.execute("""SELECT COUNT(*) FILTER (WHERE end_date > NOW() AND end_date < NOW() + interval '60 days'),
-                           COUNT(*) FILTER (WHERE end_date > NOW() + interval '60 days')
-                         FROM promotion""")
-          near, far = cur.fetchone()
-          print(f"future end_date: within 60d={near}, beyond 60d={far}")
-          for t in ('promotion', 'promotion_item', 'store_price', 'product', 'store'):
-              cur.execute(f"SELECT pg_size_pretty(pg_total_relation_size('{t}'))")
-              print(f"size {t}: {cur.fetchone()[0]}")
+          STAMP = "image_url ILIKE '%/produce-img/%'"
+
+          cur.execute(f"SELECT COUNT(*) FROM product WHERE {STAMP}")
+          print(f"total stamped: {cur.fetchone()[0]}")
+
+          # national branded products = high store_count; weighed produce is lower.
+          # the wrongly stamped processed items should dominate the top of this list
+          print("\n== top 220 stamped by store_count ==")
+          cur.execute(f"""SELECT store_count, COALESCE(brand,''), COALESCE(subcategory,''), name
+                          FROM product WHERE {STAMP}
+                          ORDER BY store_count DESC NULLS LAST LIMIT 220""")
+          for sc, brand, sub, name in cur.fetchall():
+              print(f"{sc}\t[{brand}]\t({sub})\t{name}")
+
+          print("\n== stamped brand frequency (store_count>600) ==")
+          cur.execute(f"""SELECT COALESCE(brand,'(none)'), COUNT(*) FROM product
+                          WHERE {STAMP} AND COALESCE(store_count,0) > 600
+                          GROUP BY 1 ORDER BY 2 DESC LIMIT 40""")
+          for b, n in cur.fetchall(): print(f"{n}\t{b}")
+
+          print("\n== stamped names containing latin letters ==")
+          cur.execute(f"""SELECT store_count, name FROM product
+                          WHERE {STAMP} AND name ~ '[A-Za-z]'
+                          ORDER BY store_count DESC NULLS LAST LIMIT 60""")
+          for sc, name in cur.fetchall(): print(f"{sc}\t{name}")
+
+          print("\n== stamped names with liquid volume ==")
+          cur.execute(f"""SELECT store_count, name FROM product
+                          WHERE {STAMP} AND name ~ '[0-9](\\.[0-9])?\\s*(ליטר|ל''|מ"ל|מל\\M)'
+                          ORDER BY store_count DESC NULLS LAST LIMIT 60""")
+          for sc, name in cur.fetchall(): print(f"{sc}\t{name}")
+
+          print("\n== subcategory distribution of stamped ==")
+          cur.execute(f"""SELECT COALESCE(subcategory,'(none)'), COUNT(*) FROM product
+                          WHERE {STAMP} GROUP BY 1 ORDER BY 2 DESC LIMIT 30""")
+          for s, n in cur.fetchall(): print(f"{n}\t{s}")
           EOF
       - name: Commit results
         run: |
@@ -62,5 +72,5 @@ jobs:
           git config user.email "bench@savy.co.il"
           git checkout -B bench-data
           git add bench-results/diagnose.txt
-          git commit -m "chore(bench): promotion table diagnosis [skip ci]" || echo "no changes"
+          git commit -m "chore(bench): produce stamp audit [skip ci]" || echo "no changes"
           git push -f origin bench-data
