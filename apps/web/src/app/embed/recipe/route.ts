@@ -29,7 +29,7 @@ interface Resolved {
 const PRODUCE_WORDS = /עגבני|מלפפון|בצל|תפוח אדמה|תפו"א|גזר|קישוא|חציל|חסה|ברוקולי|כרובית|כרוב|פלפל|שום|בטטה|תרד|דלעת|סלרי|צנונ|לימון|תפוז|בננה|תפוח|אבוקדו|מנגו|תות|פטרוזיליה|כוסברה|נענע|שמיר|בזיליקום|פטריות/;
 // a candidate carrying these is a flavored/processed product, not the food
 // itself — penalized unless the ingredient line asked for it explicitly
-const FLAVORED = /בטעם|מעדן|יוגורט|דניאלה|מילקי|אקטימל|חטיף|שוקו |גלידת|גלידה|קינוח|משקה|מיץ|סירופ|ממרח|דגני|עוגיות|וופל|תחליב|אבקת|רוטב|שלגון|ארטיק/;
+const FLAVORED = /בטעם|מעדן|יוגורט|דניאלה|מילקי|אקטימל|חטיף|שוקו |גלידת|גלידה|קינוח|משקה|מיץ|שייק|סמוזי|מופחת|סירופ|ממרח|דגני|עוגיות|וופל|תחליב|אבקת|רוטב|שלגון|ארטיק/;
 const PROCESSED_PRODUCE = /חטיף|מיובש|משקה|מיץ|רסק|שימור|חמוץ|מלח|כתוש|קוביות|תיבולית|סלט|מוכן|אפוי|מטוגן|בטחינה|טעם|צ'יפס|ניוקי|רביולי|קמח/;
 
 function wantsFrozen(q: string) { return /קפוא|קפואה|קפואים|קפואות/.test(q); }
@@ -46,23 +46,26 @@ function scoreCandidate(p: any, q: string): number {
   return s;
 }
 
-async function searchOnce(q: string): Promise<any[]> {
-  const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=40`, { next: { revalidate: 3600 } });
+async function searchOnce(q: string, limit = 40): Promise<any[]> {
+  const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&limit=${limit}`, { next: { revalidate: 3600 } });
   if (!res.ok) return [];
   const data = await res.json();
   return (data.results ?? []).filter((p: any) => p.minPrice != null && p.storeCount > 5);
 }
 
-// a FRESH produce candidate must look like raw produce: start with the
-// produce word, or carry a short raw-produce-style name — and never a
-// drink-sized volume. Miscategorized juices ("ספרינג מנגו בננה 1.5 ל'")
-// live in the produce category and pass word-blocklists; this shape test
-// is what actually keeps them out.
+// a FRESH produce candidate is accepted on a deterministic signal first:
+// weighed raw produce across all chains carries OUR produce photo
+// (savy.co.il/produce-img — 10,740 products stamped by apply_produce_images).
+// Fresh shakes and juices genuinely live in the produce category and defeat
+// every word/shape heuristic ("שייק תות בננה מופחת"), but they never carry
+// the stamp. Secondary path: name starts with the produce word and looks raw.
 function produceOk(p: any, word: string): boolean {
+  const img = String(p.imageUrl || "");
+  if (img.includes("/produce-img/")) return true;
   const n = String(p.name || "").trim();
   if (PROCESSED_PRODUCE.test(n) || FLAVORED.test(n)) return false;
   if (/\d+(\.\d+)?\s*(ליטר|ל['׳]|מ"ל|מל)/.test(n)) return false;
-  return n.startsWith(word) || n.length <= 22;
+  return n.startsWith(word);
 }
 
 async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
@@ -84,9 +87,10 @@ async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
     } else if (produceWord) {
       // fresh produce: the produce category only, raw-produce-shaped names only
       let produce = candidates.filter((p: any) => p.category === "ירקות ופירות" && produceOk(p, produceWord));
-      if (!produce.length && produceWord !== q) {
-        // "בננה בשלה" found nothing — retry on the produce word itself
-        produce = (await searchOnce(produceWord)).filter((p: any) =>
+      if (!produce.length) {
+        // the top-40 by store coverage is crowded with flavored lookalikes —
+        // go deep on the produce word itself, where the stamped raw items live
+        produce = (await searchOnce(produceWord, 120)).filter((p: any) =>
           p.category === "ירקות ופירות" && produceOk(p, produceWord));
       }
       candidates = produce; // hard gate: no produce match -> unresolved
