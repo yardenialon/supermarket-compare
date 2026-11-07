@@ -290,11 +290,14 @@ export default function Home() {
     (async () => {
       try {
         const updates = await Promise.all(list.slice(0, 40).map(async (it) => {
-          if (!it.product?.barcode) return null;
+          if (!it.product?.id) return null;
           try {
-            const data = await api.search(it.product.barcode);
-            const fresh = (data.results ?? []).find((r: any) => r.id === it.product.id);
-            return fresh ? { id: it.product.id, imageUrl: fresh.imageUrl ?? null, minPrice: fresh.minPrice } : null;
+            // by id, not barcode: weighed produce carries short store-internal
+            // codes that defeat barcode search, and id is exact anyway
+            const res = await fetch(`${API}/api/product/${it.product.id}`);
+            if (!res.ok) return null;
+            const fresh = await res.json();
+            return { id: it.product.id, imageUrl: fresh.imageUrl ?? null, minPrice: fresh.minPrice };
           } catch { return null; }
         }));
         const map = new Map(updates.filter(Boolean).map((u: any) => [u.id, u]));

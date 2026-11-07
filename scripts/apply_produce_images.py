@@ -75,17 +75,31 @@ MAPPING: list[tuple[str, list[str], list[str]]] = [
     ("cherry_tomato",["%שרי%"], ["%שזיף%", "%דובדבן%", "%מיובש%"]),
 ]
 
+# processed forms that must never carry a raw-produce photo, whatever the
+# type ("ממרח לימון בלאדי" was stamped as a lemon) — applied to every entry
+GLOBAL_EXCLUDES = ["%ממרח%", "%רוטב%", "%קרקר%", "%ביסקוויט%", "%וופל%", "%אבקת%",
+                   "%משקה%", "%שימורים%", "%חליטת%", "%תה %", "%בקבוק%", "%סלקטד%"]
+
 def main():
     with open(os.path.join(os.path.dirname(__file__), "produce_images.json")) as f:
         manifest = {k: v for k, v in json.load(f).items() if not k.startswith("_")}
     conn = psycopg2.connect(os.environ["DATABASE_URL"])
     cur = conn.cursor()
+
+    # undo any earlier wrong stamp on a processed form
+    bad_sql = " OR ".join(["name ILIKE %s"] * len(GLOBAL_EXCLUDES))
+    cur.execute(f"""UPDATE product SET image_url=NULL, image_checked_at=NOW()
+                    WHERE image_url ILIKE '%%/produce-img/%%' AND ({bad_sql})""", GLOBAL_EXCLUDES)
+    if cur.rowcount:
+        print(f"unstamped {cur.rowcount} processed products wrongly carrying a produce photo")
+
     total = 0
     for pid, includes, excludes in MAPPING:
         if pid not in manifest:
             continue
+        all_exc = [*excludes, *GLOBAL_EXCLUDES]
         inc_sql = " OR ".join(["name ILIKE %s"] * len(includes))
-        exc_sql = "".join([" AND name NOT ILIKE %s"] * len(excludes))
+        exc_sql = "".join([" AND name NOT ILIKE %s"] * len(all_exc))
         url = f"{BASE}/{pid}.jpg"
         cur.execute(f"""
             UPDATE product SET image_url=%s, image_checked_at=NOW(), image_rejected_url=NULL
@@ -94,7 +108,7 @@ def main():
               AND (image_url IS NULL
                    OR image_url ILIKE '%%savy.co.il%%'
                    OR image_checked_at IS NULL)
-        """, [url, *includes, *excludes])
+        """, [url, *includes, *all_exc])
         print(f"{pid}: {cur.rowcount} products")
         total += cur.rowcount
     conn.commit()
