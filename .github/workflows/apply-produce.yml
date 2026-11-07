@@ -1,0 +1,52 @@
+name: Apply Produce Images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Apply produce stamps (junk gate)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          mkdir -p bench-results
+          python scripts/apply_produce_images.py | tee bench-results/apply-produce.txt
+      - name: Verify top of category
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python - <<'EOF' | tee -a bench-results/apply-produce.txt
+          import os, psycopg2
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+          STAMP = "image_url ILIKE '%/produce-img/%'"
+          cur.execute(f"SELECT COUNT(*) FROM product WHERE {STAMP}")
+          print(f"\ntotal stamped after run: {cur.fetchone()[0]}")
+          print("\n== top 150 stamped by store_count (what the category page shows first) ==")
+          cur.execute(f"""SELECT store_count, name FROM product WHERE {STAMP}
+                          ORDER BY store_count DESC NULLS LAST LIMIT 150""")
+          for sc, name in cur.fetchall(): print(f"{sc}\t{name}")
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/apply-produce.txt
+          git commit -m "chore(bench): produce stamp apply + verify [skip ci]" || echo "no changes"
+          git push -f origin bench-data
