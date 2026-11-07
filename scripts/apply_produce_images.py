@@ -101,14 +101,15 @@ def main():
         inc_sql = " OR ".join(["name ILIKE %s"] * len(includes))
         exc_sql = "".join([" AND name NOT ILIKE %s"] * len(all_exc))
         url = f"{BASE}/{pid}.jpg"
+        # unconditional overwrite: our produce photo always beats whatever a
+        # barcode lookup once attached ('עגבניה מגי' carried a detergent photo
+        # protected by image_checked_at). Name match + excludes are the gate.
         cur.execute(f"""
             UPDATE product SET image_url=%s, image_checked_at=NOW(), image_rejected_url=NULL
             WHERE category='ירקות ופירות'
               AND ({inc_sql}){exc_sql}
-              AND (image_url IS NULL
-                   OR image_url ILIKE '%%savy.co.il%%'
-                   OR image_checked_at IS NULL)
-        """, [url, *includes, *all_exc])
+              AND (image_url IS DISTINCT FROM %s)
+        """, [url, *includes, *all_exc, url])
         print(f"{pid}: {cur.rowcount} products")
         total += cur.rowcount
     conn.commit()

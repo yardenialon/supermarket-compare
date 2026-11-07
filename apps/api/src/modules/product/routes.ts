@@ -96,21 +96,25 @@ export async function productRoutes(app: any) {
     const subcategory = req.query.subcategory;
     const limit = 48;
     const offset = page * limit;
+    // in the produce category, genuinely fresh items (stamped with our
+    // produce photo) come before the packaged/canned products that share the
+    // category — shoppers opening 'ירקות ופירות' expect vegetables, not chips
+    const freshFirst = `(image_url ILIKE '%/produce-img/%') DESC,`;
     let result;
     if (subcategory) {
       result = await query(`
         SELECT id, name, brand, image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount"
-        FROM product 
+        FROM product
         WHERE category = $1 AND subcategory = $2
-        ORDER BY store_count DESC NULLS LAST
+        ORDER BY ${freshFirst} store_count DESC NULLS LAST
         LIMIT $3 OFFSET $4
       `, [decodeURIComponent(name), decodeURIComponent(subcategory), limit, offset]);
     } else {
       result = await query(`
         SELECT id, name, brand, image_url as "imageUrl", min_price as "minPrice", store_count as "storeCount"
-        FROM product 
+        FROM product
         WHERE category = $1
-        ORDER BY store_count DESC NULLS LAST
+        ORDER BY ${freshFirst} store_count DESC NULLS LAST
         LIMIT $2 OFFSET $3
       `, [decodeURIComponent(name), limit, offset]);
     }
