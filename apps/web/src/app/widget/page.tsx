@@ -35,7 +35,7 @@ export default function WidgetGeneratorPage() {
     return `${SITE}/embed/recipe?${params.toString()}`;
   }, [name, src, parsed]);
 
-  const snippet = `<iframe src="${embedUrl}"\n  style="width:100%;max-width:640px;height:340px;border:0;border-radius:16px;overflow:hidden"\n  loading="lazy" title="כמה עולה המתכון? — Savy"></iframe>`;
+  const snippet = `<iframe src="${embedUrl}"\n  style="width:100%;max-width:640px;height:380px;border:0;border-radius:20px;overflow:hidden"\n  loading="lazy" title="כמה עולה המתכון? — Savy"></iframe>`;
 
   const copy = async () => {
     try { await navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
@@ -93,7 +93,7 @@ export default function WidgetGeneratorPage() {
           <h2 className="font-black text-lg text-stone-800 mb-3">2️⃣ ככה זה ייראה בפוסט שלכם</h2>
           <div className="rounded-2xl overflow-hidden border border-stone-100 bg-stone-50">
             <iframe key={embedUrl} src={embedUrl} title="תצוגה מקדימה" loading="lazy"
-              style={{ width: "100%", maxWidth: 640, height: 340, border: 0, display: "block", margin: "0 auto" }} />
+              style={{ width: "100%", maxWidth: 640, height: 380, border: 0, display: "block", margin: "0 auto" }} />
           </div>
         </section>
 

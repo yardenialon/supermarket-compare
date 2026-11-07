@@ -67,6 +67,39 @@
     return null;
   }
 
+  function norm(s) { return String(s).replace(/\s+/g, " ").trim(); }
+
+  // find the DOM list that actually holds the recipe's ingredients, by
+  // matching the ingredient texts (even when the data came from JSON-LD),
+  // so the widget lands right under the ingredients — not at the page end
+  function findIngredientList(lines) {
+    var needles = [];
+    for (var i = 0; i < lines.length && needles.length < 8; i++) {
+      var n = norm(lines[i]);
+      if (n.length >= 3) needles.push(n.slice(0, 30));
+    }
+    var lists = document.querySelectorAll("ul, ol");
+    var bestEl = null, bestScore = 0;
+    for (var l = 0; l < lists.length; l++) {
+      var text = norm(lists[l].textContent);
+      var score = 0;
+      for (var k = 0; k < needles.length; k++) if (text.indexOf(needles[k]) !== -1) score++;
+      if (score > bestScore) { bestScore = score; bestEl = lists[l]; }
+    }
+    return bestScore >= 2 ? bestEl : null;
+  }
+
+  function findIngredientHeading() {
+    var hs = document.querySelectorAll("h2, h3, h4, strong");
+    for (var i = 0; i < hs.length; i++) {
+      if (/^(ה?מצרכים|ה?רכיבים|ה?חומרים|מה צריך|ingredients)\s*:?$/i.test(norm(hs[i].textContent))) {
+        // the heading's following block (usually the ingredient list)
+        return hs[i].nextElementSibling || hs[i];
+      }
+    }
+    return null;
+  }
+
   function anchorFor(data) {
     if (data.anchor) {
       // after the list that holds the ingredients
@@ -75,8 +108,9 @@
              !/^(UL|OL|DIV|SECTION)$/.test(el.tagName)) el = el.parentElement;
       return el;
     }
-    return document.querySelector(
-      ".wprm-recipe-container, .tasty-recipes, [itemtype*='Recipe'], article .entry-content, article, main") || document.body;
+    return findIngredientList(data.lines) || findIngredientHeading() ||
+      document.querySelector(
+        ".wprm-recipe-container, .tasty-recipes, [itemtype*='Recipe'], article .entry-content, article, main") || document.body;
   }
 
   function inject() {
@@ -99,7 +133,7 @@
     frame.title = "כמה עולה המתכון? — Savy";
     frame.loading = "lazy";
     frame.style.cssText = "width:100%;max-width:" + ((me.dataset && me.dataset.maxWidth) || "640px") +
-      ";height:340px;border:0;border-radius:16px;overflow:hidden;display:block;margin:16px auto";
+      ";height:380px;border:0;border-radius:20px;overflow:hidden;display:block;margin:18px auto";
 
     var host = anchorFor(data);
     if (host === document.body) host.appendChild(frame);
