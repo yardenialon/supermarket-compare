@@ -99,7 +99,9 @@ export async function productRoutes(app: any) {
     // in the produce category, genuinely fresh items (stamped with our
     // produce photo) come before the packaged/canned products that share the
     // category — shoppers opening 'ירקות ופירות' expect vegetables, not chips
-    const freshFirst = `(image_url ILIKE '%/produce-img/%') DESC,`;
+    // COALESCE: a NULL image must sort as 'not stamped' — bare DESC puts
+    // NULLs first in Postgres, which floated imageless products to the top
+    const freshFirst = `COALESCE(image_url ILIKE '%/produce-img/%', false) DESC,`;
     let result;
     if (subcategory) {
       result = await query(`
