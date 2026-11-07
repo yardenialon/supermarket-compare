@@ -26,10 +26,9 @@ jobs:
             curl -sS -m 15 "https://supermarket-compare-production.up.railway.app/api/push/vapid-key" | head -c 200; echo
             echo "== /api/push/send-test unauthenticated (401 = new code deployed) =="
             curl -sS -m 15 -o /dev/null -w "HTTP %{http_code}\n" -X POST -H "Content-Type: application/json" -H "x-admin-key: wrong-key-probe" -d '{}' "https://supermarket-compare-production.up.railway.app/api/push/send-test"
-            echo "== blog widget /embed/recipe (following redirects) =="
-            curl -sSI -m 25 "https://savy.co.il/embed/recipe?n=x&ing=y:1" | grep -iE "^HTTP|^location" | head -4
-            curl -sSL -m 25 -w "\nFINAL %{http_code} %{url_effective}\n" "https://savy.co.il/embed/recipe?n=%D7%A2%D7%95%D7%92%D7%94&ing=%D7%A7%D7%9E%D7%97%20%D7%9C%D7%91%D7%9F:500%20%D7%92%D7%A8%D7%9D,%D7%91%D7%99%D7%A6%D7%99%D7%9D:3,%D7%A1%D7%95%D7%9B%D7%A8%20%D7%9C%D7%91%D7%9F:1" \
-              | tr -d '\n' | grep -oE 'items=[^"&]*|class="chip"[^<]*<|לא זוהו מצרכים|FINAL [0-9]+ [^ ]+|Internal Server Error|could not be found' | head -12
+            echo "== blog widget v2: shake ingredients (watch for flavored-dessert mismatches) =="
+            curl -sS -m 25 "https://www.savy.co.il/embed/recipe?n=%D7%A9%D7%99%D7%99%D7%A7%20%D7%91%D7%A0%D7%A0%D7%94&ing=%D7%91%D7%A0%D7%A0%D7%94%3A2%2C%D7%97%D7%9C%D7%91%20%D7%A9%D7%A7%D7%93%D7%99%D7%9D%3A%D7%9B%D7%95%D7%A1%2C%D7%A9%D7%99%D7%91%D7%95%D7%9C%D7%AA%20%D7%A9%D7%95%D7%A2%D7%9C%3A3%20%D7%9B%D7%A4%D7%95%D7%AA%2C%D7%A1%D7%99%D7%A8%D7%95%D7%A4%20%D7%90%D7%92%D7%91%D7%94%3A%D7%9B%D7%A3%2C%D7%AA%D7%9E%D7%A6%D7%99%D7%AA%20%D7%95%D7%A0%D7%99%D7%9C%3A%D7%9B%D7%A4%D7%99%D7%AA%2C%D7%AA%D7%95%D7%AA%D7%99%D7%9D%20%D7%A7%D7%A4%D7%95%D7%90%D7%99%D7%9D%3A%D7%9B%D7%95%D7%A1" \
+              | tr -d '\n' | grep -oE 'class="chip"[^<]*<' | head -10
           } | tee bench-results/api-probe.txt
       - name: Set up Python
         uses: actions/setup-python@v5
