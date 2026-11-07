@@ -53,6 +53,18 @@ async function searchOnce(q: string): Promise<any[]> {
   return (data.results ?? []).filter((p: any) => p.minPrice != null && p.storeCount > 5);
 }
 
+// a FRESH produce candidate must look like raw produce: start with the
+// produce word, or carry a short raw-produce-style name — and never a
+// drink-sized volume. Miscategorized juices ("ספרינג מנגו בננה 1.5 ל'")
+// live in the produce category and pass word-blocklists; this shape test
+// is what actually keeps them out.
+function produceOk(p: any, word: string): boolean {
+  const n = String(p.name || "").trim();
+  if (PROCESSED_PRODUCE.test(n) || FLAVORED.test(n)) return false;
+  if (/\d+(\.\d+)?\s*(ליטר|ל['׳]|מ"ל|מל)/.test(n)) return false;
+  return n.startsWith(word) || n.length <= 22;
+}
+
 async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
   const qty = /^\d+$/.test(amount.trim()) ? Math.min(20, parseInt(amount.trim())) : 1;
   const none = { q, amount, qty, product: null };
@@ -60,13 +72,22 @@ async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
     let candidates = await searchOnce(q);
     const produceWord = q.match(PRODUCE_WORDS)?.[0];
 
-    if (produceWord && !wantsFrozen(q)) {
-      // fresh produce: the produce category only, nothing processed
-      let produce = candidates.filter((p: any) => p.category === "ירקות ופירות" && !PROCESSED_PRODUCE.test(p.name));
+    if (produceWord && wantsFrozen(q)) {
+      // frozen produce ("תותים קפואים"): exact phrase first, else the produce
+      // word filtered to frozen products
+      if (!candidates.length) {
+        candidates = (await searchOnce(produceWord)).filter((p: any) =>
+          /קפוא|מוקפא/.test(p.name) && !FLAVORED.test(p.name));
+      }
+      if (!candidates.length) return none;
+      candidates.sort((a: any, b: any) => scoreCandidate(b, q) - scoreCandidate(a, q));
+    } else if (produceWord) {
+      // fresh produce: the produce category only, raw-produce-shaped names only
+      let produce = candidates.filter((p: any) => p.category === "ירקות ופירות" && produceOk(p, produceWord));
       if (!produce.length && produceWord !== q) {
         // "בננה בשלה" found nothing — retry on the produce word itself
         produce = (await searchOnce(produceWord)).filter((p: any) =>
-          p.category === "ירקות ופירות" && !PROCESSED_PRODUCE.test(p.name));
+          p.category === "ירקות ופירות" && produceOk(p, produceWord));
       }
       candidates = produce; // hard gate: no produce match -> unresolved
       if (!candidates.length) return none;
