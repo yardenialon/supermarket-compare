@@ -26,6 +26,31 @@ async function ensureTable() {
   tableReady = true;
 }
 
+// every application is stored in partner_application first (source of
+// truth); this is only the notification layer. FormSubmit forwards the
+// POST as an email — no SMTP credentials to manage. The first submission
+// triggers a one-time activation email to the address below.
+const NOTIFY_EMAIL = process.env.PARTNER_NOTIFY_EMAIL || 'yardenialon5@gmail.com';
+async function notifyByEmail(fields: Record<string, string>) {
+  try {
+    const res = await fetch(`https://formsubmit.co/ajax/${NOTIFY_EMAIL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      signal: AbortSignal.timeout(10_000),
+      body: JSON.stringify({
+        _subject: `🏪 פנייה חדשה מסאבי לעסקים: ${fields['שם העסק']}`,
+        _template: 'table',
+        _replyto: fields['אימייל'] || undefined,
+        ...fields,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    console.log('partner notify:', res.status, JSON.stringify(data).slice(0, 200));
+  } catch (e: any) {
+    console.error('partner notify failed:', e?.message);
+  }
+}
+
 // light per-IP throttle: the form is public and unauthenticated
 const lastByIp = new Map<string, number>();
 
@@ -58,6 +83,18 @@ export async function partnerRoutes(app: FastifyInstance) {
       [businessName, clean(b.storeType, 60), clean(b.city, 60), clean(b.contactName, 80),
        phone, email, clean(b.message, 2000), clean(b.eligibility, 30)]
     );
+    // fire-and-forget: the user gets their confirmation from the DB insert;
+    // the email is a notification and must not delay or fail the response
+    void notifyByEmail({
+      'שם העסק': businessName,
+      'סוג': clean(b.storeType, 60),
+      'עיר': clean(b.city, 60),
+      'איש קשר': clean(b.contactName, 80),
+      'טלפון': phone,
+      'אימייל': email,
+      'זכאות': clean(b.eligibility, 30),
+      'הודעה': clean(b.message, 2000),
+    });
     return { ok: true };
   });
 
