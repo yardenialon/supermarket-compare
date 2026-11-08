@@ -25,6 +25,15 @@ jobs:
               -H 'Content-Type: application/json' \
               -d '{"businessName":"בדיקת מערכת — סאבי","storeType":"אחר","city":"בדיקה","contactName":"מערכת","phone":"000","email":"","message":"פנייה לבדיקת צינור המייל — אפשר להתעלם"}'
           } | tee bench-results/partner-probe.txt
+      - name: Direct FormSubmit check
+        run: |
+          {
+            echo "== direct formsubmit ajax =="
+            curl -sS -m 25 -w "\nhttp=%{http_code}\n" \
+              -X POST https://formsubmit.co/ajax/yardenialon5@gmail.com \
+              -H 'Content-Type: application/json' -H 'Accept: application/json' \
+              -d '{"_subject":"בדיקת צינור מייל — סאבי","שם העסק":"בדיקה ישירה","הערה":"בדיקת הפעלה"}'
+          } | tee -a bench-results/partner-probe.txt
       - name: Commit results
         run: |
           git config user.name "savy-bench"
