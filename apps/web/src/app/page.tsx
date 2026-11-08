@@ -13,6 +13,12 @@ import HowItWorks from "@/components/HowItWorks";
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ssr: false });
 
+// API host WITHOUT the /api suffix (callers append it). This was referenced
+// in three places but never defined at module scope — a silent ReferenceError
+// swallowed by try/catch, which killed barcode search and the list-snapshot
+// image/price refresh (ignoreBuildErrors hid it from the build).
+const API = (process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api').replace(/\/api$/, '');
+
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
 interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
 interface ListItem { product: Product; qty: number; }
