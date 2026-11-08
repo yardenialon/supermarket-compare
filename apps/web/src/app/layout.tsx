@@ -78,6 +78,7 @@ const FOOTER_PAGES = [
   { href: "/hanukkah", label: "🕎 מחירי חנוכה 2026" },
   { href: "/recipes", label: "🍳 מתכונים חסכוניים — כמה עולה להכין?" },
   { href: "/widget", label: "🧩 ווידג'ט מחירים לבלוגי מתכונים" },
+  { href: "/business", label: "🏪 סאבי לעסקים קטנים — הצטרפו להשוואה" },
   { href: "/category", label: "כל הקטגוריות" },
   { href: "/compare", label: "השוואת רשתות — מי יותר זול?" },
   { href: "/prices", label: "כמה עולה? מחירי מוצרי יסוד" },

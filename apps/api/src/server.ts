@@ -17,6 +17,7 @@ import { produceRoutes } from './modules/produce/routes.js';
 import { pushRoutes } from './modules/push/routes.js';
 import { startCampaignWorker } from './modules/push/campaigns.js';
 import { telegramRoutes } from './modules/telegram/routes.js';
+import { partnerRoutes } from './modules/partners/routes.js';
 
 const app = Fastify({ logger: true, bodyLimit: 10 * 1024 * 1024 });
 
@@ -52,6 +53,7 @@ async function main() {
   await app.register(produceRoutes, { prefix: '/api' });
   await app.register(telegramRoutes, { prefix: '/api' });
   await app.register(pushRoutes, { prefix: '/api' });
+  await app.register(partnerRoutes, { prefix: '/api' });
   startCampaignWorker();
   const port = parseInt(process.env.API_PORT || '3001');
   await app.listen({ port, host: '0.0.0.0' });
