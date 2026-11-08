@@ -27,21 +27,36 @@ async function ensureTable() {
 }
 
 // every application is stored in partner_application first (source of
-// truth); this is only the notification layer. FormSubmit forwards the
-// POST as an email — no SMTP credentials to manage. The first submission
-// triggers a one-time activation email to the address below.
+// truth); this is only the notification layer. Sent through Resend
+// (FormSubmit sits behind a Cloudflare browser challenge, so it rejects
+// server-to-server calls). Needs RESEND_API_KEY on the API environment;
+// without it the notification is skipped and only logged.
 const NOTIFY_EMAIL = process.env.PARTNER_NOTIFY_EMAIL || 'yardenialon5@gmail.com';
+const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 async function notifyByEmail(fields: Record<string, string>) {
+  const key = (process.env.RESEND_API_KEY || '').trim();
+  if (!key) { console.log('partner notify skipped: RESEND_API_KEY not set'); return; }
   try {
-    const res = await fetch(`https://formsubmit.co/ajax/${NOTIFY_EMAIL}`, {
+    const rows = Object.entries(fields)
+      .filter(([, v]) => v)
+      .map(([k, v]) =>
+        `<tr><td style="padding:6px 12px;font-weight:bold;background:#f5f5f4;white-space:nowrap">${esc(k)}</td>
+         <td style="padding:6px 12px">${esc(v)}</td></tr>`)
+      .join('');
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
       signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
-        _subject: `🏪 פנייה חדשה מסאבי לעסקים: ${fields['שם העסק']}`,
-        _template: 'table',
-        _replyto: fields['אימייל'] || undefined,
-        ...fields,
+        from: process.env.PARTNER_NOTIFY_FROM || 'Savy <onboarding@resend.dev>',
+        to: [NOTIFY_EMAIL],
+        reply_to: fields['אימייל'] || undefined,
+        subject: `🏪 פנייה חדשה מסאבי לעסקים: ${fields['שם העסק']}`,
+        html: `<div dir="rtl" style="font-family:Arial,sans-serif">
+                 <h2 style="color:#059669">פנייה חדשה — סאבי לעסקים קטנים</h2>
+                 <table style="border-collapse:collapse;border:1px solid #e7e5e4">${rows}</table>
+               </div>`,
       }),
     });
     const data = await res.json().catch(() => ({}));
