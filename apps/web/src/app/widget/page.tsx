@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 // Widget generator for recipe bloggers: paste ingredients, get an iframe
 // snippet with a live preview. The embed itself lives at /embed/recipe.
-const SITE = "https://www.savy.co.il";
+const SITE = "https://savy.co.il";
 
 // strip leading quantity/unit tokens: "500 גרם קמח" -> {amount:"500 גרם", q:"קמח"}
 const UNIT = /^(\d+([.,/]\d+)?|חצי|רבע|שליש|שלושת|קורט|מעט|גרם|ג'?|קילו|ק"ג|קג|מ"ל|מל|ליטר|כוס(ות)?|כפות|כף|כפיות?|כפית|יחידות|יחיד(ה|ות)|יח'?|חבילות|חבילה|גביעי?ם?|גביע|קופס(ה|ת|אות)|שקיות?|שקית|בקבוקי?ם?|בקבוק|פרוסות|שיני|שן|ראש|צרור|אגד)$/;
@@ -65,7 +65,7 @@ export default function WidgetGeneratorPage() {
             המצרכים מתוך נתוני המתכון שכבר קיימים בעמוד (אותה סכמת Recipe שתוסף המתכונים שלכם
             יוצר עבור גוגל), ולא נוגע בעמודים שאינם מתכונים.
           </p>
-          <pre dir="ltr" className="bg-emerald-800/60 text-emerald-100 text-[11px] leading-relaxed rounded-xl p-4 overflow-x-auto whitespace-pre-wrap break-all">{`<script src="https://www.savy.co.il/widget.js" defer></script>`}</pre>
+          <pre dir="ltr" className="bg-emerald-800/60 text-emerald-100 text-[11px] leading-relaxed rounded-xl p-4 overflow-x-auto whitespace-pre-wrap break-all">{`<script src="https://savy.co.il/widget.js" defer></script>`}</pre>
           <div className="text-xs text-emerald-50 leading-relaxed mt-3 space-y-1">
             <p><strong>וורדפרס:</strong> תוסף WPCode (או כל תוסף "Header & Footer") ← הוסיפו את השורה ל-Footer. לחלופין: עיצוב ← עורך הקבצים ← footer.php לפני <code dir="ltr">&lt;/body&gt;</code>.</p>
             <p><strong>Wix:</strong> הגדרות ← Custom Code ← הוסיפו ל-Body - End בכל העמודים.</p>

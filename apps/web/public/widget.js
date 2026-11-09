@@ -1,4 +1,4 @@
-/*! Savy Recipe Widget — https://www.savy.co.il/widget
+/*! Savy Recipe Widget — https://savy.co.il/widget
  * Site-wide auto-embed: add this script ONCE to your blog template and the
  * "how much does this recipe cost?" widget appears on every recipe page,
  * past and future. It reads the page's own schema.org Recipe JSON-LD (the
@@ -9,7 +9,7 @@
   if (window.__savyWidget) return;
   window.__savyWidget = true;
 
-  var SITE = "https://www.savy.co.il";
+  var SITE = "https://savy.co.il";
   var UNIT = /^(\d+([.,/]\d+)?|½|¼|¾|חצי|רבע|שליש|שלושת|קורט|מעט|גרם|ג'?|קילו|ק"ג|קג|מ"ל|מל|ליטר|כוס(ות)?|כפות|כף|כפיות?|כפית|יחידות|יחיד(ה|ות)|יח'?|חבילות|חבילה|גביעי?ם?|גביע|קופס(ה|ת|אות)|שקיות?|שקית|בקבוקי?ם?|בקבוק|פרוסות|שיני|שן|ראש|צרור|אגד|מכל|פחית|קוביי?ת|של)$/;
 
   function parseLine(line) {

@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   title: "סאבי לעסקים קטנים — הצטרפו להשוואת המחירים | Savy",
   description:
     "מינימרקט שכונתי, סופר חברתי או חנות סטוק? חוק שקיפות המחירים מחייב רק את הרשתות הגדולות — אנחנו פותחים את הבמה לקטנים. הצטרפו בחינם והופיעו בהשוואות המחירים של Savy.",
-  alternates: { canonical: "https://www.savy.co.il/business" },
+  alternates: { canonical: "https://savy.co.il/business" },
   openGraph: {
     title: "סאבי לעסקים קטנים — הלקוחות משווים מחירים. תנו להם לגלות אתכם",
     description:
       "הצטרפות חינם להשוואת המחירים של Savy לסופרים עצמאיים, סופרים חברתיים וחנויות סטוק.",
-    url: "https://www.savy.co.il/business",
+    url: "https://savy.co.il/business",
   },
 };
 

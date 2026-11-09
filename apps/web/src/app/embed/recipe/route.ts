@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 export const revalidate = 3600;
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://supermarket-compare-production.up.railway.app/api";
-const SITE = "https://www.savy.co.il";
+const SITE = "https://savy.co.il";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");

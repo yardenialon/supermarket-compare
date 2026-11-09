@@ -9,6 +9,9 @@ import Script from 'next/script';
 
 // Facebook domain verification added to head via metadata
 export const metadata = {
+  // the apex is the canonical host (sitemap + JSON-LD use it); without this,
+  // relative `canonical` values resolve against the deployment URL
+  metadataBase: new URL('https://savy.co.il'),
   title: 'Savy | השוואת מחירי סופרמרקט בישראל | 25+ רשתות',
   description: 'השווה מחירי מוצרים ב-25+ רשתות סופרמרקט — שופרסל, רמי לוי, ויקטורי ועוד. 7.5 מיליון מחירים, עדכון יומי. מצא את המחיר הזול ביותר ליד הבית.',
   verification: {
