@@ -1,0 +1,36 @@
+name: Domain Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check host behavior
+        run: |
+          mkdir -p bench-results
+          {
+            for u in "https://savy.co.il/" "https://savy.co.il/product/13770" "https://www.savy.co.il/" "https://www.savy.co.il/product/13770" "https://savy.co.il/business"; do
+              echo "== $u =="
+              curl -sSI -m 20 "$u" | grep -iE "^HTTP|^location" || echo "request failed"
+            done
+            echo "== canonical tag on apex product =="
+            curl -sS -m 20 "https://savy.co.il/product/13770" | grep -o '<link rel="canonical"[^>]*>' || echo "no canonical found"
+          } | tee bench-results/domain-probe.txt
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/domain-probe.txt
+          git commit -m "chore(bench): domain redirect probe [skip ci]" || echo "no changes"
+          git push -f origin bench-data
