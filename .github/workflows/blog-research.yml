@@ -1,0 +1,96 @@
+name: Blog Research
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Probe recipe blogs
+        run: |
+          mkdir -p bench-results
+          python3 - <<'EOF' | tee bench-results/blog-research.txt
+          import re, urllib.request, urllib.parse, ssl
+          ctx = ssl.create_default_context()
+          UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
+                'Accept-Language': 'he-IL,he;q=0.9'}
+
+          SITES = [
+            "https://plplt.co.il/", "https://www.thekitchencoach.co.il/",
+            "https://www.zetaim.com/", "https://rotteml.com/",
+            "https://matanot-ktanot.co.il/", "https://just-batia.com/",
+            "https://kerenagam.co.il/", "https://www.orlihoffman.com/",
+            "https://www.cookie-fairy.com/", "https://www.oogio.net/",
+            "https://www.krutit.co.il/", "https://culinartica.co.il/",
+            "http://bishulbezol.blogspot.com/", "https://gilacooking.co.il/",
+            "https://www.taamim.co.il/", "https://pormeleg.kitchen/",
+            "https://www.10dakot.co.il/", "https://touchfood.co.il/",
+          ]
+
+          def get(url):
+              try:
+                  req = urllib.request.Request(url, headers=UA)
+                  with urllib.request.urlopen(req, timeout=20, context=ctx) as r:
+                      return r.read(600_000).decode('utf-8', 'ignore')
+              except Exception as e:
+                  return f"__ERR__ {type(e).__name__}: {e}"
+
+          EMAIL = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
+          BAD_EMail = re.compile(r'\.(png|jpg|jpeg|gif|webp|svg|css|js)$|wixpress|sentry|example|wordpress|schema', re.I)
+
+          for site in SITES:
+              print(f"\n======== {site} ========")
+              html = get(site)
+              if html.startswith("__ERR__"):
+                  print(html); continue
+              platform = ("WordPress" if "wp-content" in html else
+                          "Wix" if ("wix.com" in html or "wixstatic" in html) else
+                          "Blogger" if "blogger" in html.lower() else "?")
+              print(f"platform: {platform}")
+              gen = re.search(r'<meta name="generator" content="([^"]+)"', html)
+              if gen: print(f"generator: {gen.group(1)}")
+              title = re.search(r'<title[^>]*>([^<]{0,120})', html)
+              if title: print(f"title: {title.group(1).strip()}")
+              insta = sorted(set(re.findall(r'instagram\.com/([A-Za-z0-9_.]{2,40})', html)))[:4]
+              if insta: print(f"instagram: {insta}")
+              emails = sorted({e for e in EMAIL.findall(html) if not BAD_EMail.search(e)})[:5]
+              if emails: print(f"emails(home): {emails}")
+              # discover contact/about pages
+              links = re.findall(r'href="([^"]+)"[^>]*>([^<]{0,60})', html)
+              cand = []
+              for href, text in links:
+                  blob = (href + ' ' + text)
+                  if re.search(r'contact|%D7%A6%D7%95%D7%A8|צור|קשר|אודות|about|עבוד', blob, re.I):
+                      full = urllib.parse.urljoin(site, href)
+                      if full.startswith('http') and urllib.parse.urlparse(full).netloc.replace('www.','') == urllib.parse.urlparse(site).netloc.replace('www.',''):
+                          cand.append(full)
+              seen = set()
+              for c in cand:
+                  if c in seen or len(seen) >= 2: continue
+                  seen.add(c)
+                  sub = get(c)
+                  if sub.startswith("__ERR__"):
+                      print(f"contact page {c}: {sub}"); continue
+                  print(f"contact page: {c}")
+                  se = sorted({e for e in EMAIL.findall(sub) if not BAD_EMail.search(e)})[:5]
+                  if se: print(f"  emails: {se}")
+                  si = sorted(set(re.findall(r'instagram\.com/([A-Za-z0-9_.]{2,40})', sub)))[:3]
+                  if si: print(f"  instagram: {si}")
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/blog-research.txt
+          git commit -m "chore(bench): recipe blog research [skip ci]" || echo "no changes"
+          git push -f origin bench-data
