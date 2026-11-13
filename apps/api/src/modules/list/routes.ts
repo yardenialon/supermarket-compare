@@ -87,7 +87,9 @@ export async function listRoutes(app) {
              AND ((s.lat IS NOT NULL
                    AND s.lat BETWEEN $2 - $4 AND $2 + $4
                    AND s.lng BETWEEN $3 - $4 AND $3 + $4)
-                  OR COALESCE(s.is_online, false))`;
+                  OR (COALESCE(s.is_online, false)
+                      AND s.name NOT ILIKE '%אילת%'
+                      AND COALESCE(s.city,'') NOT ILIKE '%אילת%'))`;
       params = [pids, parseFloat(lat), parseFloat(lng), radDeg];
     } else {
       sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.promo_price,
@@ -128,8 +130,19 @@ export async function listRoutes(app) {
       }
       cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, subchainName: s.subchainName, city: s.city, dist: s.dist, isOnline: s.isOnline || undefined, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, promoSavings: +promoSavings.toFixed(2), ...promoTotals(items, sid, s.prices, promoIdx), breakdown: bd });
     }
-    cands.sort((a, b) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
-    return { bestStoreCandidates: cands.slice(0, topN), totalStoresSearched: sm.size };
+    // a chain's online operation may appear as many regional warehouse
+    // "stores" in the files (שוק העיר has 8); to the shopper it is ONE
+    // delivery option — keep only the best online store per chain
+    const bestOnline = new Map();
+    for (const c of cands) {
+      if (!c.isOnline) continue;
+      const b = bestOnline.get(c.chainName);
+      if (!b || c.missingCount < b.missingCount ||
+          (c.missingCount === b.missingCount && c.total < b.total)) bestOnline.set(c.chainName, c);
+    }
+    const deduped = cands.filter(c => !c.isOnline || bestOnline.get(c.chainName) === c);
+    deduped.sort((a, b) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
+    return { bestStoreCandidates: deduped.slice(0, topN), totalStoresSearched: sm.size };
   });
 }
 
@@ -154,7 +167,8 @@ export async function sharedListRoutes(app: any) {
       JOIN store s ON s.id = sp.store_id
       JOIN retailer_chain rc ON rc.id = s.chain_id
       WHERE sp.product_id = ANY($1)
-        AND (COALESCE(s.is_online, false)
+        AND ((COALESCE(s.is_online, false)
+              AND s.name NOT ILIKE '%אילת%' AND COALESCE(s.city,'') NOT ILIKE '%אילת%')
              OR (s.lat IS NOT NULL AND s.city NOT ILIKE '%אילת%'))
     `, [pids]);
     const promoIdxBC = await fetchPromoIndex(pids);

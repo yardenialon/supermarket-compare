@@ -159,7 +159,8 @@ export async function productRoutes(app: any) {
           WHERE sp.product_id = $1
             AND ((s.lat IS NOT NULL
                   AND ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) < $4)
-                 OR COALESCE(s.is_online, false))
+                 OR (COALESCE(s.is_online, false)
+                     AND s.name NOT ILIKE '%אילת%' AND COALESCE(s.city,'') NOT ILIKE '%אילת%'))
           ORDER BY sp.price ASC LIMIT 50
         `, [id, uLat, uLng, radDeg2]);
       } else {
@@ -173,7 +174,9 @@ export async function productRoutes(app: any) {
           JOIN store s ON s.id = sp.store_id
           JOIN retailer_chain rc ON rc.id = s.chain_id
           WHERE sp.product_id = $1
-            AND (s.lat IS NOT NULL OR COALESCE(s.is_online, false))
+            AND (s.lat IS NOT NULL
+                 OR (COALESCE(s.is_online, false)
+                     AND s.name NOT ILIKE '%אילת%' AND COALESCE(s.city,'') NOT ILIKE '%אילת%'))
           ORDER BY dist ASC NULLS LAST LIMIT 50
         `, [id, uLat, uLng]);
       }
@@ -190,10 +193,22 @@ export async function productRoutes(app: any) {
         ORDER BY sp.price ASC LIMIT 50
       `, [id]);
     }
+    // one online row per chain: regional online warehouses (שוק העיר has 8)
+    // are a single delivery option to the shopper — keep the cheapest
+    const seenOnlineChain = new Set<string>();
+    const priceRows = prices.rows
+      .map((r: any) => ({ ...r, price: +r.price }))
+      .sort((a: any, b: any) => a.price - b.price)
+      .filter((r: any) => {
+        if (!r.isOnline) return true;
+        if (seenOnlineChain.has(r.chainName)) return false;
+        seenOnlineChain.add(r.chainName);
+        return true;
+      });
     return {
       productId: +id,
       imageUrl: prod.rows[0]?.image_url || null,
-      prices: prices.rows.map((r: any) => ({ ...r, price: +r.price })).sort((a: any, b: any) => a.price - b.price)
+      prices: priceRows
     };
   });
 
