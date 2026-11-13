@@ -15,16 +15,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-      - name: Check host behavior
+      - name: Check host behavior and product-page health
         run: |
           mkdir -p bench-results
           {
-            for u in "https://savy.co.il/" "https://savy.co.il/product/13770" "https://www.savy.co.il/" "https://www.savy.co.il/product/13770" "https://savy.co.il/business"; do
-              echo "== $u =="
-              curl -sSI -m 20 "$u" | grep -iE "^HTTP|^location" || echo "request failed"
+            echo "== SSR product pages (status + time), 3 rounds =="
+            for round in 1 2 3; do
+              for id in 13770 419 1537 8050 204985; do
+                curl -s -o /dev/null -m 30 -w "round$round /product/$id http=%{http_code} t=%{time_total}s\n" "https://savy.co.il/product/$id" || echo "round$round /product/$id FAILED"
+              done
             done
-            echo "== canonical tag on apex product =="
-            curl -sS -m 20 "https://savy.co.il/product/13770" | grep -o '<link rel="canonical"[^>]*>' || echo "no canonical found"
+            echo "== API endpoints (status + time) =="
+            for u in "https://supermarket-compare-production.up.railway.app/api/product/13770" \
+                     "https://supermarket-compare-production.up.railway.app/api/product/13770/prices" \
+                     "https://supermarket-compare-production.up.railway.app/api/product/204985/prices" \
+                     "https://supermarket-compare-production.up.railway.app/api/search?q=%D7%97%D7%9C%D7%91&limit=5"; do
+              curl -s -o /tmp/resp -m 30 -w "$u http=%{http_code} t=%{time_total}s\n" "$u" || echo "$u FAILED"
+              head -c 120 /tmp/resp; echo
+            done
           } | tee bench-results/domain-probe.txt
       - name: Commit results
         run: |
