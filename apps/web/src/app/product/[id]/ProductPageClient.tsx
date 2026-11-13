@@ -97,6 +97,8 @@ interface Price {
   chainName: string;
   subchainName?: string;
   dist?: number;
+  isOnline?: boolean;
+  deeplink?: string | null;
 }
 
 interface Product {
@@ -492,8 +494,9 @@ export default function ProductPageClient({
                   <div className="flex items-center gap-3">
                     <CLogo name={p.chainName} subchain={p.subchainName} size={44} />
                     <div>
-                      <div className="font-bold text-sm text-stone-700">
+                      <div className="font-bold text-sm text-stone-700 flex items-center gap-1.5">
                         {p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}
+                        {p.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">🚚 אונליין</span>}
                       </div>
                       <div className="text-xs text-stone-400 mt-0.5">
                         {p.storeName}
@@ -509,6 +512,12 @@ export default function ProductPageClient({
                     <span className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>
                       ₪{Number(p.price).toFixed(2)}
                     </span>
+                    {p.deeplink && (
+                      <a href={p.deeplink} target="_blank" rel="noopener nofollow"
+                        className="text-[10px] font-bold bg-sky-600 text-white px-2 py-0.5 rounded-full leading-none hover:bg-sky-700 transition-colors">
+                        להזמנה
+                      </a>
+                    )}
                     {p.isPromo && (
                       <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none"
                         title="מחיר מבצע — ייתכנו תנאים (כמות מינימום / מועדון)">

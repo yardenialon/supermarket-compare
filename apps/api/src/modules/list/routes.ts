@@ -75,21 +75,24 @@ export async function listRoutes(app) {
     let sql, params;
     if (lat && lng) {
       const radDeg = (radiusKm || 10) / 111;
+      // online stores (national delivery) are inside every radius
       sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.is_promo, sp.promo_price,
              s.name as store_name, s.city, rc.name as chain_name,
-             s.subchain_name,
+             s.subchain_name, COALESCE(s.is_online, false) as is_online,
              ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
              FROM store_price sp
              JOIN store s ON s.id = sp.store_id
              JOIN retailer_chain rc ON rc.id = s.chain_id
-             WHERE sp.product_id = ANY($1) AND s.lat IS NOT NULL
-             AND s.lat BETWEEN $2 - $4 AND $2 + $4
-             AND s.lng BETWEEN $3 - $4 AND $3 + $4`;
+             WHERE sp.product_id = ANY($1)
+             AND ((s.lat IS NOT NULL
+                   AND s.lat BETWEEN $2 - $4 AND $2 + $4
+                   AND s.lng BETWEEN $3 - $4 AND $3 + $4)
+                  OR COALESCE(s.is_online, false))`;
       params = [pids, parseFloat(lat), parseFloat(lng), radDeg];
     } else {
       sql = `SELECT sp.store_id, sp.product_id, sp.price, sp.promo_price,
              s.name as store_name, s.city, rc.name as chain_name,
-             s.subchain_name
+             s.subchain_name, COALESCE(s.is_online, false) as is_online
              FROM store_price sp
              JOIN store s ON s.id = sp.store_id
              JOIN retailer_chain rc ON rc.id = s.chain_id
@@ -100,7 +103,7 @@ export async function listRoutes(app) {
     const promoIdx = await fetchPromoIndex(pids);
     const sm = new Map();
     for (const r of rows) {
-      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, subchainName: r.subchain_name || null, city: r.city, dist: r.dist, prices: new Map(), promos: new Map() });
+      if (!sm.has(r.store_id)) sm.set(r.store_id, { storeName: r.store_name, chainName: r.chain_name, subchainName: r.subchain_name || null, city: r.city, dist: r.dist, isOnline: !!r.is_online, prices: new Map(), promos: new Map() });
       const st = sm.get(r.store_id);
       const cur = st.prices.get(r.product_id);
       if (!cur || +r.price < cur) st.prices.set(r.product_id, +r.price);
@@ -123,7 +126,7 @@ export async function listRoutes(app) {
         }
         else miss++;
       }
-      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, subchainName: s.subchainName, city: s.city, dist: s.dist, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, promoSavings: +promoSavings.toFixed(2), ...promoTotals(items, sid, s.prices, promoIdx), breakdown: bd });
+      cands.push({ storeId: sid, storeName: s.storeName, chainName: s.chainName, subchainName: s.subchainName, city: s.city, dist: s.dist, isOnline: s.isOnline || undefined, total: +total.toFixed(2), availableCount: bd.length, missingCount: miss, promoSavings: +promoSavings.toFixed(2), ...promoTotals(items, sid, s.prices, promoIdx), breakdown: bd });
     }
     cands.sort((a, b) => a.missingCount !== b.missingCount ? a.missingCount - b.missingCount : a.total - b.total);
     return { bestStoreCandidates: cands.slice(0, topN), totalStoresSearched: sm.size };
@@ -140,31 +143,35 @@ export async function sharedListRoutes(app: any) {
     if (!items || !items.length) return { chains: [] };
     const pids = items.map((i: any) => i.productId);
 
+    // physical branches (ex-Eilat, whose VAT-free prices skew national
+    // comparisons) PLUS flagged online stores — the user's direction is one
+    // combined board: branch prices and online prices side by side, labeled
     const { rows } = await query(`
       SELECT sp.store_id, sp.product_id, sp.price, sp.promo_price,
              s.name as store_name, s.city, rc.name as chain_name,
-             s.subchain_name
+             s.subchain_name, COALESCE(s.is_online, false) as is_online
       FROM store_price sp
       JOIN store s ON s.id = sp.store_id
       JOIN retailer_chain rc ON rc.id = s.chain_id
       WHERE sp.product_id = ANY($1)
-        AND s.lat IS NOT NULL
-        AND s.city NOT ILIKE '%אילת%'
-        AND s.city NOT ILIKE '%אינטרנט%'
-        AND s.name NOT ILIKE '%אונליין%'
-        AND s.name NOT ILIKE '%online%'
-        AND s.name NOT ILIKE '%אינטרנט%'
+        AND (COALESCE(s.is_online, false)
+             OR (s.lat IS NOT NULL AND s.city NOT ILIKE '%אילת%'))
     `, [pids]);
     const promoIdxBC = await fetchPromoIndex(pids);
 
-    // Group by chain -> store -> products
+    // Group by chain -> store -> products. A chain's online operation
+    // competes as its own row ("שופרסל אונליין" next to "שופרסל"), so the
+    // shopper sees the delivery option and the branch option separately.
     const chainMap = new Map<string, Map<number, any>>();
     for (const r of rows) {
-      if (!chainMap.has(r.chain_name)) chainMap.set(r.chain_name, new Map());
-      const storeMap = chainMap.get(r.chain_name)!;
+      const groupName = r.is_online && !/אונליין|online/i.test(r.chain_name)
+        ? `${r.chain_name} אונליין` : r.chain_name;
+      if (!chainMap.has(groupName)) chainMap.set(groupName, new Map());
+      const storeMap = chainMap.get(groupName)!;
       if (!storeMap.has(r.store_id)) storeMap.set(r.store_id, {
         storeId: r.store_id, storeName: r.store_name, city: r.city,
-        subchainName: r.subchain_name || null, prices: new Map(), promos: new Map()
+        subchainName: r.subchain_name || null, isOnline: !!r.is_online,
+        prices: new Map(), promos: new Map()
       });
       const st = storeMap.get(r.store_id)!;
       const cur = st.prices.get(r.product_id);

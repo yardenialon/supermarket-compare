@@ -20,9 +20,9 @@ const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ss
 const API = (process.env.NEXT_PUBLIC_API_URL || 'https://supermarket-compare-production.up.railway.app/api').replace(/\/api$/, '');
 
 interface Product { id: number; barcode: string; name: string; brand: string; unitQty: string; unitMeasure: string; matchScore: number; minPrice: number | null; maxPrice: number | null; storeCount: number; imageUrl?: string | null; }
-interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; }
+interface Price { price: number; isPromo: boolean; storeId: number; storeName: string; city: string; chainName: string; subchainName?: string; dist?: number; isOnline?: boolean; deeplink?: string | null; }
 interface ListItem { product: Product; qty: number; }
-interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; total: number; availableCount: number; missingCount: number; promoSavings?: number; promoTotal?: number; promoClubTotal?: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
+interface StoreResult { storeId: number; storeName: string; chainName: string; subchainName?: string; city: string; isOnline?: boolean; total: number; availableCount: number; missingCount: number; promoSavings?: number; promoTotal?: number; promoClubTotal?: number; dist?: number; breakdown: { productId: number; price: number; qty: number; subtotal: number }[]; }
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',        color: '#e11d48', logo: '/logos/shufersal.png' },
@@ -757,7 +757,7 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <CLogo name={p.chainName} subchain={p.subchainName} size={80} />
                     <div>
-                      <div className="font-bold text-base text-stone-700">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}</div>
+                      <div className="font-bold text-base text-stone-700 flex items-center gap-1.5">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}{p.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">🚚 אונליין</span>}</div>
                       <div className="text-sm text-stone-400">
                         {p.storeName}{p.city && p.city !== '0' && !p.city.match(/^\d+$/) && ` · ${p.city}`}
                         {p.dist !== undefined && p.dist !== null && <span className="text-blue-400 mr-1"> · {distToKm(p.dist).toFixed(1)} ק״מ</span>}
@@ -765,7 +765,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5"><div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/deals?chain=${encodeURIComponent(p.chainName)}&limit=5`).then(r=>r.json()).then(data=>{ const deal = data.deals?.[0]; if(deal) setPromoModal(deal); else alert('לא נמצאו מבצעים לרשת זו'); }); }} className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none hover:bg-red-600 transition-colors cursor-pointer">🔥 מבצע</button>}</div>
+                  <div className="flex items-center gap-1.5"><div className={"font-mono font-black text-xl " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.deeplink && <a href={p.deeplink} target="_blank" rel="noopener nofollow" onClick={(e) => e.stopPropagation()} className="text-[10px] font-bold bg-sky-600 text-white px-2 py-0.5 rounded-full leading-none hover:bg-sky-700 transition-colors">להזמנה</a>}{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/deals?chain=${encodeURIComponent(p.chainName)}&limit=5`).then(r=>r.json()).then(data=>{ const deal = data.deals?.[0]; if(deal) setPromoModal(deal); else alert('לא נמצאו מבצעים לרשת זו'); }); }} className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none hover:bg-red-600 transition-colors cursor-pointer">🔥 מבצע</button>}</div>
                 </div>
               ))}
             </div>
@@ -815,7 +815,7 @@ export default function Home() {
                   <div className="flex items-center gap-3">
                     <CLogo name={p.chainName} subchain={p.subchainName} size={76} />
                     <div>
-                      <div className="font-bold text-sm text-stone-700">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}</div>
+                      <div className="font-bold text-sm text-stone-700 flex items-center gap-1.5">{p.subchainName ? subchainHe(p.subchainName) : chainHe(p.chainName)}{p.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">🚚 אונליין</span>}</div>
                       <div className="text-xs text-stone-400">
                         {p.storeName}{p.city && p.city !== '0' && !p.city.match(/^\d+$/) && ` · ${p.city}`}
                         {p.dist !== undefined && p.dist !== null && <span className="text-blue-400 mr-1"> · {distToKm(p.dist).toFixed(1)} ק״מ</span>}
@@ -823,7 +823,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1"><div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/deals?chain=${encodeURIComponent(p.chainName)}&limit=5`).then(r=>r.json()).then(data=>{ const deal = data.deals?.[0]; if(deal) setPromoModal(deal); else alert('לא נמצאו מבצעים לרשת זו'); }); }} className="text-[9px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full leading-none hover:bg-red-600 cursor-pointer">🔥</button>}</div>
+                  <div className="flex items-center gap-1"><div className={"font-mono font-black text-lg " + (i === 0 ? "text-emerald-600" : "text-stone-700")}>₪{Number(p.price).toFixed(2)}</div>{p.deeplink && <a href={p.deeplink} target="_blank" rel="noopener nofollow" onClick={(e) => e.stopPropagation()} className="text-[9px] font-bold bg-sky-600 text-white px-1.5 py-0.5 rounded-full leading-none hover:bg-sky-700 transition-colors">להזמנה</a>}{p.isPromo && <button onClick={(e) => { e.stopPropagation(); fetch(`${process.env.NEXT_PUBLIC_API_URL}/deals?chain=${encodeURIComponent(p.chainName)}&limit=5`).then(r=>r.json()).then(data=>{ const deal = data.deals?.[0]; if(deal) setPromoModal(deal); else alert('לא נמצאו מבצעים לרשת זו'); }); }} className="text-[9px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full leading-none hover:bg-red-600 cursor-pointer">🔥</button>}</div>
                 </div>
               ))}
             </div>
@@ -982,7 +982,7 @@ export default function Home() {
                     <div key={c.chainName} className={"bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 " + (i === 0 ? "border-emerald-300 bg-emerald-50/40" : "border-stone-100")}>
                       <div className="shrink-0">{(() => { const logo = CHAINS[c.chainName]?.logo; return logo ? <img src={logo} alt={c.chainName} className="w-10 h-10 object-contain" onError={e => (e.currentTarget.style.display='none')} /> : <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{backgroundColor: CHAINS[c.chainName]?.color || '#6b7280'}}>{(CHAINS[c.chainName]?.he || c.chainName).charAt(0)}</span>; })()}</div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-stone-800 text-sm">{CHAINS[c.chainName]?.he || c.chainName}</div>
+                        <div className="font-bold text-stone-800 text-sm flex items-center gap-1.5">{CHAINS[c.chainName]?.he || c.chainName}{c.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">🚚 אונליין</span>}</div>
                         <div className="text-xs text-stone-400">{c.storeName} · {c.city}</div>
                         {c.missingCount > 0 && <div className="text-xs text-red-400">חסרים {c.missingCount} מוצרים</div>}
                       </div>
@@ -1025,7 +1025,7 @@ export default function Home() {
                           {/* מידע */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <div className="font-black text-base text-stone-800 leading-tight">{store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}</div>
+                              <div className="font-black text-base text-stone-800 leading-tight">{store.subchainName ? subchainHe(store.subchainName) : chainHe(store.chainName)}{store.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full mr-1.5 align-middle">🚚 אונליין</span>}</div>
                               <div className="shrink-0 text-right">
                                 <div className={"font-mono font-black text-xl leading-tight " + (isWinner ? "text-emerald-600" : "text-stone-700")}>₪{store.total.toFixed(2)}</div>
                                 {sav > 0 && <div className="text-xs text-red-400 font-semibold">+₪{sav.toFixed(2)}</div>}

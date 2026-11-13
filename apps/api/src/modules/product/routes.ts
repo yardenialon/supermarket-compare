@@ -149,34 +149,40 @@ export async function productRoutes(app: any) {
         const radDeg2 = (radKm / 111) ** 2;
         prices = await query(`
           SELECT sp.price, sp.is_promo as "isPromo", sp.promo_price as "promoPrice",
-            s.id as "storeId", s.name as "storeName", s.city,
+            sp.deeplink, s.id as "storeId", s.name as "storeName", s.city,
             rc.name as "chainName", s.subchain_name as "subchainName",
+            COALESCE(s.is_online, false) as "isOnline",
             ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
           FROM store_price sp
           JOIN store s ON s.id = sp.store_id
           JOIN retailer_chain rc ON rc.id = s.chain_id
-          WHERE sp.product_id = $1 AND s.lat IS NOT NULL
-            AND ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) < $4
+          WHERE sp.product_id = $1
+            AND ((s.lat IS NOT NULL
+                  AND ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) < $4)
+                 OR COALESCE(s.is_online, false))
           ORDER BY sp.price ASC LIMIT 50
         `, [id, uLat, uLng, radDeg2]);
       } else {
         prices = await query(`
           SELECT sp.price, sp.is_promo as "isPromo", sp.promo_price as "promoPrice",
-            s.id as "storeId", s.name as "storeName", s.city,
+            sp.deeplink, s.id as "storeId", s.name as "storeName", s.city,
             rc.name as "chainName", s.subchain_name as "subchainName",
+            COALESCE(s.is_online, false) as "isOnline",
             ((s.lat - $2) * (s.lat - $2) + (s.lng - $3) * (s.lng - $3)) as dist
           FROM store_price sp
           JOIN store s ON s.id = sp.store_id
           JOIN retailer_chain rc ON rc.id = s.chain_id
-          WHERE sp.product_id = $1 AND s.lat IS NOT NULL
-          ORDER BY dist ASC LIMIT 50
+          WHERE sp.product_id = $1
+            AND (s.lat IS NOT NULL OR COALESCE(s.is_online, false))
+          ORDER BY dist ASC NULLS LAST LIMIT 50
         `, [id, uLat, uLng]);
       }
     } else {
       prices = await query(`
         SELECT sp.price, sp.is_promo as "isPromo", sp.promo_price as "promoPrice",
-          s.id as "storeId", s.name as "storeName", s.city,
-          rc.name as "chainName", s.subchain_name as "subchainName"
+          sp.deeplink, s.id as "storeId", s.name as "storeName", s.city,
+          rc.name as "chainName", s.subchain_name as "subchainName",
+          COALESCE(s.is_online, false) as "isOnline"
         FROM store_price sp
         JOIN store s ON s.id = sp.store_id
         JOIN retailer_chain rc ON rc.id = s.chain_id
