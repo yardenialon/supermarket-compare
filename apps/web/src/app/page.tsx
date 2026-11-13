@@ -498,8 +498,9 @@ export default function Home() {
       {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50"><div className="bg-stone-900 text-white px-5 py-2.5 rounded-xl shadow-2xl text-sm flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[10px]">✓</span>{toast} נוסף לרשימה</div></div>}
 
       {/* Hamburger Menu Button */}
+      {!q.trim() && !sel && (<>
       {/* Hero */}
-      <section className="relative overflow-hidden pt-6 pb-4 px-4">
+      <section className="relative overflow-hidden pt-4 pb-3 px-4">
         {/* רקע דקורטיבי */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-100/60 rounded-full blur-3xl" />
@@ -509,7 +510,7 @@ export default function Home() {
         <div className="relative text-center max-w-lg mx-auto">
           {/* לוגו */}
           <div className="flex justify-center mb-3">
-            <img src="/icons/savy-logo.png" alt="Savy" className="h-20 sm:h-24 object-contain drop-shadow-sm" />
+            <img src="/icons/savy-logo.png" alt="Savy" className="h-14 sm:h-24 object-contain drop-shadow-sm" />
           </div>
 
           {/* כותרת */}
@@ -522,10 +523,9 @@ export default function Home() {
               </svg>
             </span> משלמים?
           </h1>
-          <p className="text-stone-400 text-sm mt-1">30+ רשתות · 8.5 מיליון מחירים · מתעדכן יומיומית · 2,000 חנויות</p>
 
           {/* סטטיסטיקות */}
-          <div className="flex justify-center gap-4 mt-4">
+          <div className="flex justify-center gap-4 mt-3">
             <div className="bg-white/80 backdrop-blur-sm border border-stone-100 rounded-2xl px-4 py-2.5 shadow-sm">
               <div className="font-black text-lg text-emerald-600 leading-none">30+</div>
               <div className="text-[10px] text-stone-400 mt-0.5">רשתות</div>
@@ -541,11 +541,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </>)}
 
 
       {/* Logo Marquee */}
       {/* Tabs */}
-      <div className="flex justify-center px-4 mb-4 mt-1">
+      <div className="flex justify-center px-4 mb-3 mt-1">
         <div className="flex bg-gray-100 rounded-2xl p-1 gap-1 w-full max-w-sm">
           <button onClick={() => setTab('search')}
             className={"flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 " +
@@ -576,21 +577,26 @@ export default function Home() {
       </div>
       {/* ==================== SEARCH TAB ==================== */}
       <div>
-        <QuickAddProducts onAdd={(p) => addToList(p)} />
-        <div className="max-w-2xl mx-auto px-4">
-          <p className="text-[11px] text-gray-400 text-center mb-2">📱 סרקו ברקוד מוצר עם הטלפון לחיפוש מהיר</p>
-          <div className="relative">
-    <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 py-4 pr-14 pl-12 rounded-2xl bg-white border-2 border-gray-100 text-base focus:outline-none focus:ring-0 focus:border-emerald-400 transition-all placeholder:text-gray-300 shadow-sm hover:border-emerald-200" style={{boxShadow:'0 2px 12px rgba(16,185,129,0.08)'}} />
-    <button onClick={openScanner} className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-emerald-500 transition-colors rounded-lg" aria-label="סרוק ברקוד"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 5h2v14H3zM7 5h1v14H7zM10 5h2v14h-2zM14 5h1v14h-1zM17 5h1v14h-1zM20 5h1v14h-1z"/><path d="M1 3h4v3" strokeWidth="2"/><path d="M23 3h-4v3" strokeWidth="2"/><path d="M1 21h4v-3" strokeWidth="2"/><path d="M23 21h-4v-3" strokeWidth="2"/></svg></button>
-
-    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center" style={{background:'linear-gradient(135deg,#10b981,#059669)'}}>
+        <div className="max-w-2xl mx-auto px-4 mb-4">
+          {!q.trim() && !sel && (
+            <p className="text-center text-sm font-bold text-stone-600 mb-2">מה בודקים היום? 👇</p>
+          )}
+          <div className="rounded-[21px] p-[3px] bg-gradient-to-l from-emerald-400 via-teal-400 to-emerald-500 shadow-xl shadow-emerald-500/25">
+            <div className="relative bg-white rounded-[18px]">
+              <input value={q} onChange={e => onInput(e.target.value)} placeholder="חלב, במבה, שמפו, או ברקוד..." className="w-full px-4 py-5 pr-14 pl-12 rounded-[18px] bg-white border-0 text-lg font-medium focus:outline-none placeholder:text-gray-300" />
+              <button onClick={openScanner} className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-300 hover:text-emerald-500 transition-colors rounded-lg" aria-label="סרוק ברקוד"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 5h2v14H3zM7 5h1v14H7zM10 5h2v14h-2zM14 5h1v14h-1zM17 5h1v14h-1zM20 5h1v14h-1z"/><path d="M1 3h4v3" strokeWidth="2"/><path d="M23 3h-4v3" strokeWidth="2"/><path d="M1 21h4v-3" strokeWidth="2"/><path d="M23 21h-4v-3" strokeWidth="2"/></svg></button>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center" style={{background:'linear-gradient(135deg,#10b981,#059669)'}}>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2.5"/>
         <path d="M21 21L16.65 16.65" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
       </svg>
     </div>
-
-  </div>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-400 text-center mt-2">📱 אפשר גם לסרוק ברקוד — לחצו על סמל הסורק משמאל</p>
+        </div>
+        {!q.trim() && !sel && <QuickAddProducts onAdd={(p) => addToList(p)} />}
+        <div className="max-w-2xl mx-auto px-4">
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button onClick={() => { if (userLoc) { setLocStatus('granted'); setLocMode('nearby'); } else { setLocStatus('loading'); setLocMode('nearby'); navigator.geolocation?.getCurrentPosition((pos) => { setUserLoc({lat: pos.coords.latitude, lng: pos.coords.longitude}); setLocStatus('granted'); }, () => { setLocStatus('denied'); setLocMode('cheapest'); }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }); } }} className={"flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all " + (locMode === 'nearby' ? "bg-emerald-500 border-emerald-500 shadow-lg" : locStatus === 'loading' ? "bg-amber-50 border-amber-300 animate-pulse" : "bg-white border-gray-100 hover:border-emerald-200")}>
               <div className={"w-9 h-9 rounded-xl flex items-center justify-center " + (locMode === 'nearby' ? "bg-white/20" : "bg-gray-50")}>
