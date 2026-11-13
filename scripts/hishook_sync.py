@@ -24,7 +24,21 @@ STORE_NAME = "החישוק אונליין"
 WEBSITE = "https://hahishook.com/"
 UA = {'User-Agent': 'SavyBot/1.0 (+https://savy.co.il; price partnership)'}
 
-COL_PRICE, COL_DISC, COL_DEEPLINK, COL_SHORT, COL_LEADING = 1, 2, 4, 5, 9
+COL_PRICE, COL_DISC, COL_CAPACITY, COL_DEEPLINK, COL_SHORT, COL_UNITS, COL_LEADING = 1, 2, 3, 4, 5, 6, 9
+
+
+def to_base_units(qty, measure):
+    """normalize a package size to grams/ml; None when unparseable"""
+    try:
+        q = float(str(qty).strip())
+    except (TypeError, ValueError):
+        return None
+    if not (q > 0):
+        return None
+    m = str(measure or '')
+    if re.search(r'ליטר|ק"ג|קילו|kg|ק״ג', m) and q < 20:
+        return q * 1000
+    return q
 
 
 def fetch_latest():
@@ -102,23 +116,44 @@ def main():
         if not barcodes:
             continue
         promo = disc if 0 < disc < price else None
-        items.append((barcodes, price, promo, c[COL_DEEPLINK].strip()[:500], c[COL_SHORT][:80]))
+        cap = to_base_units(c[COL_CAPACITY], c[COL_UNITS])
+        items.append((barcodes, price, promo, cap, c[COL_DEEPLINK].strip()[:500], c[COL_SHORT][:80]))
         all_barcodes.update(barcodes)
     print(f"file items with leading barcodes: {len(items)}")
 
-    # ── match to catalog ──
-    cur.execute("SELECT barcode, id FROM product WHERE barcode = ANY(%s)", (list(all_barcodes),))
-    by_barcode = dict(cur.fetchall())
+    # ── match to catalog, guarded against package-size mismatches ──
+    # hishook's leading_barcodes map THEIR product to "equivalent" retail
+    # barcodes, which are not always the same package size (their 1L maple
+    # syrup pointed at 250ml bottles — 65₪ shown against a 26₪ product).
+    # A price must only attach when the sizes agree, or failing size data,
+    # when the price is in a sane band around the product's current minimum.
+    cur.execute("""SELECT barcode, id, min_price, unit_qty, unit_measure
+                   FROM product WHERE barcode = ANY(%s)""", (list(all_barcodes),))
+    by_barcode = {r[0]: r for r in cur.fetchall()}
     upserts = {}        # product_id -> (price, promo, deeplink)  (cheapest wins)
-    for barcodes, price, promo, deeplink, _name in items:
+    rejected = []
+    for barcodes, price, promo, cap, deeplink, name in items:
         for b in barcodes:
-            pid = by_barcode.get(b)
-            if pid is None:
+            row = by_barcode.get(b)
+            if row is None:
                 continue
+            _, pid, min_price, unit_qty, unit_measure = row
+            ours = to_base_units(unit_qty, unit_measure)
+            if cap and ours:
+                if not (0.75 <= cap / ours <= 1.3):
+                    rejected.append((name, price, f"size {cap:g} vs {ours:g}"))
+                    continue
+            elif min_price and float(min_price) > 0:
+                ratio = price / float(min_price)
+                if not (0.35 <= ratio <= 2.2):
+                    rejected.append((name, price, f"price x{ratio:.1f} of min {min_price}"))
+                    continue
             prev = upserts.get(pid)
             if prev is None or price < prev[0]:
                 upserts[pid] = (price, promo, deeplink)
-    print(f"matched products: {len(upserts)}")
+    print(f"matched products: {len(upserts)}, rejected mappings: {len(rejected)}")
+    for name, price, why in rejected[:20]:
+        print(f"  rejected: {name} @ {price} ({why})")
 
     # ── upsert prices, purge stale rows, refresh aggregates ──
     cur.execute("SELECT product_id FROM store_price WHERE store_id=%s", (store_id,))
