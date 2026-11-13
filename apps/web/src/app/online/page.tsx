@@ -207,6 +207,15 @@ export default function OnlinePage() {
 
       <main className="max-w-4xl mx-auto px-4 py-6" dir="rtl">
 
+        {/* ההשוואה האונליין חיה עכשיו גם בתוצאות הראשיות (שורות 🚚 אונליין),
+            אז העמוד הזה משמש כעמוד נחיתה ממוקד + כלי ייעודי למי שהגיע מחיפוש */}
+        <div className="mb-4 bg-sky-50 border border-sky-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+          <div className="text-sm text-sky-900">
+            <span className="font-bold">חדש:</span> חנויות האונליין — כולל שופרסל אונליין, רמי לוי אונליין והחישוק — מופיעות עכשיו ישירות בהשוואת הסל הראשית, לצד הסניפים, עם תגית 🚚
+          </div>
+          <Link href="/?tab=list" className="shrink-0 bg-sky-600 hover:bg-sky-700 text-white text-xs font-black px-3 py-2 rounded-xl transition">להשוואה המלאה</Link>
+        </div>
+
         {/* Layout דו-עמודי בדסקטופ */}
         <div className="flex flex-col lg:flex-row gap-6">
 
