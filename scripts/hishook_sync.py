@@ -24,7 +24,7 @@ STORE_NAME = "החישוק אונליין"
 WEBSITE = "https://hahishook.com/"
 UA = {'User-Agent': 'SavyBot/1.0 (+https://savy.co.il; price partnership)'}
 
-COL_PRICE, COL_DISC, COL_CAPACITY, COL_DEEPLINK, COL_SHORT, COL_UNITS, COL_LEADING = 1, 2, 3, 4, 5, 6, 9
+COL_PRICE, COL_DISC, COL_CAPACITY, COL_DEEPLINK, COL_SHORT, COL_UNITS, COL_IMAGE, COL_LEADING = 1, 2, 3, 4, 5, 6, 8, 9
 
 
 def to_base_units(qty, measure):
@@ -122,7 +122,12 @@ def main():
             continue
         promo = disc if 0 < disc < price else None
         cap = to_base_units(c[COL_CAPACITY], c[COL_UNITS])
-        items.append((own, barcodes, price, promo, cap, c[COL_DEEPLINK].strip()[:500], c[COL_SHORT][:80]))
+        # their product photo — usable only on an exact-identity match; the
+        # generic placeholder (shopping.webp) is not a product photo
+        img = c[COL_IMAGE].strip()[:500]
+        if not img.startswith('https://hahishook.com/') or 'shopping.webp' in img:
+            img = None
+        items.append((own, barcodes, price, promo, cap, c[COL_DEEPLINK].strip()[:500], img, c[COL_SHORT][:80]))
         all_barcodes.update(barcodes)
         if own:
             all_barcodes.add(own)
@@ -138,15 +143,18 @@ def main():
                    FROM product WHERE barcode = ANY(%s)""", (list(all_barcodes),))
     by_barcode = {r[0]: r for r in cur.fetchall()}
     upserts = {}        # product_id -> (price, promo, deeplink)  (cheapest wins)
+    images = {}         # product_id -> image url (exact-identity matches only)
     rejected = []
     own_hits = 0
-    for own, barcodes, price, promo, cap, deeplink, name in items:
+    for own, barcodes, price, promo, cap, deeplink, img, name in items:
         # exact identity: their itemcode IS this product's barcode
         if own and own in by_barcode:
             pid = by_barcode[own][1]
             prev = upserts.get(pid)
             if prev is None or price < prev[0]:
                 upserts[pid] = (price, promo, deeplink)
+            if img:
+                images[pid] = img
             own_hits += 1
         for b in barcodes:
             row = by_barcode.get(b)
@@ -186,6 +194,15 @@ def main():
                              promo_price=EXCLUDED.promo_price, deeplink=EXCLUDED.deeplink,
                              updated_at=NOW()""",
                     (pid, store_id, price, promo is not None, promo, deeplink))
+
+    # fill image gaps only: never overwrite an existing image (our produce
+    # photos included) — hishook's photo covers products no chain CDN has
+    filled = 0
+    for pid, img in images.items():
+        cur.execute("""UPDATE product SET image_url=%s, image_checked_at=NOW()
+                       WHERE id=%s AND image_url IS NULL""", (img, pid))
+        filled += cur.rowcount
+    print(f"image gaps filled from hishook photos: {filled}")
 
     affected = list(set(upserts) | stale)
     if affected:
