@@ -1,0 +1,35 @@
+name: Hishook Price Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * *'   # nightly, after the chains' own daily update window
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Sync hishook prices
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          mkdir -p bench-results
+          python scripts/hishook_sync.py | tee bench-results/hishook-sync.txt
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/hishook-sync.txt
+          git commit -m "chore(bench): hishook price sync [skip ci]" || echo "no changes"
+          git push -f origin bench-data
