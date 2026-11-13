@@ -17,30 +17,52 @@ jobs:
           ref: main
       - name: Install psycopg2
         run: pip install psycopg2-binary
-      - name: Online stores audit
+      - name: Trace maple syrup through the hishook pipeline
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           set -o pipefail
           mkdir -p bench-results
           python3 - <<'EOF' 2>&1 | tee bench-results/diagnose.txt
-          import os, psycopg2
+          import os, re, json, datetime, urllib.request, psycopg2
+          UA = {'User-Agent': 'SavyBot/1.0 (+https://savy.co.il)'}
+
+          print("== hishook daily file: maple rows ==")
+          data = None
+          for d in range(0, 8):
+              day = (datetime.date.today() - datetime.timedelta(days=d)).strftime("%Y%m%d")
+              try:
+                  req = urllib.request.Request(f"https://hahishook.com/wp-content/uploads/chp/{day}.tsv", headers=UA)
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      data = r.read().decode('utf-8', 'ignore'); print("file:", day); break
+              except Exception: pass
+          for line in data.split('\n'):
+              if 'מייפל' in line:
+                  c = line.rstrip('\r').split('\t')
+                  print({'itemcode': c[0], 'price': c[1], 'disc': c[2], 'name': c[5],
+                         'leading': c[9], 'similar': c[10]})
+
           cur = psycopg2.connect(os.environ['DATABASE_URL']).cursor()
-          print("== is_online stores per chain ==")
-          cur.execute("""SELECT rc.name, COUNT(*),
-                                MIN(s.name), MAX(s.name)
-                         FROM store s JOIN retailer_chain rc ON rc.id=s.chain_id
-                         WHERE s.is_online GROUP BY rc.name ORDER BY 2 DESC""")
+          print("\n== hishook store_price rows matching maple ==")
+          cur.execute("""SELECT sp.product_id, p.name, p.barcode, sp.price, p.store_count
+                         FROM store_price sp JOIN product p ON p.id=sp.product_id
+                         WHERE sp.store_id=2426945 AND p.name ILIKE '%מייפל%'""")
           for r in cur.fetchall(): print(r)
-          print("\n== all online stores of the biggest offender ==")
-          cur.execute("""SELECT s.id, s.name, s.city,
-                                (SELECT COUNT(*) FROM store_price sp WHERE sp.store_id=s.id) prices
-                         FROM store s JOIN retailer_chain rc ON rc.id=s.chain_id
-                         WHERE s.is_online AND rc.name = (
-                           SELECT rc2.name FROM store s2 JOIN retailer_chain rc2 ON rc2.id=s2.chain_id
-                           WHERE s2.is_online GROUP BY rc2.name ORDER BY COUNT(*) DESC LIMIT 1)
-                         ORDER BY prices DESC LIMIT 40""")
+
+          print("\n== our catalog: maple products by store_count ==")
+          cur.execute("""SELECT id, name, barcode, store_count, min_price
+                         FROM product WHERE name ILIKE '%מייפל%'
+                         ORDER BY store_count DESC NULLS LAST LIMIT 12""")
           for r in cur.fetchall(): print(r)
+
+          print("\n== live search API for 'סירופ מייפל' (what the user sees) ==")
+          req = urllib.request.Request(
+              "https://supermarket-compare-production.up.railway.app/api/search?q=" +
+              urllib.parse.quote("סירופ מייפל") + "&limit=10", headers=UA)
+          with urllib.request.urlopen(req, timeout=30) as r:
+              res = json.loads(r.read())
+          for p in res.get('results', []):
+              print(p.get('id'), p.get('name'), 'stores:', p.get('storeCount'))
           EOF
       - name: Commit results
         if: always()
@@ -49,5 +71,5 @@ jobs:
           git config user.email "bench@savy.co.il"
           git checkout -B bench-data
           git add bench-results/diagnose.txt
-          git commit -m "chore(bench): online stores audit [skip ci]" || echo "no changes"
+          git commit -m "chore(bench): maple trace [skip ci]" || echo "no changes"
           git push -f origin bench-data
