@@ -3,3 +3,4 @@ node_modules/
 .env
 dumps/
 kaggle_data/
+__pycache__/
