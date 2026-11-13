@@ -111,15 +111,22 @@ def main():
             disc = float(c[COL_DISC])
         except ValueError:
             disc = price
+        # the itemcode is usually the product's OWN barcode (an EAN) —
+        # an exact identity match, stronger than leading_barcodes, which
+        # map to "equivalent" retail products and need the size guard
+        own = c[0].strip()
+        own = own if own.isdigit() and 8 <= len(own) <= 14 else None
         barcodes = [b for b in re.split(r'[,;| ]+', c[COL_LEADING].strip())
                     if b.isdigit() and 6 <= len(b) <= 14]
-        if not barcodes:
+        if not own and not barcodes:
             continue
         promo = disc if 0 < disc < price else None
         cap = to_base_units(c[COL_CAPACITY], c[COL_UNITS])
-        items.append((barcodes, price, promo, cap, c[COL_DEEPLINK].strip()[:500], c[COL_SHORT][:80]))
+        items.append((own, barcodes, price, promo, cap, c[COL_DEEPLINK].strip()[:500], c[COL_SHORT][:80]))
         all_barcodes.update(barcodes)
-    print(f"file items with leading barcodes: {len(items)}")
+        if own:
+            all_barcodes.add(own)
+    print(f"file items with a barcode (own or leading): {len(items)}")
 
     # ── match to catalog, guarded against package-size mismatches ──
     # hishook's leading_barcodes map THEIR product to "equivalent" retail
@@ -132,7 +139,15 @@ def main():
     by_barcode = {r[0]: r for r in cur.fetchall()}
     upserts = {}        # product_id -> (price, promo, deeplink)  (cheapest wins)
     rejected = []
-    for barcodes, price, promo, cap, deeplink, name in items:
+    own_hits = 0
+    for own, barcodes, price, promo, cap, deeplink, name in items:
+        # exact identity: their itemcode IS this product's barcode
+        if own and own in by_barcode:
+            pid = by_barcode[own][1]
+            prev = upserts.get(pid)
+            if prev is None or price < prev[0]:
+                upserts[pid] = (price, promo, deeplink)
+            own_hits += 1
         for b in barcodes:
             row = by_barcode.get(b)
             if row is None:
@@ -151,7 +166,7 @@ def main():
             prev = upserts.get(pid)
             if prev is None or price < prev[0]:
                 upserts[pid] = (price, promo, deeplink)
-    print(f"matched products: {len(upserts)}, rejected mappings: {len(rejected)}")
+    print(f"matched products: {len(upserts)} (exact itemcode hits: {own_hits}), rejected mappings: {len(rejected)}")
     for name, price, why in rejected[:20]:
         print(f"  rejected: {name} @ {price} ({why})")
 
