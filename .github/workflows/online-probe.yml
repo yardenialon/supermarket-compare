@@ -1,0 +1,72 @@
+name: Online Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Verify hishook + online stores end to end
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -o pipefail
+          mkdir -p bench-results
+          python3 - <<'EOF' 2>&1 | tee bench-results/online-probe.txt
+          import os, json, psycopg2, urllib.request
+
+          cur = psycopg2.connect(os.environ['DATABASE_URL']).cursor()
+          cur.execute("""SELECT sp.product_id, p.name, sp.price, sp.deeplink IS NOT NULL
+                         FROM store_price sp JOIN product p ON p.id=sp.product_id
+                         WHERE sp.store_id=2426945 ORDER BY p.store_count DESC NULLS LAST LIMIT 5""")
+          rows = cur.fetchall()
+          print("== hishook-priced products (top by store_count) ==")
+          for r in rows: print(r)
+          pid = rows[0][0]
+
+          API = "https://supermarket-compare-production.up.railway.app/api"
+          def call(url, body=None):
+              req = urllib.request.Request(url, headers={'Content-Type': 'application/json'},
+                                           data=json.dumps(body).encode() if body else None)
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  return json.loads(r.read())
+
+          print(f"\n== /product/{pid}/prices ==")
+          d = call(f"{API}/product/{pid}/prices")
+          hish = [p for p in d['prices'] if 'חישוק' in (p.get('chainName') or '')]
+          online = [p for p in d['prices'] if p.get('isOnline')]
+          print(f"total rows: {len(d['prices'])}, online rows: {len(online)}, hishook rows: {len(hish)}")
+          for p in hish: print("HISHOOK:", p.get('price'), p.get('storeName'), (p.get('deeplink') or '')[:60])
+
+          print(f"\n== /product/{pid}/prices with Tel Aviv geo+radius 5km ==")
+          d2 = call(f"{API}/product/{pid}/prices?lat=32.08&lng=34.78&radius=5")
+          hish2 = [p for p in d2['prices'] if 'חישוק' in (p.get('chainName') or '')]
+          print(f"total rows: {len(d2['prices'])}, hishook present despite radius: {len(hish2) > 0}")
+
+          print("\n== /list/by-chain ==")
+          d3 = call(f"{API}/list/by-chain", {"items": [{"productId": pid, "qty": 1}]})
+          names = [(c['chainName'], c.get('isOnline'), c['total']) for c in d3['chains'][:15]]
+          for n in names: print(n)
+          print("hishook row:", any('חישוק' in c['chainName'] for c in d3['chains']))
+          print("online-labeled rows:", sum(1 for c in d3['chains'] if c.get('isOnline')))
+          EOF
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/online-probe.txt
+          git commit -m "chore(bench): online stores e2e probe [skip ci]" || echo "no changes"
+          git push -f origin bench-data
