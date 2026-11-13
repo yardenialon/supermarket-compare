@@ -23,8 +23,9 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
+          set -o pipefail
           mkdir -p bench-results
-          python scripts/hishook_sync.py | tee bench-results/hishook-sync.txt
+          python scripts/hishook_sync.py 2>&1 | tee bench-results/hishook-sync.txt
       - name: Commit results
         run: |
           git config user.name "savy-bench"
