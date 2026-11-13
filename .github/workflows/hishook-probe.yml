@@ -1,0 +1,100 @@
+name: Hishook Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install psycopg2
+        run: pip install psycopg2-binary
+      - name: Fetch daily price file and match against our catalog
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          mkdir -p bench-results
+          python3 - <<'EOF' | tee bench-results/hishook-probe.txt
+          import urllib.request, datetime, os, psycopg2, re
+          UA = {'User-Agent': 'SavyBot/1.0 (+https://savy.co.il; price partnership probe)'}
+
+          # find the newest daily file (try today backwards)
+          base = "https://hahishook.com/wp-content/uploads/chp/{}.tsv"
+          data = None
+          for d in range(0, 8):
+              day = (datetime.date.today() - datetime.timedelta(days=d)).strftime("%Y%m%d")
+              url = base.format(day)
+              try:
+                  req = urllib.request.Request(url, headers=UA)
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      data = r.read().decode('utf-8', 'ignore')
+                  print(f"fetched: {url}  bytes={len(data)}")
+                  break
+              except Exception as e:
+                  print(f"{url} -> {type(e).__name__} {e}")
+          if not data:
+              raise SystemExit("no daily file found in last 8 days")
+
+          lines = [l for l in data.split('\n') if l.strip()]
+          print(f"rows: {len(lines)}")
+          print("\n== first 3 raw rows ==")
+          for l in lines[:3]:
+              print(repr(l[:500]))
+
+          # columns: 0 itemcode, 1 price, 2 discounted_price, 3 capacity,
+          # 4 deeplink, 5 short_name, 6 capacity_incl_units, 7 long_name,
+          # 8 image, 9 leading_barcodes, 10 similar_barcodes
+          n_price = n_disc = 0
+          barcode_rows = []   # (itemcode, all barcodes)
+          all_barcodes = set()
+          for l in lines:
+              c = l.split('\t')
+              if len(c) < 11: continue
+              if c[1].strip(): n_price += 1
+              if c[2].strip(): n_disc += 1
+              bcs = set()
+              for field in (c[9], c[10]):
+                  for b in re.split(r'[,;| ]+', field.strip()):
+                      b = b.strip()
+                      if b.isdigit() and 6 <= len(b) <= 14:
+                          bcs.add(b)
+              if bcs:
+                  barcode_rows.append((c[0], c[5][:40], bcs))
+                  all_barcodes.update(bcs)
+          print(f"\nrows with price: {n_price}, with discount: {n_disc}")
+          print(f"rows with at least one barcode: {len(barcode_rows)}")
+          print(f"distinct barcodes: {len(all_barcodes)}")
+
+          conn = psycopg2.connect(os.environ['DATABASE_URL']); cur = conn.cursor()
+          bl = list(all_barcodes)
+          matched = set()
+          for i in range(0, len(bl), 5000):
+              cur.execute("SELECT barcode FROM product WHERE barcode = ANY(%s)", (bl[i:i+5000],))
+              matched.update(r[0] for r in cur.fetchall())
+          print(f"barcodes found in our product table: {len(matched)}")
+          hit = sum(1 for _, _, bcs in barcode_rows if bcs & matched)
+          print(f"hishook items matchable to our catalog: {hit}/{len(barcode_rows)} ({hit*100//max(len(barcode_rows),1)}%)")
+          print("\n== sample of UNmatched items ==")
+          shown = 0
+          for code, name, bcs in barcode_rows:
+              if not (bcs & matched):
+                  print(f"  {code}\t{name}\t{sorted(bcs)[:2]}")
+                  shown += 1
+                  if shown >= 15: break
+          EOF
+      - name: Commit results
+        run: |
+          git config user.name "savy-bench"
+          git config user.email "bench@savy.co.il"
+          git checkout -B bench-data
+          git add bench-results/hishook-probe.txt
+          git commit -m "chore(bench): hishook price-file feasibility probe [skip ci]" || echo "no changes"
+          git push -f origin bench-data
