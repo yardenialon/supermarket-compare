@@ -10,6 +10,7 @@ interface StoreResult { storeId: number; storeName: string; chainName: string; c
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   'Shufersal':    { he: 'שופרסל',      color: '#e11d48', logo: '/logos/shufersal.png' },
+  'החישוק':       { he: 'החישוק', color: '#65a30d', logo: '/logos/hahishook.png' },
   'Rami Levy':    { he: 'רמי לוי',     color: '#2563eb', logo: '/logos/rami-levy.png' },
   'Victory':      { he: 'ויקטורי',     color: '#f59e0b', logo: '/logos/victory.png' },
   'Hazi Hinam':   { he: 'חצי חינם',    color: '#ea580c', logo: '/logos/hazi-hinam.png' },

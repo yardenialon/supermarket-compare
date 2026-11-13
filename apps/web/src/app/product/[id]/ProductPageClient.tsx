@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 
 const CHAINS: Record<string, { he: string; color: string; logo: string }> = {
   Shufersal:    { he: "שופרסל",      color: "#e11d48", logo: "/logos/shufersal.png" },
+  "החישוק":     { he: "החישוק",      color: "#65a30d", logo: "/logos/hahishook.png" },
   "Rami Levy":  { he: "רמי לוי",     color: "#2563eb", logo: "/logos/rami-levy.png" },
   Victory:      { he: "ויקטורי",     color: "#f59e0b", logo: "/logos/victory.png" },
   Mega:         { he: "מגה",         color: "#16a34a", logo: "/logos/mega.png" },
