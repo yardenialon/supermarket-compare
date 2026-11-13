@@ -27,6 +27,7 @@ jobs:
           mkdir -p bench-results
           python scripts/hishook_sync.py 2>&1 | tee bench-results/hishook-sync.txt
       - name: Commit results
+        if: always()
         run: |
           git config user.name "savy-bench"
           git config user.email "bench@savy.co.il"
