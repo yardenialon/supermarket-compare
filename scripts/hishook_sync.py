@@ -114,11 +114,11 @@ def main():
         # the itemcode is usually the product's OWN barcode (an EAN) —
         # an exact identity match, stronger than leading_barcodes, which
         # map to "equivalent" retail products and need the size guard
-        own = c[0].strip()
-        own = own if own.isdigit() and 8 <= len(own) <= 14 else None
+        itemcode = c[0].strip()
+        own = itemcode if itemcode.isdigit() and 8 <= len(itemcode) <= 14 else None
         barcodes = [b for b in re.split(r'[,;| ]+', c[COL_LEADING].strip())
                     if b.isdigit() and 6 <= len(b) <= 14]
-        if not own and not barcodes:
+        if not itemcode:
             continue
         promo = disc if 0 < disc < price else None
         cap = to_base_units(c[COL_CAPACITY], c[COL_UNITS])
@@ -127,11 +127,15 @@ def main():
         img = c[COL_IMAGE].strip()[:500]
         if not img.startswith('https://hahishook.com/') or 'shopping.webp' in img:
             img = None
-        items.append((own, barcodes, price, promo, cap, c[COL_DEEPLINK].strip()[:500], img, c[COL_SHORT][:80]))
+        items.append({'itemcode': itemcode, 'own': own, 'barcodes': barcodes,
+                      'price': price, 'promo': promo, 'cap': cap,
+                      'units': c[COL_UNITS].strip()[:20],
+                      'deeplink': c[COL_DEEPLINK].strip()[:500], 'img': img,
+                      'name': c[COL_SHORT].strip()[:100], 'accepted': False})
         all_barcodes.update(barcodes)
         if own:
             all_barcodes.add(own)
-    print(f"file items with a barcode (own or leading): {len(items)}")
+    print(f"file items parsed: {len(items)}")
 
     # ── match to catalog, guarded against package-size mismatches ──
     # hishook's leading_barcodes map THEIR product to "equivalent" retail
@@ -146,17 +150,19 @@ def main():
     images = {}         # product_id -> image url (exact-identity matches only)
     rejected = []
     own_hits = 0
-    for own, barcodes, price, promo, cap, deeplink, img, name in items:
+    for it in items:
+        price, promo, cap, deeplink, img = it['price'], it['promo'], it['cap'], it['deeplink'], it['img']
         # exact identity: their itemcode IS this product's barcode
-        if own and own in by_barcode:
-            pid = by_barcode[own][1]
+        if it['own'] and it['own'] in by_barcode:
+            pid = by_barcode[it['own']][1]
             prev = upserts.get(pid)
             if prev is None or price < prev[0]:
                 upserts[pid] = (price, promo, deeplink)
             if img:
                 images[pid] = img
             own_hits += 1
-        for b in barcodes:
+            it['accepted'] = True
+        for b in it['barcodes']:
             row = by_barcode.get(b)
             if row is None:
                 continue
@@ -164,19 +170,49 @@ def main():
             ours = to_base_units(unit_qty, unit_measure)
             if cap and ours:
                 if not (0.75 <= cap / ours <= 1.3):
-                    rejected.append((name, price, f"size {cap:g} vs {ours:g}"))
+                    rejected.append((it['name'], price, f"size {cap:g} vs {ours:g}"))
                     continue
             elif min_price and float(min_price) > 0:
                 ratio = price / float(min_price)
                 if not (0.35 <= ratio <= 2.2):
-                    rejected.append((name, price, f"price x{ratio:.1f} of min {min_price}"))
+                    rejected.append((it['name'], price, f"price x{ratio:.1f} of min {min_price}"))
                     continue
             prev = upserts.get(pid)
             if prev is None or price < prev[0]:
                 upserts[pid] = (price, promo, deeplink)
+            it['accepted'] = True
     print(f"matched products: {len(upserts)} (exact itemcode hits: {own_hits}), rejected mappings: {len(rejected)}")
     for name, price, why in rejected[:20]:
         print(f"  rejected: {name} @ {price} ({why})")
+
+    # ── hishook-exclusive items become NEW products ──
+    # their own bulk goods (nuts, grains, spices) and off-size packs have no
+    # catalog twin, so shoppers could not find them at all. Insert them as
+    # first-class products: searchable by name, priced only at hishook.
+    # Synthetic barcode hsk-<itemcode> keeps non-EAN itemcodes collision-free.
+    created = 0
+    for it in items:
+        if it['accepted'] or not it['name']:
+            continue
+        barcode = it['own'] or f"hsk-{it['itemcode']}"
+        cur.execute("SELECT id FROM product WHERE barcode=%s", (barcode,))
+        row = cur.fetchone()
+        if row:
+            pid = row[0]
+        else:
+            display = it['name']
+            if it['cap'] and it['units']:
+                n = it['cap']
+                display = f"{display} {int(n) if float(n).is_integer() else n} {it['units']}"
+            cur.execute("""INSERT INTO product (barcode, name, brand, image_url, image_checked_at)
+                           VALUES (%s, %s, 'החישוק', %s, NOW()) RETURNING id""",
+                        (barcode, display[:120], it['img']))
+            pid = cur.fetchone()[0]
+            created += 1
+        prev = upserts.get(pid)
+        if prev is None or it['price'] < prev[0]:
+            upserts[pid] = (it['price'], it['promo'], it['deeplink'])
+    print(f"hishook-exclusive products: {created} created, {sum(1 for i in items if not i['accepted'])} total in file")
 
     # ── upsert prices, purge stale rows, refresh aggregates ──
     cur.execute("SELECT product_id FROM store_price WHERE store_id=%s", (store_id,))
