@@ -980,9 +980,9 @@ export default function Home() {
                 <div className="space-y-2">
                   {chainResults.map((c: any, i: number) => (
                     <div key={c.chainName} className={"bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 " + (i === 0 ? "border-emerald-300 bg-emerald-50/40" : "border-stone-100")}>
-                      <div className="shrink-0">{(() => { const logo = CHAINS[c.chainName]?.logo; return logo ? <img src={logo} alt={c.chainName} className="w-10 h-10 object-contain" onError={e => (e.currentTarget.style.display='none')} /> : <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{backgroundColor: CHAINS[c.chainName]?.color || '#6b7280'}}>{(CHAINS[c.chainName]?.he || c.chainName).charAt(0)}</span>; })()}</div>
+                      <div className="shrink-0">{(() => { const logo = CHAINS[c.chainName.replace(/ אונליין$/, '')]?.logo; return logo ? <img src={logo} alt={c.chainName} className="w-10 h-10 object-contain" onError={e => (e.currentTarget.style.display='none')} /> : <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm" style={{backgroundColor: CHAINS[c.chainName.replace(/ אונליין$/, '')]?.color || '#6b7280'}}>{(CHAINS[c.chainName.replace(/ אונליין$/, '')]?.he || c.chainName).charAt(0)}</span>; })()}</div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-stone-800 text-sm flex items-center gap-1.5">{CHAINS[c.chainName]?.he || c.chainName}{c.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">🚚 אונליין</span>}</div>
+                        <div className="font-bold text-stone-800 text-sm flex items-center gap-1.5">{CHAINS[c.chainName.replace(/ אונליין$/, '')]?.he || c.chainName.replace(/ אונליין$/, '')}{c.isOnline && <span className="text-[9px] font-bold bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">🚚 אונליין</span>}</div>
                         <div className="text-xs text-stone-400">{c.storeName} · {c.city}</div>
                         {c.missingCount > 0 && <div className="text-xs text-red-400">חסרים {c.missingCount} מוצרים</div>}
                       </div>
