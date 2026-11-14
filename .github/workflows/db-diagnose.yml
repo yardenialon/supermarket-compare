@@ -17,45 +17,35 @@ jobs:
           ref: main
       - name: Install psycopg2
         run: pip install psycopg2-binary
-      - name: Trace barcode 7290018710982
+      - name: Image coverage report
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           set -o pipefail
           mkdir -p bench-results
           python3 - <<'EOF' 2>&1 | tee bench-results/diagnose.txt
-          import os, datetime, urllib.request, psycopg2
-          BC = "7290018710982"
-          UA = {'User-Agent': 'SavyBot/1.0 (+https://savy.co.il)'}
-          data = None
-          for d in range(0, 8):
-              day = (datetime.date.today() - datetime.timedelta(days=d)).strftime("%Y%m%d")
-              try:
-                  req = urllib.request.Request(f"https://hahishook.com/wp-content/uploads/chp/{day}.tsv", headers=UA)
-                  with urllib.request.urlopen(req, timeout=30) as r:
-                      data = r.read().decode('utf-8', 'ignore'); print("file:", day); break
-              except Exception: pass
-          print(f"== lines containing {BC} ==")
-          found = False
-          for line in data.split('\n'):
-              if BC in line:
-                  found = True
-                  c = line.rstrip('\r').split('\t')
-                  print({'itemcode': c[0], 'price': c[1], 'capacity': c[3], 'units': c[6],
-                         'name': c[5], 'leading': c[9], 'similar': c[10]})
-          if not found: print("NOT in daily file at all")
-
+          import os, psycopg2
           cur = psycopg2.connect(os.environ['DATABASE_URL']).cursor()
-          print(f"\n== our product for barcode {BC} ==")
-          cur.execute("""SELECT id, name, unit_qty, unit_measure, min_price, store_count
-                         FROM product WHERE barcode=%s""", (BC,))
-          rows = cur.fetchall()
-          for r in rows: print(r)
-          if rows:
-              pid = rows[0][0]
-              cur.execute("""SELECT price, deeplink IS NOT NULL FROM store_price
-                             WHERE store_id=2426945 AND product_id=%s""", (pid,))
-              print("hishook price row:", cur.fetchall())
+          cur.execute("""
+            SELECT
+              CASE WHEN COALESCE(store_count,0) >= 500 THEN 'a: 500+ stores'
+                   WHEN COALESCE(store_count,0) >= 100 THEN 'b: 100-499'
+                   WHEN COALESCE(store_count,0) >= 10  THEN 'c: 10-99'
+                   WHEN COALESCE(store_count,0) >= 3   THEN 'd: 3-9'
+                   ELSE 'e: under 3' END AS tier,
+              COUNT(*) AS products,
+              COUNT(*) FILTER (WHERE image_url IS NOT NULL AND image_url != '') AS with_img
+            FROM product GROUP BY 1 ORDER BY 1""")
+          print(f"{'tier':<16}{'products':>10}{'with img':>10}{'missing':>10}{'coverage':>10}")
+          tm = 0
+          for tier, n, w in cur.fetchall():
+              print(f"{tier:<16}{n:>10}{w:>10}{n-w:>10}{100*w//n:>9}%")
+              if tier != 'e: under 3': tm += n - w
+          print(f"\nmissing in tiers a-d (what shoppers actually see): {tm}")
+          cur.execute("""SELECT COUNT(*) FROM product
+                         WHERE (image_url IS NULL OR image_url='')
+                           AND image_checked_at IS NOT NULL""")
+          print(f"already attempted but nothing found (image_checked_at set, still empty): {cur.fetchone()[0]}")
           EOF
       - name: Commit results
         if: always()
@@ -64,5 +54,5 @@ jobs:
           git config user.email "bench@savy.co.il"
           git checkout -B bench-data
           git add bench-results/diagnose.txt
-          git commit -m "chore(bench): barcode trace [skip ci]" || echo "no changes"
+          git commit -m "chore(bench): image coverage [skip ci]" || echo "no changes"
           git push -f origin bench-data
