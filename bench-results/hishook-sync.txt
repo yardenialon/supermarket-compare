@@ -1,0 +1,29 @@
+fetched https://hahishook.com/wp-content/uploads/chp/20261114.tsv (337185 bytes)
+file items parsed: 679
+matched products: 834 (exact itemcode hits: 570), rejected mappings: 57
+  rejected: שקד מולבן פרוס @ 14.6 (size 250 vs 100)
+  rejected: אגוז ברזיל טבעי @ 20.9 (size 250 vs 1)
+  rejected: טונה בשמן סויה @ 14.9 (size 392 vs 156)
+  rejected: הל טחון @ 7.9 (size 100 vs 35)
+  rejected: סודה לשתייה @ 4.1 (size 250 vs 100)
+  rejected: סירופ מייפל אורגני טהור @ 65.2 (size 1000 vs 236)
+  rejected: סירופ מייפל אורגני טהור @ 65.2 (size 1000 vs 250)
+  rejected: תמצית בטעם וניל @ 8.9 (size 250 vs 50)
+  rejected: רוטב לפסטה מעגבניות דטריני @ 11.4 (price x2.6 of min 4.40)
+  rejected: רוטב לפסטה מעגבניות דטריני @ 11.4 (size 400 vs 240)
+  rejected: שמן זית גלילי, כתית מעולה בפח @ 201.3 (price x7.9 of min 25.50)
+  rejected: ביסקוויט פתי בר @ 2.1 (size 120 vs 220)
+  rejected: ביסקוויט פתי בר קטן בטעם שוקו @ 2.1 (size 120 vs 500)
+  rejected: שמן זית כתית מעולה בטעם גלילי קלאסי @ 103.1 (price x2.2 of min 45.90)
+  rejected: שמן זית כתית מעולה בטעם גלילי קלאסי @ 103.1 (price x4.0 of min 25.50)
+  rejected: בולי בוטנים (במבה) @ 2.0 (size 80 vs 60)
+  rejected: מלפפונים במלח קטן @ 7.1 (size 320 vs 688)
+  rejected: פפריקה מעושנת @ 3.4 (size 80 vs 120)
+  rejected: סוללות AAA @ 5.7 (size 52 vs 4)
+  rejected: נייר כסף - זוג @ 7.3 (size 252 vs 7.5)
+hishook-exclusive products: 0 created, 67 total in file
+purged 2 stale rows
+image gaps filled from hishook photos: 0
+refreshed aggregates for 903 products
+
+hishook sync done: 901 products priced at store 2426945
