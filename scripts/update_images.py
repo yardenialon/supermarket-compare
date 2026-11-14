@@ -164,12 +164,16 @@ def main():
     conn.commit()
 
     cur.execute("""
-        SELECT p.id, p.barcode, p.name, p.image_rejected_url
+        SELECT p.id, p.barcode, p.name, p.image_rejected_url, COALESCE(p.store_count, 0)
         FROM product p
         WHERE (p.image_url IS NULL OR p.image_url = '')
           AND p.barcode IS NOT NULL
           AND length(p.barcode) >= 8
           AND COALESCE(p.category, '') != 'ירקות ופירות'
+          -- skip products we already tried recently: without this the same
+          -- unfindable top-store_count products were re-fetched every night
+          -- and the backfill never advanced past them
+          AND (p.image_checked_at IS NULL OR p.image_checked_at < NOW() - interval '30 days')
           AND EXISTS (SELECT 1 FROM store_price sp WHERE sp.product_id = p.id)
         ORDER BY p.store_count DESC NULLS LAST
         LIMIT %s
@@ -180,7 +184,7 @@ def main():
 
     updated = cdn_count = off_count = serp_count = not_found = 0
 
-    for i, (pid, barcode, name, rejected) in enumerate(products):
+    for i, (pid, barcode, name, rejected, store_count) in enumerate(products):
         img = fetch_from_chain_cdn(barcode)
         if img:
             cdn_count += 1
@@ -188,18 +192,23 @@ def main():
             img = fetch_from_off(barcode)
             if img:
                 off_count += 1
-            else:
-                # שלב 3 — SerpAPI ברקוד בלבד
+            elif store_count >= 100:
+                # שלב 3 — SerpAPI ברקוד בלבד, רק למוצרים נפוצים (עלות לקריאה)
                 time.sleep(DELAY)
                 img = fetch_from_serp(barcode)
                 if img:
                     serp_count += 1
                 else:
                     not_found += 1
+            else:
+                not_found += 1
 
         if img and img != rejected:
             cur.execute("UPDATE product SET image_url=%s, image_checked_at=NULL WHERE id=%s", (img, pid))
             updated += 1
+        else:
+            # mark the attempt so tomorrow's batch moves on to new products
+            cur.execute("UPDATE product SET image_checked_at=NOW() WHERE id=%s", (pid,))
 
         if (i + 1) % 50 == 0:
             conn.commit()
