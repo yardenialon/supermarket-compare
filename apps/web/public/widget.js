@@ -14,6 +14,10 @@
 
   function parseLine(line) {
     var clean = String(line).replace(/\(.*?\)/g, " ").replace(/[•\-–*·,]/g, " ").replace(/\s+/g, " ").trim();
+    // recipe group headers ("לבצק: 500 גרם קמח" / a bare "לציפוי:") are
+    // labels, not ingredients — drop the label, keep the ingredient
+    clean = clean.replace(/^(לבצק|לציפוי|למילוי|לרוטב|לקרם|להגשה|לתוספת|לסירופ|לתיבול|למרינדה|לסלט|בצק|ציפוי|מילוי|קרם|סירופ|מרינדה)\s*:\s*/, "").trim();
+    if (/^ל?[א-ת"' ]{2,16}:$/.test(clean)) return null;
     if (!clean) return null;
     var t = clean.split(" "), i = 0;
     while (i < t.length - 1 && UNIT.test(t[i])) i++;

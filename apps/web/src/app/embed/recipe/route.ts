@@ -34,7 +34,7 @@ const PROCESSED_PRODUCE = /חטיף|מיובש|משקה|מיץ|רסק|שימור
 
 // shake/recipe lines that are not supermarket products at all — skipped,
 // never "matched" to ice pops (קרח → קרחונים was a real field bug)
-const STOP_LINES = /^(קרח|קוביות קרח|מים|מים קרים|מים רותחים|מלח ופלפל|פלפל שחור גרוס)$/;
+const STOP_LINES = /^(קרח|קוביות קרח|מים|מים קרים|מים רותחים|מלח ופלפל|פלפל שחור גרוס|ל?בצק|ל?ציפוי|ל?מילוי|ל?רוטב|ל?קרם|להגשה|ל?תוספת|ל?סירופ|ל?מרינדה|לתיבול)$/;
 
 // pantry staples nearly every kitchen already has. Pricing a FULL bottle of
 // olive oil against "5 כפות שמן" made a simple pasta basket show ₪147 —

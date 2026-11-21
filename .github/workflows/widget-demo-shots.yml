@@ -68,6 +68,7 @@ jobs:
                 let found = null;
                 let matches = 0;
                 for (const link of links.slice(0, 14)) {
+                  if (link.replace(/https?:\/\/[^/]+\/?/, '').length < 9) continue; // never the homepage
                   try {
                     await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 30000 });
                     const text = await page.evaluate(() => document.body.innerText);
