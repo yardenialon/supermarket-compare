@@ -36,6 +36,12 @@ const PROCESSED_PRODUCE = /חטיף|מיובש|משקה|מיץ|רסק|שימור
 // never "matched" to ice pops (קרח → קרחונים was a real field bug)
 const STOP_LINES = /^(קרח|קוביות קרח|מים|מים קרים|מים רותחים|מלח ופלפל|פלפל שחור גרוס)$/;
 
+// pantry staples nearly every kitchen already has. Pricing a FULL bottle of
+// olive oil against "5 כפות שמן" made a simple pasta basket show ₪147 —
+// not credible. These are excluded from the basket by default and listed
+// transparently under the total instead.
+const PANTRY = /^(שמן( זית| קנולה| צמחי)?|מלח( גס| אטלנטי| ים)?|פלפל( שחור| לבן| גרוס| טחון)?|סוכר( חום| דמררה)?( לבן)?|קמח( לבן| מלא| תופח)?|מים( קרים| רותחים| פושרים)?|אבקת אפי+ה|אבקת סוכר|סודה לשתי+ה|תמצית וניל|סוכר וניל|חומץ( בן יין| תפוחים| בלסמי)?|רוטב סויה|פפריקה( מתוקה| חריפה| מעושנת)?|כמון|כורכום|קינמון( טחון)?|אורגנו|טימין יבש|עלי דפנה|אגוז מוסקט|צ'ילי גרוס|גרגרי כוסברה|תבלינים?( לפי הטעם)?)$/;
+
 function wantsFrozen(q: string) { return /קפוא|קפואה|קפואים|קפואות/.test(q); }
 
 function scoreCandidate(p: any, q: string): number {
@@ -133,8 +139,12 @@ export async function GET(request: Request) {
     return { q: (q || "").trim().slice(0, 60), amount: amount.trim().slice(0, 40) };
   }).filter((i) => i.q).slice(0, 25);
 
-  const resolved = ings.length
-    ? await Promise.all(ings.map((i) => resolveIngredient(i.q, i.amount)))
+  // pantry staples stay out of the basket (and out of resolution entirely) —
+  // the total reflects what a shopper actually has to BUY for this recipe
+  const pantryItems = ings.filter((i) => PANTRY.test(i.q.trim()));
+  const basketIngs = ings.filter((i) => !PANTRY.test(i.q.trim()));
+  const resolved = basketIngs.length
+    ? await Promise.all(basketIngs.map((i) => resolveIngredient(i.q, i.amount)))
     : [];
   const found = resolved.filter((r) => r.product);
   const estimate = found.reduce((s, r) => s + r.product!.minPrice * r.qty, 0);
@@ -206,6 +216,7 @@ export async function GET(request: Request) {
       ${found.length ? '<div class="skel"></div><div class="skel"></div><div class="skel"></div>' : '<div class="err">לא זוהו מצרכים להשוואה</div>'}
     </div>
     <div class="chips"><span class="lbl">✓ ${found.length === 1 ? "זוהה מצרך אחד" : `זוהו ${found.length} מצרכים`}:</span>${chipsHtml}</div>
+    ${pantryItems.length ? `<div class="chips" style="opacity:.75"><span class="lbl">🏠 בלי מצרכי מזווה שיש כמעט בכל בית:</span> ${esc(pantryItems.map((i) => i.q).slice(0, 8).join(", "))}</div>` : ""}
     <a class="cta" href="${esc(ctaUrl)}" target="_blank" rel="noopener">🛒 השוו ליד הבית והוסיפו לסל <span class="arr">←</span></a>
     <div class="foot">
       <a href="${SITE}/?utm_source=widget&utm_medium=embed&utm_campaign=${encodeURIComponent(src)}" target="_blank" rel="noopener">מופעל ע״י <b>Savy</b> ⚡ השוואת מחירי סופרמרקט</a>
