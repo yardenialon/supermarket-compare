@@ -39,21 +39,37 @@ jobs:
             for (const blog of BLOGS) {
               try {
                 const page = await browser.newPage({ viewport: { width: 1280, height: 1000 }, deviceScaleFactor: 2 });
-                await page.goto(blog.home, { waitUntil: 'domcontentloaded', timeout: 45000 });
-                // collect same-host candidate post links
+                // post URLs from the site feed (reliable), homepage as fallback
+                let links = [];
+                const feeds = blog.home.includes('blogspot')
+                  ? [blog.home.replace(/\/$/, '') + '/feeds/posts/default?alt=rss&max-results=15']
+                  : [blog.home.replace(/\/$/, '') + '/feed/'];
+                for (const feedUrl of feeds) {
+                  try {
+                    const resp = await page.request.get(feedUrl, { timeout: 30000 });
+                    const xml = await resp.text();
+                    links.push(...[...xml.matchAll(/<link>([^<]+)<\/link>/g)].map(m => m[1])
+                      .concat([...xml.matchAll(/<link[^>]*href="([^"]+)"[^>]*\/>/g)].map(m => m[1])));
+                  } catch (e) { log(blog.name, 'feed failed:', e.message.slice(0, 60)); }
+                }
                 const host = new URL(blog.home).host;
-                let links = await page.$$eval('a[href]', as => as.map(a => a.href));
                 links = [...new Set(links)]
-                  .filter(h => { try { return new URL(h).host === host; } catch { return false; } })
-                  .filter(h => !/categor|tag|about|contact|אודות|קשר|privacy|facebook|#|\?replytocom/i.test(h))
-                  .filter(h => h.replace(/https?:\/\/[^/]+/, '').length > 12);
+                  .filter(h => { try { return new URL(h).host.replace('www.','') === host.replace('www.',''); } catch { return false; } })
+                  .filter(h => h.replace(/https?:\/\/[^/]+\/?/, '').length > 8);
+                if (!links.length) {
+                  await page.goto(blog.home, { waitUntil: 'domcontentloaded', timeout: 45000 });
+                  links = [...new Set(await page.$$eval('a[href]', as => as.map(a => a.href)))]
+                    .filter(h => { try { return new URL(h).host === host; } catch { return false; } })
+                    .filter(h => !/categor|tag|about|contact|אודות|קשר|#/i.test(h));
+                }
                 log(blog.name, 'candidates:', links.length);
                 let found = null;
                 for (const link of links.slice(0, 10)) {
                   try {
                     await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 30000 });
-                    const text = await page.evaluate(() => document.body.innerText.slice(0, 20000));
-                    if (/מצרכים|רכיבים|חומרים/.test(text) && /כוס|כפית|גרם|ביצים|קמח|סוכר|בצל|שמן/.test(text)) { found = link; break; }
+                    const text = await page.evaluate(() => document.body.innerText);
+                    const hits = (text.match(/כוס |כפית|כף |גרם|ביצים|קמח|סוכר|בצל|שמן זית|מלח/g) || []).length;
+                    if (hits >= 4) { found = link; break; }
                   } catch (e) { log('  skip', link, e.message.slice(0, 60)); }
                 }
                 if (!found) { log(blog.name, 'NO RECIPE PAGE FOUND'); await page.close(); continue; }
@@ -68,14 +84,22 @@ jobs:
                   log(blog.name, 'widget did not auto-attach — building manual embed');
                   // crude fallback: take the first ul near an ingredients heading
                   const ings = await page.evaluate(() => {
-                    const uls = [...document.querySelectorAll('ul, ol')];
+                    const MEAS = /כוס|כפית|כף|גרם|ק"ג|מ"ל|ביצ|קמח|סוכר|שמן|בצל|שום|מלח|חבילת|קופסת/;
                     let best = null, bestScore = 0;
-                    for (const ul of uls) {
+                    for (const ul of document.querySelectorAll('ul, ol')) {
                       const items = [...ul.querySelectorAll('li')].map(li => li.innerText.trim()).filter(t => t && t.length < 90);
-                      const score = items.filter(t => /כוס|כפית|כף|גרם|ק"ג|מ"ל|ביצ|קמח|סוכר|שמן|בצל|שום|מלח/.test(t)).length;
+                      const score = items.filter(t => MEAS.test(t)).length;
                       if (score > bestScore) { bestScore = score; best = items; }
                     }
-                    return bestScore >= 3 ? best.slice(0, 15) : null;
+                    if (bestScore >= 3) return best.slice(0, 15);
+                    // blogspot-style: <br>-separated lines in the post body
+                    const lines = document.body.innerText.split('\n').map(t => t.trim());
+                    let run = [], bestRun = [];
+                    for (const t of lines) {
+                      if (t && t.length < 90 && MEAS.test(t)) { run.push(t); if (run.length > bestRun.length) bestRun = [...run]; }
+                      else if (t === '' || t.length >= 90) run = [];
+                    }
+                    return bestRun.length >= 3 ? bestRun.slice(0, 15) : null;
                   });
                   if (!ings) { log(blog.name, 'no ingredient list parsed'); await page.close(); continue; }
                   const url = 'https://savy.co.il/embed/recipe?t=' + encodeURIComponent(document_title_safe(await page.title())) + '&ing=' + encodeURIComponent(ings.join('\n')) + '&utm_source=demo';
