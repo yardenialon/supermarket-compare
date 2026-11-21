@@ -28,7 +28,7 @@ jobs:
           const fs = require('fs');
 
           const BLOGS = [
-            { name: 'plplt',       home: 'https://plplt.co.il/' },
+            { name: 'plplt',       home: 'https://plplt.co.il/', skipFirst: 1 },
             { name: 'bishulbezol', home: 'http://bishulbezol.blogspot.com/' },
             { name: 'matanot',     home: 'https://matanot-ktanot.co.il/' },
           ];
@@ -55,7 +55,9 @@ jobs:
                 const host = new URL(blog.home).host;
                 links = [...new Set(links)]
                   .filter(h => { try { return new URL(h).host.replace('www.','') === host.replace('www.',''); } catch { return false; } })
-                  .filter(h => h.replace(/https?:\/\/[^/]+\/?/, '').length > 8);
+                  .filter(h => h.replace(/https?:\/\/[^/]+\/?/, '').length > 8)
+                  // blogspot: static pages (/p/...) are indexes, posts live under /YYYY/
+                  .filter(h => !blog.home.includes('blogspot') || /\/20\d{2}\//.test(h));
                 if (!links.length) {
                   await page.goto(blog.home, { waitUntil: 'domcontentloaded', timeout: 45000 });
                   links = [...new Set(await page.$$eval('a[href]', as => as.map(a => a.href)))]
@@ -64,12 +66,13 @@ jobs:
                 }
                 log(blog.name, 'candidates:', links.length);
                 let found = null;
-                for (const link of links.slice(0, 10)) {
+                let matches = 0;
+                for (const link of links.slice(0, 14)) {
                   try {
                     await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 30000 });
                     const text = await page.evaluate(() => document.body.innerText);
                     const hits = (text.match(/כוס |כפית|כף |גרם|ביצים|קמח|סוכר|בצל|שמן זית|מלח/g) || []).length;
-                    if (hits >= 4) { found = link; break; }
+                    if (hits >= 4) { matches++; if (matches > (blog.skipFirst || 0)) { found = link; break; } }
                   } catch (e) { log('  skip', link, e.message.slice(0, 60)); }
                 }
                 if (!found) { log(blog.name, 'NO RECIPE PAGE FOUND'); await page.close(); continue; }

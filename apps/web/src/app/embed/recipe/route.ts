@@ -115,7 +115,16 @@ async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const name = (searchParams.get("n") || "המתכון").slice(0, 80);
+  // page titles arrive with raw HTML entities (&#8211;, &amp;) and often
+  // start with "הכנת/מתכון ל" which doubles up in "כמה עולה להכין X"
+  const cleanTitle = (t: string) =>
+    t.replace(/&#(\d+);/g, (_, c) => String.fromCharCode(+c))
+     .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;|&apos;/g, "'")
+     .replace(/&nbsp;/g, " ")
+     .replace(/^(הכנת|מתכון ל|מתכון:|מתכון )\s*/,"")
+     .replace(/\s+[-–|]\s+[^-–|]{0,40}$/,"")   // drop trailing " – site name"-style suffixes
+     .trim();
+  const name = cleanTitle(searchParams.get("n") || "המתכון").slice(0, 80) || "המתכון";
   const src = (searchParams.get("src") || "").slice(0, 100);
   const ingParam = (searchParams.get("ing") || "").slice(0, 2000);
 
@@ -196,7 +205,7 @@ export async function GET(request: Request) {
     <div id="chains" class="chains">
       ${found.length ? '<div class="skel"></div><div class="skel"></div><div class="skel"></div>' : '<div class="err">לא זוהו מצרכים להשוואה</div>'}
     </div>
-    <div class="chips"><span class="lbl">✓ זוהו ${found.length} מצרכים:</span>${chipsHtml}</div>
+    <div class="chips"><span class="lbl">✓ ${found.length === 1 ? "זוהה מצרך אחד" : `זוהו ${found.length} מצרכים`}:</span>${chipsHtml}</div>
     <a class="cta" href="${esc(ctaUrl)}" target="_blank" rel="noopener">🛒 השוו ליד הבית והוסיפו לסל <span class="arr">←</span></a>
     <div class="foot">
       <a href="${SITE}/?utm_source=widget&utm_medium=embed&utm_campaign=${encodeURIComponent(src)}" target="_blank" rel="noopener">מופעל ע״י <b>Savy</b> ⚡ השוואת מחירי סופרמרקט</a>
