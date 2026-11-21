@@ -28,9 +28,7 @@ jobs:
           const fs = require('fs');
 
           const BLOGS = [
-            { name: 'plplt',       home: 'https://plplt.co.il/', skipFirst: 1 },
-            { name: 'bishulbezol', home: 'http://bishulbezol.blogspot.com/' },
-            { name: 'matanot',     home: 'https://matanot-ktanot.co.il/' },
+            { name: 'plplt', home: 'https://plplt.co.il/', url: 'https://plplt.co.il/4494/' },
           ];
           const log = (...a) => console.log(...a);
 
@@ -65,8 +63,9 @@ jobs:
                     .filter(h => !/categor|tag|about|contact|אודות|קשר|#/i.test(h));
                 }
                 log(blog.name, 'candidates:', links.length);
-                let found = null;
+                let found = blog.url || null;
                 let matches = 0;
+                if (!found)
                 for (const link of links.slice(0, 14)) {
                   if (link.replace(/https?:\/\/[^/]+\/?/, '').length < 9) continue; // never the homepage
                   try {
