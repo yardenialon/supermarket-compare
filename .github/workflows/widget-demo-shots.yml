@@ -23,7 +23,7 @@ jobs:
       - name: Shoot blogger pages with the live widget injected
         run: |
           mkdir -p bench-results/widget-shots
-          cat > /tmp/shots.js <<'EOF'
+          cat > ./shots.js <<'EOF'
           const { chromium } = require('playwright');
           const fs = require('fs');
 
@@ -106,7 +106,7 @@ jobs:
             function document_title_safe(t) { return (t || 'מתכון').slice(0, 60); }
           })();
           EOF
-          node /tmp/shots.js 2>&1 | tee bench-results/widget-shots/log.txt
+          node ./shots.js 2>&1 | tee bench-results/widget-shots/log.txt
       - name: Commit results
         if: always()
         run: |
