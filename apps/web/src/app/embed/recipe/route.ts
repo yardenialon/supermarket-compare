@@ -237,16 +237,21 @@ export async function GET(request: Request) {
   function escT(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
   function heName(c){
     var m={'Shufersal':'שופרסל','Rami Levy':'רמי לוי','Victory':'ויקטורי','Osher Ad':'אושר עד','Carrefour':'קרפור','Yochananof':'יוחננוף','Tiv Taam':'טיב טעם','Hazi Hinam':'חצי חינם','Yayno Bitan':'יינות ביתן','Keshet Taamim':'קשת טעמים','Freshmarket':'פרשמרקט','Mahsani Ashuk':'מחסני השוק','King Store':'קינג סטור','Zol Vebegadol':'זול ובגדול','Netiv Hased':'נתיב החסד','Super Yuda':'סופר יודה','Bareket':'סופר ברקת','Polizer':'פוליצר','Wolt':'וולט מרקט','Stop Market':'סטופ מרקט','Super Sapir':'סופר ספיר','Machsanei HaShuk':'מחסני השוק','Yellow':'ילו','Quik':'קוויק'};
-    return c.subchainName||m[c.chainName]||c.chainName;
+    var base=(c.chainName||'').replace(/ אונליין$/,'');
+    var nm=c.subchainName||m[base]||base;
+    return / אונליין$/.test(c.chainName||'')?nm+' אונליין':nm;
   }
   function show(ch){
     var eff=function(c){return c.promoTotal!=null?c.promoTotal:c.total};
     // cheapest first, always — a pricier basket above a cheaper one reads as
     // a bug ("הכי זול" over higher numbers). The trophy goes to the cheapest
     // MOST-COMPLETE basket; rows with gaps carry their orange note.
-    ch=ch.filter(function(c){return c.availableCount>0}).sort(function(a,b){return eff(a)-eff(b)}).slice(0,4);
+    ch=ch.filter(function(c){return c.availableCount>0});
     if(!ch.length){fb();return}
+    // only near-complete baskets compete (a ₪27 basket covering 2 of 8
+    // items is not "cheapest"); among them, cheapest first
     var minMissing=Math.min.apply(null,ch.map(function(c){return c.missingCount}));
+    ch=ch.filter(function(c){return c.missingCount<=minMissing+1}).sort(function(a,b){return eff(a)-eff(b)}).slice(0,4);
     var complete=ch.filter(function(c){return c.missingCount===minMissing});
     var winner=complete[0];
     var best=eff(complete[0]),worst=eff(complete[complete.length-1]);
