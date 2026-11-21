@@ -125,15 +125,19 @@
         ".wprm-recipe-container, .tasty-recipes, [itemtype*='Recipe'], article .entry-content, article, main") || document.body;
   }
 
-  function inject() {
+  function inject(attempt) {
+    attempt = attempt || 0;
+    // builder sites (Elementor, Wix) render the recipe AFTER load — when
+    // nothing is found yet, retry a few times before giving up
+    var retry = function () { if (attempt < 4) setTimeout(function () { inject(attempt + 1); }, 1500 * (attempt + 1)); };
     var data = fromJsonLd() || fromDom();
-    if (!data) return; // not a recipe page — do nothing
+    if (!data) return retry(); // possibly not rendered yet
     var parsed = [];
     for (var i = 0; i < data.lines.length && parsed.length < 25; i++) {
       var p = parseLine(data.lines[i]);
       if (p) parsed.push(p.q + (p.amount ? ":" + p.amount : ""));
     }
-    if (parsed.length < 2) return;
+    if (parsed.length < 2) return retry();
 
     var me = document.currentScript || {};
     var src = location.hostname;
@@ -156,6 +160,6 @@
     else host.insertAdjacentElement("afterend", frame);
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
-  else inject();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { inject(0); });
+  else inject(0);
 })();
