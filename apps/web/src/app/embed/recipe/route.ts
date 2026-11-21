@@ -252,7 +252,11 @@ export async function GET(request: Request) {
     // items is not "cheapest"); among them, cheapest first
     var minMissing=Math.min.apply(null,ch.map(function(c){return c.missingCount}));
     ch=ch.filter(function(c){return c.missingCount<=minMissing+1}).sort(function(a,b){return eff(a)-eff(b)}).slice(0,4);
-    var complete=ch.filter(function(c){return c.missingCount===minMissing});
+    if(!ch.length){fb();return}
+    // the winner comes from the rows actually shown — the most complete
+    // among them (the globally-complete row may have been priced out)
+    var sliceMin=Math.min.apply(null,ch.map(function(c){return c.missingCount}));
+    var complete=ch.filter(function(c){return c.missingCount===sliceMin});
     var winner=complete[0];
     var best=eff(complete[0]),worst=eff(complete[complete.length-1]);
     if(complete.length>1&&worst-best>1){save.style.display='flex';saveAmt.textContent='₪'+(worst-best).toFixed(0)}
