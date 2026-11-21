@@ -79,7 +79,9 @@ function produceOk(p: any, word: string): boolean {
 }
 
 async function resolveIngredient(q: string, amount: string): Promise<Resolved> {
-  const qty = /^\d+$/.test(amount.trim()) ? Math.min(20, parseInt(amount.trim())) : 1;
+  // a recipe's "6 ביצים" means six eggs, not six CARTONS — one package of
+  // each ingredient is what the shopper buys ("שקשוקה ב-330₪" otherwise)
+  const qty = 1;
   const none = { q, amount, qty, product: null };
   if (STOP_LINES.test(q.trim())) return none;
   try {
@@ -239,16 +241,21 @@ export async function GET(request: Request) {
   }
   function show(ch){
     var eff=function(c){return c.promoTotal!=null?c.promoTotal:c.total};
-    ch=ch.filter(function(c){return c.availableCount>0}).sort(function(a,b){return a.missingCount-b.missingCount||eff(a)-eff(b)}).slice(0,4);
+    // cheapest first, always — a pricier basket above a cheaper one reads as
+    // a bug ("הכי זול" over higher numbers). The trophy goes to the cheapest
+    // MOST-COMPLETE basket; rows with gaps carry their orange note.
+    ch=ch.filter(function(c){return c.availableCount>0}).sort(function(a,b){return eff(a)-eff(b)}).slice(0,4);
     if(!ch.length){fb();return}
-    var complete=ch.filter(function(c){return c.missingCount===ch[0].missingCount});
-    var best=eff(ch[0]),worst=eff(complete[complete.length-1]);
+    var minMissing=Math.min.apply(null,ch.map(function(c){return c.missingCount}));
+    var complete=ch.filter(function(c){return c.missingCount===minMissing});
+    var winner=complete[0];
+    var best=eff(complete[0]),worst=eff(complete[complete.length-1]);
     if(complete.length>1&&worst-best>1){save.style.display='flex';saveAmt.textContent='₪'+(worst-best).toFixed(0)}
-    box.innerHTML=ch.map(function(c,i){
+    box.innerHTML=ch.map(function(c){
       var nm=heName(c);
-      return '<div class="row'+(i===0?' win':'')+'">'
+      return '<div class="row'+(c===winner?' win':'')+'">'
         +'<span class="avatar" style="background:'+color(nm)+'">'+escT(nm.charAt(0))+'</span>'
-        +'<span class="cname"><b>'+escT(nm)+(i===0?'<span class="best">הכי זול 🏆</span>':'')+'</b>'
+        +'<span class="cname"><b>'+escT(nm)+(c===winner?'<span class="best">הכי זול 🏆</span>':'')+'</b>'
         +(c.missingCount>0?'<small>חסרים '+c.missingCount+' מצרכים</small>':'')+'</span>'
         +'<span class="price">₪'+eff(c).toFixed(2)+'</span></div>';
     }).join('');
